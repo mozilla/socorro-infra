@@ -7,11 +7,6 @@ class socorro::generic {
       enable  => false,
       require => Package['httpd'];
 
-    'memcached':
-      ensure  => stopped,
-      enable  => false,
-      require => Package['memcached'];
-
     'postgresql-9.3':
       ensure  => stopped,
       enable  => false,
@@ -47,7 +42,6 @@ class socorro::generic {
       'daemonize',
       'httpd',
       'java-1.7.0-openjdk',
-      'memcached',
       'mod_wsgi',
       'unzip',
       'yum-plugin-fastestmirror',
