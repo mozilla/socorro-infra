@@ -27,6 +27,12 @@
                 "puppet/modules"
             ],
             "prevent_sudo": "true"
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "rm /root/.ssh/authorized_keys"
+            ]
         }
     ]
 }
