@@ -11,14 +11,19 @@ class socorro::generic {
       ensure  => stopped,
       enable  => false,
       require => [
-          Package['postgresql93-server'],
-          File['pg_hba.conf'],
-        ];
+        Package['postgresql93-server'],
+        File['pg_hba.conf'],
+      ];
 
     'elasticsearch':
       ensure  => stopped,
       enable  => false,
       require => Package['elasticsearch'];
+
+    'rabbitmq-server':
+      ensure  => stopped,
+      enable  => false,
+      require => Package['rabbitmq-server'];
   }
 
   yumrepo {
@@ -61,7 +66,10 @@ class socorro::generic {
   }
 
   package {
-    'supervisor':
+    [
+      'rabbitmq-server',
+      'supervisor'
+    ]:
       ensure  => latest,
       require => Yumrepo['EPEL']
   }
@@ -82,9 +90,7 @@ class socorro::generic {
       source  => 'puppet:///modules/socorro/var_lib_pgsql_9.3_data/pg_hba.conf',
       owner   => 'postgres',
       group   => 'postgres',
-      require => [
-        Package['postgresql93-server'],
-      ],
+      require => Package['postgresql93-server'],
       notify  => Service['postgresql-9.3'];
 
     'pgsql.sh':
