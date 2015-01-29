@@ -28,30 +28,40 @@ class socorro::generic {
 
   yumrepo {
     'elasticsearch':
-      baseurl => 'http://packages.elasticsearch.org/elasticsearch/0.90/centos';
-    'EPEL':
-      baseurl => 'http://dl.fedoraproject.org/pub/epel/$releasever/$basearch',
-      timeout => 60;
+      baseurl => 'http://packages.elasticsearch.org/elasticsearch/0.90/centos',
+      gpgkey  => 'https://packages.elasticsearch.org/GPG-KEY-elasticsearch';
     'PGDG':
-      baseurl => 'http://yum.postgresql.org/9.3/redhat/rhel-$releasever-$basearch';
+      baseurl => 'http://yum.postgresql.org/9.3/redhat/rhel-$releasever-$basearch',
+      gpgkey  => 'http://yum.postgresql.org/RPM-GPG-KEY-PGDG';
   }
 
-  Yumrepo['elasticsearch', 'EPEL', 'PGDG'] {
+  Yumrepo['elasticsearch', 'PGDG'] {
     enabled  => 1,
-    gpgcheck => 0,
-    require  => Package['yum-plugin-fastestmirror']
+    gpgcheck => 1
+  }
+
+  package {
+    'ca-certificates':
+      ensure => latest
+  }
+
+  package {
+    'yum-plugin-fastestmirror':
+      ensure  => latest,
+      require => Package['ca-certificates']
   }
 
   package {
     [
       'daemonize',
+      'epel-release',
       'httpd',
       'java-1.7.0-openjdk',
       'mod_wsgi',
       'unzip',
-      'yum-plugin-fastestmirror',
     ]:
-    ensure => latest
+    ensure  => latest,
+    require => Package['yum-plugin-fastestmirror']
   }
 
   package {
@@ -62,7 +72,10 @@ class socorro::generic {
       'postgresql93-server',
     ]:
     ensure  => latest,
-    require => Yumrepo['PGDG']
+    require => [
+      Yumrepo['PGDG'],
+      Package['ca-certificates']
+    ]
   }
 
   package {
@@ -71,13 +84,16 @@ class socorro::generic {
       'supervisor'
     ]:
       ensure  => latest,
-      require => Yumrepo['EPEL']
+      require => Package['epel-release']
   }
 
   package {
     'elasticsearch':
       ensure  => latest,
-      require => [ Yumrepo['elasticsearch'], Package['java-1.7.0-openjdk'] ]
+      require => [
+        Yumrepo['elasticsearch'],
+        Package['java-1.7.0-openjdk']
+      ]
   }
 
   file {
