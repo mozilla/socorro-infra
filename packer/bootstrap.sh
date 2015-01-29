@@ -7,7 +7,7 @@ function techo {
 
 techo "start"
 techo "install puppet yum repo"
-rpm -ivh http://yum.puppetlabs.com/puppetlabs-release-el-6.noarch.rpm
+rpm -ivh http://yum.puppetlabs.com/puppetlabs-release-el-7.noarch.rpm
 techo "yum check-update"
 yum check-update
 techo "yum upgrade"

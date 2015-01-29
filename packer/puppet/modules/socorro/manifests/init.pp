@@ -28,7 +28,7 @@ class socorro::generic {
 
   yumrepo {
     'elasticsearch':
-      baseurl => 'http://packages.elasticsearch.org/elasticsearch/0.90/centos',
+      baseurl => 'http://packages.elasticsearch.org/elasticsearch/1.4/centos',
       gpgkey  => 'https://packages.elasticsearch.org/GPG-KEY-elasticsearch';
     'PGDG':
       baseurl => 'http://yum.postgresql.org/9.3/redhat/rhel-$releasever-$basearch',
@@ -53,7 +53,6 @@ class socorro::generic {
 
   package {
     [
-      'daemonize',
       'epel-release',
       'httpd',
       'java-1.7.0-openjdk',
