@@ -9,29 +9,23 @@
             "access_key": "{{user `aws_access_key`}}",
             "secret_key": "{{user `aws_secret_key`}}",
             "region": "eu-west-1",
-            "source_ami": "ami-4ac6653d",
-            "instance_type": "t1.micro",
-            "ssh_username": "root",
-            "ami_name": "centos_test {{timestamp}}"
+            "source_ami": "ami-e4ff5c93",
+            "instance_type": "t2.micro",
+            "ssh_username": "centos",
+            "ami_name": "centos7_test__{{timestamp}}"
         }
     ],
     "provisioners": [
         {
             "type": "shell",
-            "script": "bootstrap.sh"
+            "script": "bootstrap.sh",
+            "execute_command": "sudo -E sh '{{ .Path }}'"
         },
         {
             "type": "puppet-masterless",
             "manifest_file": "puppet/manifests/default.pp",
             "module_paths": [
                 "puppet/modules"
-            ],
-            "prevent_sudo": "true"
-        },
-        {
-            "type": "shell",
-            "inline": [
-                "rm /root/.ssh/authorized_keys"
             ]
         }
     ]
