@@ -1,0 +1,6 @@
+credentials.json
+terraform.tfvars
+*.pem
+*.swp
+*.plan
+*.log
