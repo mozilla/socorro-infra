@@ -1,0 +1,20 @@
+Port 22     # block by ACL or sec group; for private use only
+Port 22123  # alternate port allowed from Internet
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+SyslogFacility AUTHPRIV
+LogLevel VERBOSE
+AuthorizedKeysFile .ssh/authorized_keys
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+GSSAPIAuthentication no
+GSSAPICleanupCredentials no
+UsePAM yes
+PermitRootLogin no
+X11Forwarding no
+UsePrivilegeSeparation sandbox          # Default for new installations.
+AcceptEnv LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
+AcceptEnv LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
+AcceptEnv LC_IDENTIFICATION LC_ALL LANGUAGE
+AcceptEnv XMODIFIERS
+Subsystem sftp  /usr/libexec/openssh/sftp-server

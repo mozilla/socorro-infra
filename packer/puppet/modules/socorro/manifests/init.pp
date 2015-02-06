@@ -2,6 +2,11 @@
 class socorro::generic {
 
   service {
+    'sshd':
+      ensure  => running,
+      enable  => true,
+      require => File['sshd_config'];
+
     'httpd':
       ensure  => stopped,
       enable  => false,
@@ -96,6 +101,22 @@ class socorro::generic {
   }
 
   file {
+    'sshd_config':
+      ensure => file,
+      path   => '/etc/ssh/sshd_config',
+      source => 'puppet:///modules/socorro/etc_ssh/sshd_config',
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0644';
+
+    'selinux_config':
+      ensure => file,
+      path   => '/etc/selinux/config',
+      source => 'puppet:///modules/socorro/etc_selinux/config',
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0644';
+
     '/etc/socorro':
       ensure => directory;
 
