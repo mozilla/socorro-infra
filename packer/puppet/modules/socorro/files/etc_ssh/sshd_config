@@ -2,9 +2,6 @@ Port 22     # block by ACL or sec group; for private use only
 Port 22123  # alternate port allowed from Internet
 HostKey /etc/ssh/ssh_host_rsa_key
 HostKey /etc/ssh/ssh_host_ecdsa_key
-KexAlgorithms ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group-exchange-sha256
-Ciphers aes256-ctr,aes192-ctr,aes128-ctr
-MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com
 SyslogFacility AUTHPRIV
 LogLevel VERBOSE
 AuthorizedKeysFile .ssh/authorized_keys
