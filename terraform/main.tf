@@ -89,6 +89,19 @@ resource "aws_security_group" "elb_to_webheads__http" {
     }
 }
 
+resource "aws_security_group" "internet_to_snowflakes__http" {
+    name = "internet_to_snowflakes__http"
+    description = "Allow HTTP access to some oddball nodes."
+    ingress {
+        from_port = 80
+        to_port = 80
+        protocol = "tcp"
+        cidr_blocks = [
+            "0.0.0.0/0"
+        ]
+    }
+}
+
 resource "aws_elb" "elb_for_collectors" {
     name = "elb-for-collectors"
     availability_zones = [
@@ -153,7 +166,7 @@ resource "aws_instance" "webheads" {
     security_groups = [
         "${aws_security_group.elb_to_webheads__http.name}",
         "${aws_security_group.internet_to_any__ssh.name}",
-		"${aws_security_group.private_to_private__any.name}"
+        "${aws_security_group.private_to_private__any.name}"
     ]
     provisioner "remote-exec" {
         connection {
@@ -176,7 +189,7 @@ resource "aws_instance" "collectors" {
     security_groups = [
         "${aws_security_group.elb_to_webheads__http.name}",
         "${aws_security_group.internet_to_any__ssh.name}",
-		"${aws_security_group.private_to_private__any.name}"
+        "${aws_security_group.private_to_private__any.name}"
     ]
     provisioner "remote-exec" {
         connection {
@@ -198,7 +211,7 @@ resource "aws_instance" "processors" {
     count = 1
     security_groups = [
         "${aws_security_group.internet_to_any__ssh.name}",
-		"${aws_security_group.private_to_private__any.name}"
+        "${aws_security_group.private_to_private__any.name}"
     ]
 }
 
@@ -209,7 +222,7 @@ resource "aws_instance" "middleware" {
     count = 1
     security_groups = [
         "${aws_security_group.internet_to_any__ssh.name}",
-		"${aws_security_group.private_to_private__any.name}"
+        "${aws_security_group.private_to_private__any.name}"
     ]
 }
 
@@ -220,7 +233,7 @@ resource "aws_instance" "rabbitmq" {
     count = 1
     security_groups = [
         "${aws_security_group.internet_to_any__ssh.name}",
-		"${aws_security_group.private_to_private__any.name}"
+        "${aws_security_group.private_to_private__any.name}"
     ]
 }
 
@@ -231,7 +244,7 @@ resource "aws_instance" "elasticsearch" {
     count = 1
     security_groups = [
         "${aws_security_group.internet_to_any__ssh.name}",
-		"${aws_security_group.private_to_private__any.name}"
+        "${aws_security_group.private_to_private__any.name}"
     ]
 }
 
@@ -242,7 +255,31 @@ resource "aws_instance" "postgres" {
     count = 1
     security_groups = [
         "${aws_security_group.internet_to_any__ssh.name}",
-		"${aws_security_group.private_to_private__any.name}"
+        "${aws_security_group.private_to_private__any.name}"
+    ]
+}
+
+resource "aws_instance" "crash-analysis" {
+    ami = "${lookup(var.base_ami, var.region)}"
+    instance_type = "t2.micro"
+    key_name = "${lookup(var.ssh_key_name, var.region)}"
+    count = 1
+    security_groups = [
+        "${aws_security_group.internet_to_any__ssh.name}",
+        "${aws_security_group.internet_to_snowflakes__http.name}",
+        "${aws_security_group.private_to_private__any.name}"
+    ]
+}
+
+resource "aws_instance" "symbolapi" {
+    ami = "${lookup(var.base_ami, var.region)}"
+    instance_type = "t2.micro"
+    key_name = "${lookup(var.ssh_key_name, var.region)}"
+    count = 1
+    security_groups = [
+        "${aws_security_group.internet_to_any__ssh.name}",
+        "${aws_security_group.internet_to_snowflakes__http.name}",
+        "${aws_security_group.private_to_private__any.name}"
     ]
 }
 
@@ -250,8 +287,9 @@ resource "aws_instance" "admin_host" {
     ami = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
+    count = 1
     security_groups = [
         "${aws_security_group.internet_to_any__ssh.name}",
-		"${aws_security_group.private_to_private__any.name}"
+        "${aws_security_group.private_to_private__any.name}"
     ]
 }
