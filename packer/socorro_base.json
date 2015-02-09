@@ -8,11 +8,11 @@
             "type": "amazon-ebs",
             "access_key": "{{user `aws_access_key`}}",
             "secret_key": "{{user `aws_secret_key`}}",
-            "region": "eu-west-1",
-            "source_ami": "ami-e4ff5c93",
+            "region": "us-west-2",
+            "source_ami": "ami-c7d092f7",
             "instance_type": "t2.micro",
             "ssh_username": "centos",
-            "ami_name": "centos7_test__{{timestamp}}"
+            "ami_name": "socorro_centos7__{{timestamp}}"
         }
     ],
     "provisioners": [
