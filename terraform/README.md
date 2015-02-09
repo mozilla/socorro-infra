@@ -16,6 +16,6 @@ process are still being worked on.
 ## Details
 
 Performing a `terraform apply` on this repo will result in a small amount of
-infrastructure being spun up in the `eu-west-1` AWS zone.  The AWS access and
+infrastructure being spun up in the `us-west-2` AWS zone.  The AWS access and
 secret keys need to be supplied either as environment variables, or via
 the `terraform.tfvars` file.
