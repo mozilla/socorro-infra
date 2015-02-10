@@ -1,10 +1,4 @@
-# Terraform
-
-[Terraform](https://www.terraform.io) is a tool for building and maintaining
-virtual infrastructure in a variety of environments.  We use it for managing
-various elements of Socorro's cloud-based deployment.
-
-## Socorro model
+# Socorro model
 
 The AMI used for spinning up new instances is built using Packer (also in this
 repo).  This AMI comes pre-installed with all of the bits and pieces required
