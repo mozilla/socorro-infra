@@ -12,7 +12,7 @@
             "source_ami": "ami-c7d092f7",
             "instance_type": "t2.micro",
             "ssh_username": "centos",
-            "ami_name": "socorro_centos7__{{timestamp}}"
+            "ami_name": "socorro_buildbox__{{timestamp}}"
         }
     ],
     "provisioners": [
@@ -28,7 +28,7 @@
                 "puppet/modules"
             ],
             "facter": {
-                "packer_profile": "base"
+                "packer_profile": "buildbox"
             }
         }
     ]
