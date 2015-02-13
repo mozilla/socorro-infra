@@ -6,7 +6,7 @@ provider "aws" {
 
 # This is potentially dangerous; may require review.
 resource "aws_security_group" "private_to_private__any" {
-    name = "private_to_private__any"
+    name = "${var.environment}__private_to_private__any"
     description = "Allow all private traffic."
     ingress {
         from_port = 0
@@ -32,10 +32,13 @@ resource "aws_security_group" "private_to_private__any" {
             "172.0.0.0/16"
         ]
     }
+    tags {
+        Environment = "${var.environment}"
+    }
 }
 
 resource "aws_security_group" "internet_to_any__ssh" {
-    name = "internet_to_any__ssh"
+    name = "${var.environment}__internet_to_any__ssh"
     description = "Allow (alt) SSH to any given node."
     ingress {
         from_port = "${var.alt_ssh_port}"
@@ -45,10 +48,13 @@ resource "aws_security_group" "internet_to_any__ssh" {
             "0.0.0.0/0"
         ]
     }
+    tags {
+        Environment = "${var.environment}"
+    }
 }
 
 resource "aws_security_group" "internet_to_elb__http" {
-    name = "internet_to_elb__http"
+    name = "${var.environment}__internet_to_elb__http"
     description = "Allow incoming traffic from Internet to HTTP(S) on ELBs."
     ingress {
         from_port = 80
@@ -66,11 +72,14 @@ resource "aws_security_group" "internet_to_elb__http" {
             "0.0.0.0/0"
         ]
     }
+    tags {
+        Environment = "${var.environment}"
+    }
 }
 
-resource "aws_security_group" "elb_to_webheads__http" {
-    name = "elb_to_webheads__http"
-    description = "Allow HTTP(S) from ELBs to webheads."
+resource "aws_security_group" "elb_to_webhead__http" {
+    name = "${var.environment}__elb_to_webhead__http"
+    description = "Allow HTTP(S) from ELBs to webhead."
     ingress {
         from_port = 80
         to_port = 80
@@ -87,10 +96,13 @@ resource "aws_security_group" "elb_to_webheads__http" {
             "${aws_security_group.internet_to_elb__http.id}"
         ]
     }
+    tags {
+        Environment = "${var.environment}"
+    }
 }
 
 resource "aws_security_group" "internet_to_snowflakes__http" {
-    name = "internet_to_snowflakes__http"
+    name = "${var.environment}__internet_to_snowflakes__http"
     description = "Allow HTTP access to some oddball nodes."
     ingress {
         from_port = 80
@@ -100,12 +112,15 @@ resource "aws_security_group" "internet_to_snowflakes__http" {
             "0.0.0.0/0"
         ]
     }
+    tags {
+        Environment = "${var.environment}"
+    }
 }
 
-resource "aws_elb" "elb_for_collectors" {
-    name = "elb-for-collectors"
+resource "aws_elb" "elb_for_collector" {
+    name = "${var.environment}--elb-for-collector"
     availability_zones = [
-        "${aws_instance.collectors.*.availability_zone}"
+        "${aws_instance.collector.*.availability_zone}"
     ]
     listener {
         instance_port = 80
@@ -121,19 +136,19 @@ resource "aws_elb" "elb_for_collectors" {
         lb_protocol = "https"
     }
     */
-    # Sit in front of the collectors.
+    # Sit in front of the collector.
     instances = [
-        "${aws_instance.collectors.*.id}"
+        "${aws_instance.collector.*.id}"
     ]
     security_groups = [
         "${aws_security_group.internet_to_elb__http.id}"
     ]
 }
 
-resource "aws_elb" "elb_for_webheads" {
-    name = "elb-for-webheads"
+resource "aws_elb" "elb_for_webhead" {
+    name = "${var.environment}--elb-for-webhead"
     availability_zones = [
-        "${aws_instance.webheads.*.availability_zone}"
+        "${aws_instance.webhead.*.availability_zone}"
     ]
     listener {
         instance_port = 80
@@ -149,22 +164,22 @@ resource "aws_elb" "elb_for_webheads" {
         lb_protocol = "https"
     }
     */
-    # Sit in front of the webheads.
+    # Sit in front of the webhead.
     instances = [
-        "${aws_instance.webheads.*.id}"
+        "${aws_instance.webhead.*.id}"
     ]
     security_groups = [
         "${aws_security_group.internet_to_elb__http.id}"
     ]
 }
 
-resource "aws_instance" "webheads" {
+resource "aws_instance" "webhead" {
     ami = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     count = 1
     security_groups = [
-        "${aws_security_group.elb_to_webheads__http.name}",
+        "${aws_security_group.elb_to_webhead__http.name}",
         "${aws_security_group.internet_to_any__ssh.name}",
         "${aws_security_group.private_to_private__any.name}"
     ]
@@ -179,15 +194,26 @@ resource "aws_instance" "webheads" {
             "sudo systemctl start httpd"
         ]
     }
+    block_device {
+        device_name = "/dev/sda1"
+        delete_on_termination = "${var.del_on_term}"
+        tags {
+            Name = "${var.environment}__symbolapi_${count.index}__sda1"
+        }
+    }
+    tags {
+        Name = "${var.environment}__webhead_${count.index}"
+        Environment = "${var.environment}"
+    }
 }
 
-resource "aws_instance" "collectors" {
+resource "aws_instance" "collector" {
     ami = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     count = 1
     security_groups = [
-        "${aws_security_group.elb_to_webheads__http.name}",
+        "${aws_security_group.elb_to_webhead__http.name}",
         "${aws_security_group.internet_to_any__ssh.name}",
         "${aws_security_group.private_to_private__any.name}"
     ]
@@ -202,9 +228,20 @@ resource "aws_instance" "collectors" {
             "sudo systemctl start httpd"
         ]
     }
+    block_device {
+        device_name = "/dev/sda1"
+        delete_on_termination = "${var.del_on_term}"
+        tags {
+            Name = "${var.environment}__symbolapi_${count.index}__sda1"
+        }
+    }
+    tags {
+        Name = "${var.environment}__collector_${count.index}"
+        Environment = "${var.environment}"
+    }
 }
 
-resource "aws_instance" "processors" {
+resource "aws_instance" "processor" {
     ami = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
@@ -213,6 +250,17 @@ resource "aws_instance" "processors" {
         "${aws_security_group.internet_to_any__ssh.name}",
         "${aws_security_group.private_to_private__any.name}"
     ]
+    block_device {
+        device_name = "/dev/sda1"
+        delete_on_termination = "${var.del_on_term}"
+        tags {
+            Name = "${var.environment}__symbolapi_${count.index}__sda1"
+        }
+    }
+    tags {
+        Name = "${var.environment}__processor_${count.index}"
+        Environment = "${var.environment}"
+    }
 }
 
 resource "aws_instance" "middleware" {
@@ -224,6 +272,17 @@ resource "aws_instance" "middleware" {
         "${aws_security_group.internet_to_any__ssh.name}",
         "${aws_security_group.private_to_private__any.name}"
     ]
+    block_device {
+        device_name = "/dev/sda1"
+        delete_on_termination = "${var.del_on_term}"
+        tags {
+            Name = "${var.environment}__symbolapi_${count.index}__sda1"
+        }
+    }
+    tags {
+        Name = "${var.environment}__middleware_${count.index}"
+        Environment = "${var.environment}"
+    }
 }
 
 resource "aws_instance" "rabbitmq" {
@@ -235,6 +294,17 @@ resource "aws_instance" "rabbitmq" {
         "${aws_security_group.internet_to_any__ssh.name}",
         "${aws_security_group.private_to_private__any.name}"
     ]
+    block_device {
+        device_name = "/dev/sda1"
+        delete_on_termination = "${var.del_on_term}"
+        tags {
+            Name = "${var.environment}__symbolapi_${count.index}__sda1"
+        }
+    }
+    tags {
+        Name = "${var.environment}__rabbitmq_${count.index}"
+        Environment = "${var.environment}"
+    }
 }
 
 resource "aws_instance" "elasticsearch" {
@@ -246,6 +316,17 @@ resource "aws_instance" "elasticsearch" {
         "${aws_security_group.internet_to_any__ssh.name}",
         "${aws_security_group.private_to_private__any.name}"
     ]
+    block_device {
+        device_name = "/dev/sda1"
+        delete_on_termination = "${var.del_on_term}"
+        tags {
+            Name = "${var.environment}__symbolapi_${count.index}__sda1"
+        }
+    }
+    tags {
+        Name = "${var.environment}__elasticsearch_${count.index}"
+        Environment = "${var.environment}"
+    }
 }
 
 resource "aws_instance" "postgres" {
@@ -257,6 +338,17 @@ resource "aws_instance" "postgres" {
         "${aws_security_group.internet_to_any__ssh.name}",
         "${aws_security_group.private_to_private__any.name}"
     ]
+    block_device {
+        device_name = "/dev/sda1"
+        delete_on_termination = "${var.del_on_term}"
+        tags {
+            Name = "${var.environment}__symbolapi_${count.index}__sda1"
+        }
+    }
+    tags {
+        Name = "${var.environment}__postgres_${count.index}"
+        Environment = "${var.environment}"
+    }
 }
 
 resource "aws_instance" "crash-analysis" {
@@ -269,6 +361,17 @@ resource "aws_instance" "crash-analysis" {
         "${aws_security_group.internet_to_snowflakes__http.name}",
         "${aws_security_group.private_to_private__any.name}"
     ]
+    block_device {
+        device_name = "/dev/sda1"
+        delete_on_termination = "${var.del_on_term}"
+        tags {
+            Name = "${var.environment}__symbolapi_${count.index}__sda1"
+        }
+    }
+    tags {
+        Name = "${var.environment}__crash-analysis_${count.index}"
+        Environment = "${var.environment}"
+    }
 }
 
 resource "aws_instance" "symbolapi" {
@@ -281,9 +384,20 @@ resource "aws_instance" "symbolapi" {
         "${aws_security_group.internet_to_snowflakes__http.name}",
         "${aws_security_group.private_to_private__any.name}"
     ]
+    block_device {
+        device_name = "/dev/sda1"
+        delete_on_termination = "${var.del_on_term}"
+        tags {
+            Name = "${var.environment}__symbolapi_${count.index}__sda1"
+        }
+    }
+    tags {
+        Name = "${var.environment}__symbolapi_${count.index}"
+        Environment = "${var.environment}"
+    }
 }
 
-resource "aws_instance" "admin_host" {
+resource "aws_instance" "admin" {
     ami = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
@@ -292,4 +406,15 @@ resource "aws_instance" "admin_host" {
         "${aws_security_group.internet_to_any__ssh.name}",
         "${aws_security_group.private_to_private__any.name}"
     ]
+    block_device {
+        device_name = "/dev/sda1"
+        delete_on_termination = "${var.del_on_term}"
+        tags {
+            Name = "${var.environment}__symbolapi_${count.index}__sda1"
+        }
+    }
+    tags {
+        Name = "${var.environment}__admin_${count.index}"
+        Environment = "${var.environment}"
+    }
 }
