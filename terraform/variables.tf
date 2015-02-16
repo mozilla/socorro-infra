@@ -1,3 +1,4 @@
+variable "environment" {}
 variable "access_key" {}
 variable "secret_key" {}
 variable "ssh_key_file" {
@@ -23,4 +24,7 @@ variable "base_ami" {
 }
 variable "alt_ssh_port" {
     default = 22123
+}
+variable "del_on_term" {
+    default = "false"
 }

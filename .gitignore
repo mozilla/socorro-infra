@@ -1,5 +1,6 @@
 credentials.json
 terraform.tfvars
+terraform.tfstate*
 *.pem
 *.swp
 *.plan
