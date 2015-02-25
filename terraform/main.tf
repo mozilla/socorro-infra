@@ -376,7 +376,7 @@ resource "aws_instance" "crash-analysis" {
 
 resource "aws_instance" "symbolapi" {
     ami = "${lookup(var.base_ami, var.region)}"
-    instance_type = "t2.micro"
+    instance_type = "c4.xlarge"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     count = 1
     security_groups = [
