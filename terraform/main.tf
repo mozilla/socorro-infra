@@ -173,6 +173,26 @@ resource "aws_elb" "elb_for_webhead" {
     ]
 }
 
+resource "aws_elb" "elb_for_symbolapi" {
+    name = "${var.environment}--elb-for-symbolapi"
+    availability_zones = [
+        "${aws_instance.symbolapi.*.availability_zone}"
+    ]
+    listener {
+        instance_port = 80
+        instance_protocol = "http"
+        lb_port = 80
+        lb_protocol = "http"
+    }
+    # Sit in front of the symbolapi.
+    instances = [
+        "${aws_instance.symbolapi.*.id}"
+    ]
+    security_groups = [
+        "${aws_security_group.internet_to_elb__http.id}"
+    ]
+}
+
 resource "aws_instance" "webhead" {
     ami = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
@@ -376,10 +396,11 @@ resource "aws_instance" "crash-analysis" {
 
 resource "aws_instance" "symbolapi" {
     ami = "${lookup(var.base_ami, var.region)}"
-    instance_type = "t2.micro"
+    instance_type = "c4.xlarge"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     count = 1
     security_groups = [
+        "${aws_security_group.elb_to_webhead__http.name}",
         "${aws_security_group.internet_to_any__ssh.name}",
         "${aws_security_group.internet_to_snowflakes__http.name}",
         "${aws_security_group.private_to_private__any.name}"
