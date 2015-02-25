@@ -30,6 +30,6 @@ terraform apply foo.plan
 
 ## Branches
 
-The ```master``` branch contains production-ready configs, changes that are
+The ```master``` branch contains production-ready configs; changes that are
 ready for testing but not for prime-time should go to the ```stage``` branch
 instead.
