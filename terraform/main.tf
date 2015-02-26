@@ -53,6 +53,30 @@ resource "aws_security_group" "internet_to_any__ssh" {
     }
 }
 
+resource "aws_security_group" "internet_to_elb__http" {
+    name = "${var.environment}__internet_to_elb__http"
+    description = "Allow incoming traffic from Internet to HTTP(S) on ELBs."
+    ingress {
+        from_port = 80
+        to_port = 80
+        protocol = "tcp"
+        cidr_blocks = [
+            "0.0.0.0/0"
+        ]
+    }
+    ingress {
+        from_port = 443
+        to_port = 443
+        protocol = "tcp"
+        cidr_blocks = [
+            "0.0.0.0/0"
+        ]
+    }
+    tags {
+        Environment = "${var.environment}"
+    }
+}
+
 resource "aws_security_group" "internet_to_snowflakes__http" {
     name = "${var.environment}__internet_to_snowflakes__http"
     description = "Allow HTTP access to some oddball nodes."
