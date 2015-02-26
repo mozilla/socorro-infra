@@ -27,3 +27,8 @@ keys in `terraform.tfvars` and specifying the rest at runtime:
 terraform plan -var 'environment=foo' -var 'del_on_term=true' -out=foo.plan
 terraform apply foo.plan
 ```
+
+## Making changes live in staging and production
+
+Anything landed on master will go to staging and be considered eligible for
+pushing to production. Tags will be pushed to production.
