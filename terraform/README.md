@@ -27,3 +27,9 @@ keys in `terraform.tfvars` and specifying the rest at runtime:
 terraform plan -var 'environment=foo' -var 'del_on_term=true' -out=foo.plan
 terraform apply foo.plan
 ```
+
+## Branches
+
+The ```master``` branch contains production-ready configs; changes that are
+ready for testing but not for prime-time should go to the ```stage``` branch
+instead.
