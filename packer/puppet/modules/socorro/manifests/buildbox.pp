@@ -6,6 +6,7 @@ class socorro::buildbox {
 
   package {
     [
+      'createrepo',
       'gcc-c++',
       'git',
       'java-1.7.0-openjdk',
@@ -17,6 +18,7 @@ class socorro::buildbox {
       'mock',
       'openldap-devel',
       'python-devel',
+      'python-pip',
       'rpm-build',
       'rpmdevtools',
       'rsync',
@@ -28,4 +30,22 @@ class socorro::buildbox {
     ensure  => latest,
     require => Package['epel-release']
   }
+
+  # RHEL-alike and pip provider relationship status: It's Complicated
+  # Workaround is to have a symlink called "pip-python" because reasons.
+  # https://github.com/evenup/evenup-curator/issues/24 for example.
+  file {
+    '/usr/bin/pip-python':
+      ensure  => link,
+      target  => '/usr/bin/pip',
+      require => Package['python-pip']
+  }
+
+  package {
+    'awscli':
+      ensure   => latest,
+      provider => 'pip',
+      require  => File['/usr/bin/pip-python']
+  }
+
 }
