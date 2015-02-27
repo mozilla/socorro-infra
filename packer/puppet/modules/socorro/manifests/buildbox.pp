@@ -20,6 +20,7 @@ class socorro::buildbox {
       'python-devel',
       'python-pip',
       'rpm-build',
+      'rpm-sign',
       'rpmdevtools',
       'rsync',
       'ruby-devel',
