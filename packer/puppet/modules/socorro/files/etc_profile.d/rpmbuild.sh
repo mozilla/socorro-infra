@@ -1,0 +1,1 @@
+alias rpmbuild="rpmbuild --sign"

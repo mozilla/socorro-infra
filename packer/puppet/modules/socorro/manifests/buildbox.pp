@@ -20,6 +20,7 @@ class socorro::buildbox {
       'python-devel',
       'python-pip',
       'rpm-build',
+      'rpm-sign',
       'rpmdevtools',
       'rsync',
       'ruby-devel',
@@ -47,5 +48,14 @@ class socorro::buildbox {
       provider => 'pip',
       require  => File['/usr/bin/pip-python']
   }
+
+  file {
+    '/etc/profile.d/rpmbuild.sh':
+      ensure => file,
+      source => 'puppet:///modules/socorro/etc_profile.d/rpmbuild.sh',
+      owner  => 'root',
+      group  => 'root'
+  }
+
 
 }
