@@ -49,4 +49,13 @@ class socorro::buildbox {
       require  => File['/usr/bin/pip-python']
   }
 
+  file {
+    '/etc/profile.d/rpmbuild.sh':
+      ensure => file,
+      source => 'puppet:///modules/socorro/etc_profile.d/rpmbuild.sh',
+      owner  => 'root',
+      group  => 'root'
+  }
+
+
 }
