@@ -14,14 +14,19 @@ class socorro {
   }
 
   package {
+    'socorro-public-repo':
+      ensure   => present,
+      source   => 'https://s3-us-west-2.amazonaws.com/org.mozilla.crash-stats.packages-public/el/7/noarch/socorro-public-repo-1-1.el7.centos.noarch.rpm',
+      provider => 'rpm'
+  }
+
+  package {
     [
       'epel-release',
       'yum-plugin-fastestmirror'
     ]:
     ensure  => latest,
-    require => [
-      Package['ca-certificates']
-    ]
+    require => Package['ca-certificates']
   }
 
   file {
