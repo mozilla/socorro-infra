@@ -26,7 +26,8 @@ class socorro::buildbox {
       'ruby-devel',
       'subversion',
       'time',
-      'unzip'
+      'unzip',
+      'vim'
     ]:
     ensure  => latest,
     require => Package['epel-release']
