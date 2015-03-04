@@ -98,11 +98,4 @@ resource "aws_autoscaling_group" "asg_for_symbolapi" {
     load_balancers = [
         "${var.environment}--elb-for-symbolapi"
     ]
-    block_device {
-        device_name = "/dev/sda1"
-        delete_on_termination = "${var.del_on_term}"
-        tags {
-            Name = "${var.environment}__symbolapi_${count.index}__sda1"
-        }
-    }
 }
