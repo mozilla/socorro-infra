@@ -23,9 +23,9 @@
         },
         {
             "type": "puppet-masterless",
-            "manifest_file": "puppet/manifests/default.pp",
+            "manifest_file": "../puppet/manifests/default.pp",
             "module_paths": [
-                "puppet/modules"
+                "../puppet/modules"
             ],
             "facter": {
                 "packer_profile": "base"
