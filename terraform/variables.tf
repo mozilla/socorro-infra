@@ -22,6 +22,6 @@ variable "base_ami" {
 variable "alt_ssh_port" {
     default = 22123
 }
-variable "del_on_term" {
-    default = "false"
+variable "infra_repo" {
+    default = "https://github.com/mozilla/socorro-infra.git"
 }
