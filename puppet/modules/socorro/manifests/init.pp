@@ -23,6 +23,7 @@ class socorro {
   package {
     [
       'epel-release',
+      'git',
       'yum-plugin-fastestmirror'
     ]:
     ensure  => latest,

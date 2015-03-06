@@ -4,11 +4,14 @@ Exec {
 
 node default {
   case $::packer_profile {
-    'base': { include socorro::base }
-    'buildbox': { include socorro::buildbox }
-    default: {
-      err("'${::packer_profile}' is not a valid Packer profile label.")
-      fail('Invalid packer_profile.')
-    }
+    'base': { include socorro::packer::base }
+    'buildbox': { include socorro::packer::buildbox }
+    default: {}
+  }
+
+  case $::socorro_role {
+    'consul': { include socorro::role::consul }
+    'symbolapi': { include socorro::role::symbolapi }
+    default: {}
   }
 }
