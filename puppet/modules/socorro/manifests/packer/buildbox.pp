@@ -1,23 +1,24 @@
 # Box used for building Socorro components.
 class socorro::packer::buildbox {
 
-  # Don't forget to include the common components!
-  include socorro
+  # The base class has much of what we need for testing.
+  include socorro::packer::base
 
   package {
     [
       'createrepo',
       'gcc-c++',
-      'java-1.7.0-openjdk',
       'java-1.7.0-openjdk-devel',
       'libcurl-devel',
       'libxml2-devel',
       'libxslt-devel',
+      'nodejs-less',
       'make',
       'mock',
       'openldap-devel',
       'python-devel',
       'python-pip',
+      'python-virtualenv',
       'rpm-build',
       'rpm-sign',
       'rpmdevtools',
@@ -25,11 +26,10 @@ class socorro::packer::buildbox {
       'ruby-devel',
       'subversion',
       'time',
-      'unzip',
-      'vim'
+      'vim-enhanced'
     ]:
     ensure  => latest,
-    require => Package['epel-release']
+    require => Package['epel-release', 'yum-plugin-fastestmirror']
   }
 
   # RHEL-alike and pip provider relationship status: It's Complicated
@@ -56,6 +56,5 @@ class socorro::packer::buildbox {
       owner  => 'root',
       group  => 'root'
   }
-
 
 }

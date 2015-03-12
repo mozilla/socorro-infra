@@ -12,10 +12,7 @@ class socorro::packer::base {
     'postgresql-9.3':
       ensure  => stopped,
       enable  => false,
-      require => [
-        Package['postgresql93-server'],
-        File['pg_hba.conf'],
-      ];
+      require => Package['postgresql93-server'];
 
     'elasticsearch':
       ensure  => stopped,
@@ -81,15 +78,6 @@ class socorro::packer::base {
   file {
     '/etc/socorro':
       ensure => directory;
-
-    'pg_hba.conf':
-      ensure  => file,
-      path    => '/var/lib/pgsql/9.3/data/pg_hba.conf',
-      source  => 'puppet:///modules/socorro/var_lib_pgsql_9.3_data/pg_hba.conf',
-      owner   => 'postgres',
-      group   => 'postgres',
-      require => Package['postgresql93-server'],
-      notify  => Service['postgresql-9.3'];
 
     'pgsql.sh':
       ensure => file,

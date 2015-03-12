@@ -11,6 +11,7 @@ node default {
 
   case $::socorro_role {
     'consul': { include socorro::role::consul }
+    'buildbox': { include socorro::role::buildbox }
     'symbolapi': { include socorro::role::symbolapi }
     default: {}
   }
