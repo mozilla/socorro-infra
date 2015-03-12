@@ -26,10 +26,19 @@ class socorro::packer::buildbox {
       'ruby-devel',
       'subversion',
       'time',
-      'vim-enhanced'
+      'vim-enhanced',
+      'wget'
     ]:
     ensure  => latest,
     require => Package['epel-release', 'yum-plugin-fastestmirror']
+  }
+
+  file {
+    '/etc/profile.d/rpmbuild.sh':
+      ensure => file,
+      source => 'puppet:///modules/socorro/etc_profile.d/rpmbuild.sh',
+      owner  => 'root',
+      group  => 'root'
   }
 
   # RHEL-alike and pip provider relationship status: It's Complicated
@@ -49,12 +58,10 @@ class socorro::packer::buildbox {
       require  => File['/usr/bin/pip-python']
   }
 
-  file {
-    '/etc/profile.d/rpmbuild.sh':
-      ensure => file,
-      source => 'puppet:///modules/socorro/etc_profile.d/rpmbuild.sh',
-      owner  => 'root',
-      group  => 'root'
+  package {
+    'fpm':
+      ensure   => latest,
+      provider => 'gem'
   }
 
 }
