@@ -25,3 +25,7 @@ variable "alt_ssh_port" {
 variable "puppet_archive" {
     default = "https://s3-us-west-2.amazonaws.com/org.mozilla.crash-stats.packages-public/prov_cache/socorro-infra__puppet.tar.gz"
 }
+# NOTE - this deletes EBS devices, only change it for testing purposes!
+variable "del_on_term" {
+    default = "false"
+}
