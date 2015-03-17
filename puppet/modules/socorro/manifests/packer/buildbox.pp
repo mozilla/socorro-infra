@@ -61,7 +61,8 @@ class socorro::packer::buildbox {
   package {
     'fpm':
       ensure   => latest,
-      provider => 'gem'
+      provider => 'gem',
+      require  => Package['ruby-devel']
   }
 
 }
