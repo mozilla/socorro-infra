@@ -8,6 +8,7 @@ class socorro::packer::buildbox {
     [
       'createrepo',
       'gcc-c++',
+      'golang',
       'java-1.7.0-openjdk-devel',
       'libcurl-devel',
       'libxml2-devel',
@@ -15,6 +16,7 @@ class socorro::packer::buildbox {
       'nodejs-less',
       'make',
       'mock',
+      'mercurial',
       'openldap-devel',
       'python-devel',
       'python-pip',
