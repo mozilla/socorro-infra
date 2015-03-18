@@ -30,6 +30,15 @@ class socorro {
     require => Package['ca-certificates']
   }
 
+  package {
+    'hiera-s3':
+      require => Package[
+        'socorro-public-repo',
+        'epel-release',
+        'yum-plugin-fastestmirror'
+      ]
+  }
+
   file {
     'selinux_config':
       ensure => file,
