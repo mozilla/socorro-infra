@@ -4,10 +4,10 @@ class socorro::packer::base {
   include socorro
 
   service {
-    'httpd':
+    'nginx':
       ensure  => stopped,
       enable  => false,
-      require => Package['httpd'];
+      require => Package['nginx'];
 
     'postgresql-9.3':
       ensure  => stopped,
@@ -41,7 +41,7 @@ class socorro::packer::base {
 
   package {
     [
-      'httpd',
+      'nginx',
       'java-1.7.0-openjdk',
       'mod_wsgi',
       'rabbitmq-server',
