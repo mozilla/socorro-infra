@@ -2,10 +2,10 @@
 class socorro::role::webapp {
 
   service {
-    'httpd':
+    'nginx':
       ensure  => running,
       enable  => true,
-      require => Package['httpd'];
+      require => Package['nginx'];
 
     'socorro-webapp':
       ensure  => running,

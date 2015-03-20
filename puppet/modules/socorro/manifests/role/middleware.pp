@@ -2,10 +2,10 @@
 class socorro::role::middleware {
 
   service {
-    'httpd':
+    'nginx':
       ensure  => running,
       enable  => true,
-      require => Package['httpd'];
+      require => Package['nginx'];
 
     'socorro-middleware':
       ensure  => running,
