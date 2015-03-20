@@ -31,12 +31,16 @@ class socorro {
   }
 
   package {
-    'hiera-s3':
-      require => Package[
-        'socorro-public-repo',
-        'epel-release',
-        'yum-plugin-fastestmirror'
-      ]
+    [
+      'hiera-consul',
+      'hiera-s3'
+    ]:
+    ensure  => latest,
+    require => Package[
+      'socorro-public-repo',
+      'epel-release',
+      'yum-plugin-fastestmirror'
+    ]
   }
 
   file {

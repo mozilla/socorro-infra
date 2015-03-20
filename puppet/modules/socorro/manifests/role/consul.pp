@@ -9,8 +9,11 @@ class socorro::role::consul {
   }
 
   package {
-    'consul':
-      ensure => latest
+    [
+      'bind-utils',
+      'consul'
+    ]:
+    ensure => latest
   }
 
   file {
