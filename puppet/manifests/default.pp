@@ -13,6 +13,14 @@ node default {
     'consul': { include socorro::role::consul }
     'buildbox': { include socorro::role::buildbox }
     'symbolapi': { include socorro::role::symbolapi }
+    'admin': { include socorro::role::admin }
+    'collector': { include socorro::role::collector }
+    'elasticsearch': { include socorro::role::elasticsearch }
+    'middleware': { include socorro::role::middleware }
+    'postgres': { include socorro::role::postgres }
+    'processor': { include socorro::role::processor }
+    'rabbitmq': { include socorro::role::rabbitmq }
+    'webapp': { include socorro::role::webapp }
     default: {}
   }
 }

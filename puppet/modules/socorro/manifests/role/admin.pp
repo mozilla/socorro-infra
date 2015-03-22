@@ -6,4 +6,12 @@ class socorro::role::admin {
       ensure=> latest
   }
 
+  file {
+    '/etc/cron.d/socorro':
+      mode   => '0600',
+      owner  => root,
+      group  => root,
+      source => 'puppet:///modules/socorro/etc_cron.d/socorro'
+  }
+
 }

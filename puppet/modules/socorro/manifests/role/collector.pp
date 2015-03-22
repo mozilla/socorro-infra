@@ -15,7 +15,10 @@ class socorro::role::collector {
 
   package {
     'socorro':
-      ensure=> latest
+      ensure=> latest;
+
+    'nginx':
+      ensure=> latest;
   }
 
 }
