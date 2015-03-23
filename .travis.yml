@@ -7,7 +7,7 @@ before_install:
 install: false
 
 script:
-  - puppet-lint --with-filename --no-80chars-check --no-autoloader_layout-check puppet/
+  - puppet-lint --with-filename --no-80chars-check --no-autoloader_layout-check --fail-on-warnings puppet/
   - puppet parser validate `find puppet/ -name '*.pp'`
   - pushd terraform; ./terraform plan -var="environment=blah" -var="secret_key=FAKE" -var="access_key=FAKE"; popd
-  - pushd terraform/consul; ./terraform plan -var="environment=blah" -var="secret_key=FAKE" -var="access_key=FAKE"; popd
+  - pushd terraform/consul; ../terraform plan -var="environment=blah" -var="secret_key=FAKE" -var="access_key=FAKE"; popd

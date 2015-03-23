@@ -10,7 +10,10 @@ class socorro::role::processor {
 
   package {
     'socorro':
-      ensure=> latest
+      ensure=> latest;
+
+    'nginx':
+      ensure=> latest;
   }
 
 }

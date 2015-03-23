@@ -15,7 +15,10 @@ class socorro::role::webapp {
 
   package {
     'socorro':
-      ensure=> latest
+      ensure=> latest;
+
+    'nginx':
+      ensure=> latest;
   }
 
 }
