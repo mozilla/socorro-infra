@@ -82,7 +82,15 @@ class socorro {
       owner   => 'root',
       group   => 'root',
       mode    => '0644',
-      require => Package['consul']
+      require => Package['consul'];
+
+    # Puppet is already running when this lands, thus it is not available now.
+    # It is available on any subsequent run, such as during role provision.
+    '/etc/puppet/hiera.yaml':
+      source => 'puppet:///modules/socorro/etc_puppet/hiera.yaml',
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0644'
   }
 
 }

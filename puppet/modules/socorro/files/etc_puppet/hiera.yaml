@@ -1,0 +1,14 @@
+---
+:backends:
+    - consul
+    - S3
+
+:consul:
+    :host: 127.0.0.1
+    :port: 8500
+    :paths:
+        - /v1/kv/hiera
+
+:s3:
+    :bucket: '@@@SECRET_BUCKET@@@'
+    :prefix: 'hiera/'
