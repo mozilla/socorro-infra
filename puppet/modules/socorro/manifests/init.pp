@@ -2,6 +2,14 @@
 class socorro {
 
   service {
+    'consul':
+      ensure  => running,
+      enabled => true,
+      require => File[
+        '/etc/consul/common.json',
+        '/etc/sysconfig/consul'
+      ];
+
     'sshd':
       ensure  => running,
       enable  => true,
@@ -32,6 +40,8 @@ class socorro {
 
   package {
     [
+      'consul',
+      'envconsul',
       'hiera-consul',
       'hiera-s3'
     ]:
@@ -45,7 +55,6 @@ class socorro {
 
   file {
     'selinux_config':
-      ensure => file,
       path   => '/etc/selinux/config',
       source => 'puppet:///modules/socorro/etc_selinux/config',
       owner  => 'root',
@@ -53,12 +62,27 @@ class socorro {
       mode   => '0644';
 
     'sshd_config':
-      ensure => file,
       path   => '/etc/ssh/sshd_config',
       source => 'puppet:///modules/socorro/etc_ssh/sshd_config',
       owner  => 'root',
       group  => 'root',
       mode   => '0644'
+  }
+
+  file {
+    '/etc/consul/common.json':
+      source  => 'puppet:///modules/socorro/etc_consul/common.json',
+      owner   => 'root',
+      group   => 'consul',
+      mode    => '0640',
+      require => Package['consul'];
+
+    '/etc/sysconfig/consul':
+      source  => 'puppet:///modules/socorro/etc_sysconfig/consul',
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0644',
+      require => Package['consul']
   }
 
 }
