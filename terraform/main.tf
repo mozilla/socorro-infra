@@ -105,7 +105,7 @@ resource "aws_elb" "elb_for_symbolapi" {
 
 resource "aws_launch_configuration" "lc_for_symbolapi_asg" {
     name = "${var.environment}__lc_for_symbolapi_asg"
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} symbolapi"
+    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} symbolapi ${var.secret_bucket}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "c4.xlarge"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
@@ -171,7 +171,7 @@ resource "aws_elb" "elb_for_collectors" {
 
 resource "aws_launch_configuration" "lc_for_collectors_asg" {
     name = "${var.environment}__lc_for_collectors_asg"
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} collector"
+    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} collector ${var.secret_bucket}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
@@ -237,7 +237,7 @@ resource "aws_elb" "elb_for_webapp" {
 
 resource "aws_launch_configuration" "lc_for_webapp_asg" {
     name = "${var.environment}__lc_for_webapp_asg"
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} webapp"
+    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} webapp ${var.secret_bucket}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
@@ -303,7 +303,7 @@ resource "aws_elb" "elb_for_middleware" {
 
 resource "aws_launch_configuration" "lc_for_middleware_asg" {
     name = "${var.environment}__lc_for_middleware_asg"
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} middleware"
+    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} middleware ${var.secret_bucket}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
@@ -336,7 +336,7 @@ resource "aws_autoscaling_group" "asg_for_middleware" {
 # processors
 resource "aws_launch_configuration" "lc_for_processors_asg" {
     name = "${var.environment}__lc_for_processors_asg"
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} processor"
+    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} processor ${var.secret_bucket}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
@@ -365,7 +365,7 @@ resource "aws_autoscaling_group" "asg_for_processors" {
 # admin (crontabber)
 resource "aws_launch_configuration" "lc_for_admin_asg" {
     name = "${var.environment}__lc_for_admin_asg"
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} admin"
+    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} admin ${var.secret_bucket}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
@@ -427,7 +427,7 @@ resource "aws_elb" "elb_for_rabbitmq" {
 
 resource "aws_launch_configuration" "lc_for_rabbitmq_asg" {
     name = "${var.environment}__lc_for_rabbitmq_asg"
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} rabbitmq"
+    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} rabbitmq ${var.secret_bucket}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
@@ -472,7 +472,7 @@ resource "aws_instance" "postgres" {
         device_name = "/dev/sda1"
         delete_on_termination = "${var.del_on_term}"
     }
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} postgres"
+    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} postgres ${var.secret_bucket}"
     tags {
         Name = "${var.environment}__postgres_${count.index}"
         Environment = "${var.environment}"
@@ -489,7 +489,7 @@ resource "aws_instance" "elasticsearch" {
         "${aws_security_group.internet_to_any__ssh.name}",
         "${aws_security_group.private_to_private__any.name}"
     ]
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} elasticsearch"
+    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} elasticsearch ${var.secret_bucket}"
     tags {
         Name = "${var.environment}__elasticsearch_${count.index}"
         Environment = "${var.environment}"
@@ -549,7 +549,7 @@ resource "aws_elb" "elb_for_buildbox" {
 
 resource "aws_launch_configuration" "lc_for_buildbox_asg" {
     name = "${var.environment}__lc_for_buildbox_asg"
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} buildbox"
+    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} buildbox ${var.secret_bucket}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"

@@ -1,6 +1,7 @@
 variable "environment" {}
 variable "access_key" {}
 variable "secret_key" {}
+variable "secret_bucket" {}
 variable "ssh_key_file" {
     default = {
         us-west-2 = "socorro__us-west-2.pem"
