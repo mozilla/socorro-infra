@@ -17,7 +17,7 @@ variable "ssh_key_name" {
 }
 variable "base_ami" {
     default = {
-        us-west-2 = "ami-95a885a5"
+        us-west-2 = "ami-2fbc931f"
     }
 }
 variable "alt_ssh_port" {
