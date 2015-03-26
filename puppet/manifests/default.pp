@@ -16,7 +16,6 @@ node default {
     'admin': { include socorro::role::admin }
     'collector': { include socorro::role::collector }
     'elasticsearch': { include socorro::role::elasticsearch }
-    'middleware': { include socorro::role::middleware }
     'postgres': { include socorro::role::postgres }
     'processor': { include socorro::role::processor }
     'rabbitmq': { include socorro::role::rabbitmq }

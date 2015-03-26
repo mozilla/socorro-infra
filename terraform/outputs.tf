@@ -7,6 +7,3 @@ output "public_addr__collectors__http" {
 output "public_addr__webapp__http" {
     value = "${aws_elb.elb_for_webapp.dns_name}"
 }
-output "public_addr__middleware__http" {
-    value = "${aws_elb.elb_for_middleware.dns_name}"
-}
