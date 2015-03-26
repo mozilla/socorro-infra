@@ -5,10 +5,7 @@ class socorro::role::consul {
     'consul':
       ensure    => running,
       enable    => true,
-      subscribe => File[
-        '/etc/consul/config.json',
-        '/etc/consul/ui.json'
-      ]
+      subscribe => File['/etc/consul/server.json'];
   }
 
   package {
@@ -21,17 +18,11 @@ class socorro::role::consul {
 
   file {
     '/etc/consul/server.json':
-      source => 'puppet:///modules/socorro/etc_consul/server.json',
-      owner  => 'root',
-      group  => 'consul',
-      mode   => '0640';
-
-    '/etc/consul/ui.json':
-      source  => 'puppet:///modules/socorro/etc_consul/ui.json',
+      source  => 'puppet:///modules/socorro/etc_consul/server.json',
       owner   => 'root',
       group   => 'consul',
       mode    => '0640',
-      require => Package['consul-ui']
+      require => Package['consul-ui'];
   }
 
 }
