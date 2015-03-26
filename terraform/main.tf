@@ -502,6 +502,7 @@ resource "aws_launch_configuration" "lc_for_buildbox_asg" {
         "${aws_security_group.internet_to_any__ssh.name}",
         "${aws_security_group.private_to_private__any.name}"
     ]
+    iam_instance_profile = "buildbox"
 }
 
 resource "aws_autoscaling_group" "asg_for_buildbox" {
