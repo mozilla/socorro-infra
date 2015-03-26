@@ -18,7 +18,7 @@ function socorro_role {
     # Provision the role.
     /usr/bin/env FACTER_socorro_role=$2 \
         puppet apply \
-        --modulepath=${DIR}/puppet/modules \
+        --modulepath=${DIR}/puppet/modules:/etc/puppet/modules \
         ${DIR}/puppet/manifests/default.pp
     popd
 }

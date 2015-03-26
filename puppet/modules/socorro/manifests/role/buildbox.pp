@@ -39,7 +39,7 @@ class socorro::role::buildbox {
   file {
     'deadci.ini':
       ensure  => file,
-      path    => '/var/lib/deadci.ini',
+      path    => '/var/lib/deadci/deadci.ini',
       content => template('socorro/var_lib_deadci/deadci.ini.erb'),
       owner   => 'deadci',
       group   => 'deadci',
