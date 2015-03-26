@@ -20,6 +20,11 @@ variable "base_ami" {
         us-west-2 = "ami-51604e61"
     }
 }
+variable "buildbox_ami" {
+    default = {
+        us-west-2 = "ami-99614fa9"
+    }
+}
 variable "alt_ssh_port" {
     default = 22123
 }
