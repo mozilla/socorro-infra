@@ -11,6 +11,11 @@ class socorro::role::collector {
       ensure  => running,
       enable  => true,
       require => Package['socorro'];
+
+    'socorro-crashmover':
+      ensure  => running,
+      enable  => true,
+      require => Package['socorro'];
   }
 
   package {
