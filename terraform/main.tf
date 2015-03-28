@@ -341,12 +341,9 @@ resource "aws_security_group" "elb_to_rabbitmq__http" {
     name = "${var.environment}__elb_to_rabbitmq__http"
     description = "Allow HTTP from ELBs to rabbitmq."
     ingress {
-        from_port = 80
-        to_port = 80
+        from_port = 5672
+        to_port = 5672
         protocol = "tcp"
-        security_groups = [
-            "${aws_security_group.internet_to_elb__http.id}"
-        ]
     }
     tags {
         Environment = "${var.environment}"
@@ -377,7 +374,6 @@ resource "aws_launch_configuration" "lc_for_rabbitmq_asg" {
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     security_groups = [
-        "${aws_security_group.elb_to_rabbitmq__http.name}",
         "${aws_security_group.internet_to_any__ssh.name}",
         "${aws_security_group.private_to_private__any.name}"
     ]
