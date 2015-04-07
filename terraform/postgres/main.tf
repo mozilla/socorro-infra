@@ -20,22 +20,6 @@ resource "aws_security_group" "private_to_postgres__postgres" {
     }
 }
 
-resource "aws_security_group" "private_to_postgres__icmp" {
-    name = "${var.environment}__private_to_postgres__icmp"
-    description = "Allow pings from within the VPC."
-    ingress {
-        from_port = "-1"
-        to_port = "-1"
-        protocol = "icmp"
-        cidr_blocks = [
-            "172.31.0.0/16"
-        ]
-    }
-    tags {
-        Environment = "${var.environment}"
-    }
-}
-
 resource "aws_security_group" "any_to_postgres__ssh" {
     name = "${var.environment}__any_to_postgres__ssh"
     description = "Allow (alt) SSH to the Postgres node."
@@ -59,10 +43,9 @@ resource "aws_instance" "postgres" {
     count = 1
     security_groups = [
         "${aws_security_group.private_to_postgres__postgres.name}",
-        "${aws_security_group.any_to_postgres__ssh.name}",
-        "${aws_security_group.private_to_postgres__icmp.name}"
+        "${aws_security_group.any_to_postgres__ssh.name}"
     ]
-    block_device {
+    ebs_block_device {
         device_name = "/dev/sda1"
         delete_on_termination = "${var.del_on_term}"
     }

@@ -2,12 +2,11 @@ sudo: no
 language: python
 before_install:
   - gem install puppet puppet-lint
-  - pushd terraform; wget 'https://dl.bintray.com/mitchellh/terraform/terraform_0.3.7_linux_amd64.zip'; unzip -u terraform_0.3.7_linux_amd64.zip; popd
+  - pushd terraform; wget 'https://dl.bintray.com/mitchellh/terraform/terraform_0.4.0_linux_amd64.zip'; unzip -u terraform_0.4.0_linux_amd64.zip; popd
 
 install: false
 
 script:
   - puppet-lint --with-filename --no-80chars-check --no-autoloader_layout-check --fail-on-warnings puppet/
   - puppet parser validate `find puppet/ -name '*.pp'`
-  - pushd terraform; ./terraform plan -var="environment=blah" -var="secret_key=FAKE" -var="access_key=FAKE"; popd
-  - pushd terraform/consul; ../terraform plan -var="environment=blah" -var="secret_key=FAKE" -var="access_key=FAKE"; popd
+  - find ./terraform -type d -maxdepth 1 | while read role; do pushd $role; ../terraform plan -var="environment=FAKE" -var="secret_key=FAKE" -var="access_key=FAKE" -var="subnets=FAKE" -var="secret_bucket=FAKE"; popd; done
