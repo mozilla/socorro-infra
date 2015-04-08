@@ -39,9 +39,9 @@ resource "aws_elb" "elb_for_rabbitmq" {
     subnets = ["${split(",", var.subnets)}"]
     listener {
         instance_port = 5672
-        instance_protocol = "http"
+        instance_protocol = "tcp"
         lb_port = 5672
-        lb_protocol = "http"
+        lb_protocol = "tcp"
     }
     security_groups = [
         "${aws_security_group.private_to_rabbitmq__rabbitmq.id}"
