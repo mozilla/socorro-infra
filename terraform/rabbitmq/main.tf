@@ -55,8 +55,8 @@ resource "aws_launch_configuration" "lc_for_rabbitmq_asg" {
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     security_groups = [
-        "${aws_security_group.private_to_rabbitmq__rabbitmq.name}",
-        "${aws_security_group.any_to_rabbitmq__ssh.name}"
+        "${aws_security_group.private_to_rabbitmq__rabbitmq.id}",
+        "${aws_security_group.any_to_rabbitmq__ssh.id}"
     ]
     iam_instance_profile = "generic"
     associate_public_ip_address = true
