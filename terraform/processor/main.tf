@@ -20,55 +20,6 @@ resource "aws_security_group" "any_to_processor__ssh" {
     }
 }
 
-resource "aws_security_group" "internet_to_processor_elb__http" {
-    name = "${var.environment}__internet_to_processor_elb__http"
-    description = "Allow incoming traffic from Internet to HTTP on ELBs."
-    ingress {
-        from_port = 80
-        to_port = 80
-        protocol = "tcp"
-        cidr_blocks = [
-            "0.0.0.0/0"
-        ]
-    }
-    tags {
-        Environment = "${var.environment}"
-    }
-}
-
-resource "aws_security_group" "elb_to_processor__http" {
-    name = "${var.environment}__elb_to_processor__http"
-    description = "Allow HTTP from ELBs to processor."
-    ingress {
-        from_port = 80
-        to_port = 80
-        protocol = "tcp"
-        security_groups = [
-            "${aws_security_group.internet_to_processor_elb__http.id}"
-        ]
-    }
-    tags {
-        Environment = "${var.environment}"
-    }
-}
-
-resource "aws_elb" "elb_for_processor" {
-    name = "${var.environment}--elb-for-processor"
-    availability_zones = [
-        "${var.region}a",
-        "${var.region}b"
-    ]
-    listener {
-        instance_port = 80
-        instance_protocol = "http"
-        lb_port = 80
-        lb_protocol = "http"
-    }
-    security_groups = [
-        "${aws_security_group.internet_to_processor_elb__http.id}"
-    ]
-}
-
 resource "aws_launch_configuration" "lc_for_processor_asg" {
     name = "${var.environment}__lc_for_processor_asg"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} processor ${var.secret_bucket}"
@@ -78,7 +29,6 @@ resource "aws_launch_configuration" "lc_for_processor_asg" {
     iam_instance_profile = "generic"
     associate_public_ip_address = true
     security_groups = [
-        "${aws_security_group.elb_to_processor__http.id}",
         "${aws_security_group.any_to_processor__ssh.id}"
     ]
 }
@@ -98,7 +48,4 @@ resource "aws_autoscaling_group" "asg_for_processor" {
     max_size = 1
     min_size = 1
     desired_capacity = 1
-    load_balancers = [
-        "${var.environment}--elb-for-processor"
-    ]
 }
