@@ -12,6 +12,7 @@ class socorro::role::admin {
       owner  => root,
       group  => root,
       source => 'puppet:///modules/socorro/etc_cron.d/socorro'
+      require => Package['socorro']
   }
 
 }

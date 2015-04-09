@@ -5,7 +5,7 @@ class socorro::role::rabbitmq {
     'rabbitmq-server':
       ensure  => running,
       enable  => true,
-      require => Package['socorro']
+      require => Package['rabbitmq-server']
   }
 
   package {
