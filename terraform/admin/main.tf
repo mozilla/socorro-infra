@@ -23,7 +23,7 @@ resource "aws_security_group" "any_to_admin__ssh" {
 # Admin (crontabber, etc)
 resource "aws_launch_configuration" "lc_for_admin_asg" {
     name = "${var.environment}__lc_for_admin_asg"
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} admin ${var.secret_bucket}"
+    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} admin ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"

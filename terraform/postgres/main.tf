@@ -49,7 +49,7 @@ resource "aws_instance" "postgres" {
         device_name = "/dev/sda1"
         delete_on_termination = "${var.del_on_term}"
     }
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} postgres ${var.secret_bucket}"
+    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} postgres ${var.secret_bucket} ${var.environment}"
     tags {
         Name = "${var.environment}__postgres_${count.index}"
         Environment = "${var.environment}"

@@ -72,7 +72,7 @@ resource "aws_elb" "elb_for_symbolapi" {
 
 resource "aws_launch_configuration" "lc_for_symbolapi_asg" {
     name = "${var.environment}__lc_for_symbolapi_asg"
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} symbolapi ${var.secret_bucket}"
+    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} symbolapi ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "c4.xlarge"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
