@@ -38,6 +38,8 @@ resource "aws_security_group" "any_to_elasticsearch__ssh" {
     }
     tags {
         Environment = "${var.environment}"
+        app = "elasticsearch"
+        project = "crashreporter"
     }
 }
 

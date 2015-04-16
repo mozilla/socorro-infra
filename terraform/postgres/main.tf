@@ -17,6 +17,8 @@ resource "aws_security_group" "private_to_postgres__postgres" {
     }
     tags {
         Environment = "${var.environment}"
+        app = "postgres"
+        project = "crashreporter"
     }
 }
 
@@ -33,6 +35,8 @@ resource "aws_security_group" "any_to_postgres__ssh" {
     }
     tags {
         Environment = "${var.environment}"
+        app = "postgres"
+        project = "crashreporter"
     }
 }
 
@@ -53,6 +57,8 @@ resource "aws_instance" "postgres" {
     tags {
         Name = "${var.environment}__postgres_${count.index}"
         Environment = "${var.environment}"
+        app = "postgres"
+        project = "crashreporter"
     }
     iam_instance_profile = "generic"
 }
