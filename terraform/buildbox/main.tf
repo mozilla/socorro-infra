@@ -17,6 +17,8 @@ resource "aws_security_group" "any_to_buildbox__ssh" {
     }
     tags {
         Environment = "${var.environment}"
+        app = "buildbox"
+        project = "crashreporter"
     }
 }
 
@@ -33,6 +35,8 @@ resource "aws_security_group" "internet_to_elb__deadci" {
     }
     tags {
         Environment = "${var.environment}"
+        app = "buildbox"
+        project = "crashreporter"
     }
 }
 
@@ -49,6 +53,8 @@ resource "aws_security_group" "elb_to_buildbox__deadci" {
     }
     tags {
         Environment = "${var.environment}"
+        app = "buildbox"
+        project = "crashreporter"
     }
 }
 
