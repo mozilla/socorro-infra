@@ -36,6 +36,22 @@ resource "aws_security_group" "internet_to_webapp_elb__http" {
     }
 }
 
+resource "aws_security_group" "internet_to_webapp_elb__https" {
+    name = "${var.environment}__internet_to_webapp_elb__https"
+    description = "Allow incoming traffic from Internet to HTTPS on ELBs."
+    ingress {
+        from_port = 443
+        to_port = 443
+        protocol = "tcp"
+        cidr_blocks = [
+            "0.0.0.0/0"
+        ]
+    }
+    tags {
+        Environment = "${var.environment}"
+    }
+}
+
 resource "aws_security_group" "elb_to_webapp__http" {
     name = "${var.environment}__elb_to_webapp__http"
     description = "Allow HTTP from ELBs to webapp."
@@ -65,7 +81,15 @@ resource "aws_elb" "elb_for_webapp" {
         lb_port = 80
         lb_protocol = "http"
     }
+    listener {
+        instance_port = 80
+        instance_protocol = "http"
+        lb_port = 443
+        lb_protocol = "https"
+        ssl_certificate_id = "${var.webapp_cert}"
+    }
     security_groups = [
+        "${aws_security_group.internet_to_webapp_elb__https.id}",
         "${aws_security_group.internet_to_webapp_elb__http.id}"
     ]
 }
