@@ -17,7 +17,7 @@ resource "aws_security_group" "any_to_collector__ssh" {
     }
     tags {
         Environment = "${var.environment}"
-        app = "crash-reports"
+        role = "crash-reports"
         project = "socorro"
     }
 }
@@ -35,7 +35,7 @@ resource "aws_security_group" "internet_to_collector_elb__http" {
     }
     tags {
         Environment = "${var.environment}"
-        app = "crash-reports"
+        role = "crash-reports"
         project = "socorro"
     }
 }
@@ -53,7 +53,7 @@ resource "aws_security_group" "elb_to_collector__http" {
     }
     tags {
         Environment = "${var.environment}"
-        app = "crash-reports"
+        role = "crash-reports"
         project = "socorro"
     }
 }
