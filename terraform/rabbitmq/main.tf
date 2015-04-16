@@ -31,7 +31,7 @@ resource "aws_security_group" "any_to_rabbitmq__ssh" {
     tags {
         Environment = "${var.environment}"
         app = "rabbitmq"
-        project = "crashreporter"
+        project = "socorro"
     }
 }
 

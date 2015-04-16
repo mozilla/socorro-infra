@@ -18,7 +18,7 @@ resource "aws_security_group" "any_to_admin__ssh" {
     tags {
         Environment = "${var.environment}"
         app = "crash-admin"
-        project = "crashreporter"
+        project = "socorro"
     }
 }
 

@@ -60,7 +60,7 @@ resource "aws_security_group" "private_to_consul__consul" {
     tags {
         Environment = "${var.environment}"
         app = "consul"
-        project = "crashreporter"
+        project = "socorro"
     }
 }
 
@@ -78,7 +78,7 @@ resource "aws_security_group" "internet_to_consul__ssh" {
     tags {
         Environment = "${var.environment}"
         app = "consul"
-        project = "crashreporter"
+        project = "socorro"
     }
 }
 
