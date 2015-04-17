@@ -1,5 +1,4 @@
 # Set up a Consul Server node.
-class socorro::role::consul {
 
 include socorro::role::common
 
@@ -25,6 +24,15 @@ include socorro::role::common
       group   => 'consul',
       mode    => '0640',
       require => Package['consul-ui'];
+  }
+
+  # We expect this to come from the secret S3 bucket
+  # This is here instead of common.pp so we can depend on server.json
+  $consul_hostname = hiera("${::environment}/consul_hostname")
+  exec {
+      'join_consul_cluster':
+        command => "/usr/bin/consul join ${consul_hostname}",
+        require => File['/etc/consul/server.json']
   }
 
 }
