@@ -31,7 +31,8 @@ include socorro::role::common
       ensure=> latest;
 
     'nginx':
-      ensure=> latest;
+      ensure=> latest,
+      require => Package['socorro'];
   }
 
 }
