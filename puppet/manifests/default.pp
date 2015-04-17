@@ -14,6 +14,7 @@ node default {
     'buildbox': { include socorro::role::buildbox }
     'symbolapi': { include socorro::role::symbolapi }
     'admin': { include socorro::role::admin }
+    'analysis': { include socorro::role::analysis }
     'collector': { include socorro::role::collector }
     'elasticsearch': { include socorro::role::elasticsearch }
     'postgres': { include socorro::role::postgres }

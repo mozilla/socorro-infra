@@ -2,7 +2,7 @@
 # This script acts as a wrapper to Terraform.
 
 TFVARS="terraform.tfvars"
-ROLES=(admin buildbox collector consul elasticsearch postgres processor rabbitmq symbolapi webapp)
+ROLES=(admin analysis buildbox collector consul elasticsearch postgres processor rabbitmq symbolapi webapp)
 HELPARGS=("help" "-help" "--help" "-h" "-?")
 
 function help {

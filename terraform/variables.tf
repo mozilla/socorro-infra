@@ -5,6 +5,7 @@ variable "secret_bucket" {}
 variable "subnets" {}
 variable "collector_cert" {}
 variable "webapp_cert" {}
+variable "analysis_cert" {}
 variable "ssh_key_file" {
     default = {
         us-west-2 = "socorro__us-west-2.pem"
