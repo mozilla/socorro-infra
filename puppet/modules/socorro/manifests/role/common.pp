@@ -5,7 +5,8 @@ class socorro::role::common {
   $consul_hostname = hiera("${::environment}/consul_hostname")
   exec {
       'join_consul_cluster':
-        command => "/usr/bin/consul join ${consul_hostname}"
+        command => "/usr/bin/consul join ${consul_hostname}",
+        require => Service['consul']
   }
 
 }
