@@ -1,6 +1,8 @@
 # Set up a buildbox node.
 class socorro::role::buildbox {
 
+include socorro::role::common
+
   service {
     'deadci':
       ensure  => running,

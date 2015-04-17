@@ -16,7 +16,7 @@ function socorro_role {
     ARCHIVE=`echo $1|awk -F'/' '{print $NF}'`
     tar -xvzf $ARCHIVE
     # Provision the role.
-    /usr/bin/env FACTER_socorro_role=$2 \
+    /usr/bin/env FACTER_socorro_role=$2 FACTER_environment=$4 \
         puppet apply \
         --modulepath=${DIR}/puppet/modules:/etc/puppet/modules \
         ${DIR}/puppet/manifests/default.pp

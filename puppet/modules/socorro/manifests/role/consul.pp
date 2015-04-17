@@ -1,6 +1,8 @@
 # Set up a Consul Server node.
 class socorro::role::consul {
 
+include socorro::role::common
+
   service {
     'consul':
       ensure    => running,

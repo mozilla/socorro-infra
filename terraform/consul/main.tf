@@ -78,9 +78,24 @@ resource "aws_security_group" "internet_to_consul__ssh" {
     }
 }
 
+resource "aws_elb" "elb_for_consul" {
+    name = "${var.environment}--elb-for-consul"
+    internal = true
+    subnets = ["${split(",", var.subnets)}"]
+    listener {
+        instance_port = 8301
+        instance_protocol = "tcp"
+        lb_port = 8301
+        lb_protocol = "tcp"
+    }
+    security_groups = [
+        "${aws_security_group.private_to_consul__consul.id}"
+    ]
+}
+
 resource "aws_launch_configuration" "lc_for_consul_asg" {
     name = "${var.environment}__lc_for_consul_asg"
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} consul ${var.secret_bucket}"
+    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} consul ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
@@ -108,4 +123,7 @@ resource "aws_autoscaling_group" "asg_for_consul" {
     min_size = 3
     desired_capacity = 3
     health_check_type = "EC2"
+    load_balancers = [
+        "${var.environment}--elb-for-consul"
+    ]
 }

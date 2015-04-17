@@ -98,7 +98,7 @@ resource "aws_elb" "elb_for_analysis" {
 
 resource "aws_launch_configuration" "lc_for_analysis_asg" {
     name = "${var.environment}__lc_for_analysis_asg"
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} analysis ${var.secret_bucket}"
+    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} analysis ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"

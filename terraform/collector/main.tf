@@ -95,7 +95,7 @@ resource "aws_elb" "elb_for_collector" {
 
 resource "aws_launch_configuration" "lc_for_collector_asg" {
     name = "${var.environment}__lc_for_collector_asg"
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} collector ${var.secret_bucket}"
+    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} collector ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"

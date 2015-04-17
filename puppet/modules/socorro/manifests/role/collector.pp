@@ -1,6 +1,8 @@
 # Set up a collector node.
 class socorro::role::collector {
 
+include socorro::role::common
+
   service {
     'nginx':
       ensure  => running,
@@ -10,12 +12,18 @@ class socorro::role::collector {
     'socorro-collector':
       ensure  => running,
       enable  => true,
-      require => Package['socorro'];
+      require => [
+        Package['socorro'],
+        Exec['join_consul_cluster']
+      ];
 
     'socorro-crashmover':
       ensure  => running,
       enable  => true,
-      require => Package['socorro'];
+      require => [
+        Package['socorro'],
+        Exec['join_consul_cluster']
+      ];
   }
 
   package {
