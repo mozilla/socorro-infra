@@ -4,9 +4,9 @@ provider "aws" {
     secret_key = "${var.secret_key}"
 }
 
-resource "aws_security_group" "any_to_collector__ssh" {
-    name = "${var.environment}__any_to_collector__ssh"
-    description = "Allow (alt) SSH to the Collector node."
+resource "aws_security_group" "ec2-collector-sg" {
+    name = "ec2-collector-sg"
+    description = "Security grup for ec2 as group for socorro collector."
     ingress {
         from_port = "${var.alt_ssh_port}"
         to_port = "${var.alt_ssh_port}"
@@ -15,61 +15,23 @@ resource "aws_security_group" "any_to_collector__ssh" {
             "0.0.0.0/0"
         ]
     }
-    tags {
-        Environment = "${var.environment}"
-    }
-}
-
-resource "aws_security_group" "internet_to_collector_elb__http" {
-    name = "${var.environment}__internet_to_collector_elb__http"
-    description = "Allow incoming traffic from Internet to HTTP on ELBs."
     ingress {
-        from_port = 80
-        to_port = 80
-        protocol = "tcp"
-        cidr_blocks = [
-            "0.0.0.0/0"
-        ]
-    }
-    tags {
-        Environment = "${var.environment}"
-    }
-}
-
-resource "aws_security_group" "internet_to_collector_elb__https" {
-    name = "${var.environment}__internet_to_collector_elb__https"
-    description = "Allow incoming traffic from Internet to HTTPS on ELBs."
-    ingress {
-        from_port = 443
-        to_port = 443
-        protocol = "tcp"
-        cidr_blocks = [
-            "0.0.0.0/0"
-        ]
-    }
-    tags {
-        Environment = "${var.environment}"
-    }
-}
-
-resource "aws_security_group" "elb_to_collector__http" {
-    name = "${var.environment}__elb_to_collector__http"
-    description = "Allow HTTP from ELBs to collector."
-    ingress {
-        from_port = 80
-        to_port = 80
+        from_port = 8000
+        to_port = 8000
         protocol = "tcp"
         security_groups = [
-            "${aws_security_group.internet_to_collector_elb__http.id}"
+            "${var.elb_master_web_sg_id}"
         ]
     }
     tags {
         Environment = "${var.environment}"
+        role = "collector"
+        project = "socorro"
     }
 }
 
-resource "aws_elb" "elb_for_collector" {
-    name = "${var.environment}--elb-for-collector"
+resource "aws_elb" "elb-collector" {
+    name = "elb-${var.environment}-collector"
     availability_zones = [
         "${var.region}a",
         "${var.region}b"
@@ -88,13 +50,17 @@ resource "aws_elb" "elb_for_collector" {
         ssl_certificate_id = "${var.collector_cert}"
     }
     security_groups = [
-        "${aws_security_group.internet_to_collector_elb__https.id}",
-        "${aws_security_group.internet_to_collector_elb__http.id}"
+        "${var.elb_master_web_sg_id}"
     ]
+    tags {
+        Environment = "${var.environment}"
+        role = "collector"
+        project = "socorro"
+    }
 }
 
-resource "aws_launch_configuration" "lc_for_collector_asg" {
-    name = "${var.environment}__lc_for_collector_asg"
+resource "aws_launch_configuration" "lc-collector" {
+    name = "lc-${var.environment}-collector"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} collector ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
@@ -102,13 +68,12 @@ resource "aws_launch_configuration" "lc_for_collector_asg" {
     iam_instance_profile = "generic"
     associate_public_ip_address = true
     security_groups = [
-        "${aws_security_group.elb_to_collector__http.id}",
-        "${aws_security_group.any_to_collector__ssh.id}"
+        "${aws_security_group.ec2-collector-sg.id}",
     ]
 }
 
-resource "aws_autoscaling_group" "asg_for_collector" {
-    name = "${var.environment}__asg_for_collector"
+resource "aws_autoscaling_group" "as-collector" {
+    name = "as-${var.environment}-collector"
     availability_zones = [
         "${var.region}a",
         "${var.region}b",
@@ -116,13 +81,28 @@ resource "aws_autoscaling_group" "asg_for_collector" {
     ]
     vpc_zone_identifier = ["${split(",", var.subnets)}"]
     depends_on = [
-        "aws_launch_configuration.lc_for_collector_asg"
+        "aws_launch_configuration.lc-collector"
     ]
-    launch_configuration = "${aws_launch_configuration.lc_for_collector_asg.id}"
+    launch_configuration = "${aws_launch_configuration.lc-collector.id}"
     max_size = 1
     min_size = 1
     desired_capacity = 1
     load_balancers = [
-        "${var.environment}--elb-for-collector"
+        "elb-${var.environment}-collector"
     ]
+    tag {
+      key = "Environment"
+      value = "${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "role"
+      value = "collector"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "project"
+      value = "socorro"
+      propagate_at_launch = true
+    }
 }

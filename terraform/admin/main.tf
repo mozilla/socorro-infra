@@ -4,8 +4,8 @@ provider "aws" {
     secret_key = "${var.secret_key}"
 }
 
-resource "aws_security_group" "any_to_admin__ssh" {
-    name = "${var.environment}__any_to_admin__ssh"
+resource "aws_security_group" "ec2-socorroadmin-sg" {
+    name = "ec2-socorroadmin-sg"
     description = "Allow (alt) SSH to the Admin node."
     ingress {
         from_port = "${var.alt_ssh_port}"
@@ -17,12 +17,14 @@ resource "aws_security_group" "any_to_admin__ssh" {
     }
     tags {
         Environment = "${var.environment}"
+        role = "socorroadmin"
+        project = "socorro"
     }
 }
 
 # Admin (crontabber, etc)
-resource "aws_launch_configuration" "lc_for_admin_asg" {
-    name = "${var.environment}__lc_for_admin_asg"
+resource "aws_launch_configuration" "lc-socorroadmin" {
+    name = "lc-${var.environment}-socorroadmin"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} admin ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
@@ -30,12 +32,12 @@ resource "aws_launch_configuration" "lc_for_admin_asg" {
     iam_instance_profile = "generic"
     associate_public_ip_address = true
     security_groups = [
-        "${aws_security_group.any_to_admin__ssh.id}"
+        "${aws_security_group.ec2-socorroadmin-sg.id}"
     ]
 }
 
-resource "aws_autoscaling_group" "asg_for_admin" {
-    name = "${var.environment}__asg_for_admin"
+resource "aws_autoscaling_group" "as-socorroadmin" {
+    name = "as-${var.environment}-socorroadmin"
     vpc_zone_identifier = ["${split(",", var.subnets)}"]
     availability_zones = [
         "${var.region}a",
@@ -43,10 +45,25 @@ resource "aws_autoscaling_group" "asg_for_admin" {
         "${var.region}c"
     ]
     depends_on = [
-        "aws_launch_configuration.lc_for_admin_asg"
+        "aws_launch_configuration.lc-socorroadmin"
     ]
-    launch_configuration = "${aws_launch_configuration.lc_for_admin_asg.id}"
+    launch_configuration = "${aws_launch_configuration.lc-socorroadmin.id}"
     max_size = 1
     min_size = 1
     desired_capacity = 1
+    tag {
+      key = "Environment"
+      value = "${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "role"
+      value = "socorroadmin"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "project"
+      value = "socorro"
+      propagate_at_launch = true
+    }
 }

@@ -6,8 +6,8 @@ provider "aws" {
 }
 
 # Source: https://consul.io/docs/agent/options.html
-resource "aws_security_group" "private_to_consul__consul" {
-    name = "${var.environment}__private_to_consul__consul"
+resource "aws_security_group" "ec2-consul-sg" {
+    name = "ec2-consul-sg"
     description = "Allow internal access to various Consul services."
     ingress {
         from_port = 8300
@@ -57,14 +57,6 @@ resource "aws_security_group" "private_to_consul__consul" {
             "172.31.0.0/16"
         ]
     }
-    tags {
-        Environment = "${var.environment}"
-    }
-}
-
-resource "aws_security_group" "internet_to_consul__ssh" {
-    name = "${var.environment}__internet_to_consul__ssh"
-    description = "Allow (alt) SSH to any given node."
     ingress {
         from_port = "${var.alt_ssh_port}"
         to_port = "${var.alt_ssh_port}"
@@ -75,11 +67,13 @@ resource "aws_security_group" "internet_to_consul__ssh" {
     }
     tags {
         Environment = "${var.environment}"
+        role = "consul"
+        project = "devops"
     }
 }
 
-resource "aws_elb" "elb_for_consul" {
-    name = "${var.environment}--elb-for-consul"
+resource "aws_elb" "elb-consul" {
+    name = "elb-${var.environment}-consul"
     internal = true
     subnets = ["${split(",", var.subnets)}"]
     listener {
@@ -89,12 +83,17 @@ resource "aws_elb" "elb_for_consul" {
         lb_protocol = "tcp"
     }
     security_groups = [
-        "${aws_security_group.private_to_consul__consul.id}"
+        "${aws_security_group.ec2-consul-sg.id}"
     ]
+    tags {
+        Environment = "${var.environment}"
+        role = "consul"
+        project = "devops"
+    }
 }
 
-resource "aws_launch_configuration" "lc_for_consul_asg" {
-    name = "${var.environment}__lc_for_consul_asg"
+resource "aws_launch_configuration" "lc-consul" {
+    name = "lc-${var.environment}-consul"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} consul ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
@@ -102,13 +101,12 @@ resource "aws_launch_configuration" "lc_for_consul_asg" {
     iam_instance_profile = "generic"
     associate_public_ip_address = true
     security_groups = [
-        "${aws_security_group.internet_to_consul__ssh.id}",
-        "${aws_security_group.private_to_consul__consul.id}"
+        "${aws_security_group.ec2-consul-sg.id}"
     ]
 }
 
-resource "aws_autoscaling_group" "asg_for_consul" {
-    name = "${var.environment}__asg_for_consul"
+resource "aws_autoscaling_group" "as-consul" {
+    name = "as-${var.environment}consul"
     vpc_zone_identifier = ["${split(",", var.subnets)}"]
     availability_zones = [
         "${var.region}a",
@@ -116,14 +114,29 @@ resource "aws_autoscaling_group" "asg_for_consul" {
         "${var.region}c"
     ]
     depends_on = [
-        "aws_launch_configuration.lc_for_consul_asg"
+        "aws_launch_configuration.lc-consul"
     ]
-    launch_configuration = "${aws_launch_configuration.lc_for_consul_asg.id}"
+    launch_configuration = "${aws_launch_configuration.lc-consul.id}"
     max_size = 3
     min_size = 3
     desired_capacity = 3
     health_check_type = "EC2"
     load_balancers = [
-        "${var.environment}--elb-for-consul"
+        "elb-${var.environment}-consul"
     ]
+    tag {
+      key = "Environment"
+      value = "${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "role"
+      value = "consul"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "project"
+      value = "socorro"
+      propagate_at_launch = true
+    }
 }

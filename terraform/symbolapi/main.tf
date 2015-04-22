@@ -4,9 +4,9 @@ provider "aws" {
     secret_key = "${var.secret_key}"
 }
 
-resource "aws_security_group" "any_to_symbolapi__ssh" {
-    name = "${var.environment}__any_to_symbolapi__ssh"
-    description = "Allow (alt) SSH to the SymbolAPI node."
+resource "aws_security_group" "ec2-symbolapi-sg" {
+    name = "ec2-symbolapi-sg"
+    description = "SG for socorro symbolapi"
     ingress {
         from_port = "${var.alt_ssh_port}"
         to_port = "${var.alt_ssh_port}"
@@ -15,45 +15,23 @@ resource "aws_security_group" "any_to_symbolapi__ssh" {
             "0.0.0.0/0"
         ]
     }
-    tags {
-        Environment = "${var.environment}"
-    }
-}
-
-resource "aws_security_group" "internet_to_symbolapi_elb__http" {
-    name = "${var.environment}__internet_to_symbolapi_elb__http"
-    description = "Allow incoming traffic from Internet to HTTP on ELBs."
-    ingress {
-        from_port = 80
-        to_port = 80
-        protocol = "tcp"
-        cidr_blocks = [
-            "0.0.0.0/0"
-        ]
-    }
-    tags {
-        Environment = "${var.environment}"
-    }
-}
-
-resource "aws_security_group" "elb_to_symbolapi__http" {
-    name = "${var.environment}__elb_to_symbolapi__http"
-    description = "Allow HTTP from ELBs to symbolapi."
     ingress {
         from_port = 8000
         to_port = 8000
         protocol = "tcp"
         security_groups = [
-            "${aws_security_group.internet_to_symbolapi_elb__http.id}"
+            "${var.elb_master_web_sg_id}"
         ]
     }
     tags {
         Environment = "${var.environment}"
+        role = "symbolapi"
+        project = "socorro"
     }
 }
 
-resource "aws_elb" "elb_for_symbolapi" {
-    name = "${var.environment}--elb-for-symbolapi"
+resource "aws_elb" "elb-symbolapi" {
+    name = "elb-${var.environment}-symbolapi"
     availability_zones = [
         "${var.region}a",
         "${var.region}b",
@@ -66,12 +44,17 @@ resource "aws_elb" "elb_for_symbolapi" {
         lb_protocol = "http"
     }
     security_groups = [
-        "${aws_security_group.internet_to_symbolapi_elb__http.id}"
+        "${var.elb_master_web_sg_id}"
     ]
+    tags {
+        Environment = "${var.environment}"
+        role = "symbolapi"
+        project = "socorro"
+    }
 }
 
-resource "aws_launch_configuration" "lc_for_symbolapi_asg" {
-    name = "${var.environment}__lc_for_symbolapi_asg"
+resource "aws_launch_configuration" "lc-symbolapi" {
+    name = "lc-${var.environment}-symbolapi"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} symbolapi ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "c4.xlarge"
@@ -79,13 +62,12 @@ resource "aws_launch_configuration" "lc_for_symbolapi_asg" {
     iam_instance_profile = "generic"
     associate_public_ip_address = true
     security_groups = [
-        "${aws_security_group.elb_to_symbolapi__http.id}",
-        "${aws_security_group.any_to_symbolapi__ssh.id}"
+        "${aws_security_group.ec2-symbolapi-sg.id}"
     ]
 }
 
-resource "aws_autoscaling_group" "asg_for_symbolapi" {
-    name = "${var.environment}__asg_for_symbolapi"
+resource "aws_autoscaling_group" "as-symbolapi" {
+    name = "as-${var.environment}-symbolapi"
     vpc_zone_identifier = ["${split(",", var.subnets)}"]
     availability_zones = [
         "${var.region}a",
@@ -93,13 +75,28 @@ resource "aws_autoscaling_group" "asg_for_symbolapi" {
         "${var.region}c"
     ]
     depends_on = [
-        "aws_launch_configuration.lc_for_symbolapi_asg"
+        "aws_launch_configuration.lc-symbolapi"
     ]
-    launch_configuration = "${aws_launch_configuration.lc_for_symbolapi_asg.id}"
+    launch_configuration = "${aws_launch_configuration.lc-symbolapi.id}"
     max_size = 1
     min_size = 1
     desired_capacity = 1
     load_balancers = [
-        "${var.environment}--elb-for-symbolapi"
+        "elb-${var.environment}-symbolapi"
     ]
+    tag {
+      key = "Environment"
+      value = "${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "role"
+      value = "symbolapi"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "project"
+      value = "socorro"
+      propagate_at_launch = true
+    }
 }

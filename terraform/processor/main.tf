@@ -4,9 +4,9 @@ provider "aws" {
     secret_key = "${var.secret_key}"
 }
 
-resource "aws_security_group" "any_to_processor__ssh" {
-    name = "${var.environment}__any_to_processor__ssh"
-    description = "Allow (alt) SSH to the Processor node."
+resource "aws_security_group" "ec2-processor-sg" {
+    name = "ec2-processor-sg"
+    description = "Socorro processor security group."
     ingress {
         from_port = "${var.alt_ssh_port}"
         to_port = "${var.alt_ssh_port}"
@@ -17,11 +17,13 @@ resource "aws_security_group" "any_to_processor__ssh" {
     }
     tags {
         Environment = "${var.environment}"
+        role = "processor"
+        project = "socorro"
     }
 }
 
-resource "aws_launch_configuration" "lc_for_processor_asg" {
-    name = "${var.environment}__lc_for_processor_asg"
+resource "aws_launch_configuration" "lc-processor" {
+    name = "lc-${var.environment}-processor"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} processor ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
@@ -29,12 +31,12 @@ resource "aws_launch_configuration" "lc_for_processor_asg" {
     iam_instance_profile = "generic"
     associate_public_ip_address = true
     security_groups = [
-        "${aws_security_group.any_to_processor__ssh.id}"
+        "${aws_security_group.ec2-processor-sg.id}"
     ]
 }
 
-resource "aws_autoscaling_group" "asg_for_processor" {
-    name = "${var.environment}__asg_for_processor"
+resource "aws_autoscaling_group" "as-processor" {
+    name = "as-${var.environment}-processor"
     vpc_zone_identifier = ["${split(",", var.subnets)}"]
     availability_zones = [
         "${var.region}a",
@@ -42,10 +44,25 @@ resource "aws_autoscaling_group" "asg_for_processor" {
         "${var.region}c"
     ]
     depends_on = [
-        "aws_launch_configuration.lc_for_processor_asg"
+        "aws_launch_configuration.lc-processor"
     ]
-    launch_configuration = "${aws_launch_configuration.lc_for_processor_asg.id}"
+    launch_configuration = "${aws_launch_configuration.lc-processor.id}"
     max_size = 1
     min_size = 1
     desired_capacity = 1
+    tag {
+      key = "Environment"
+      value = "${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "role"
+      value = "processor"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "project"
+      value = "socorro"
+      propagate_at_launch = true
+    }
 }

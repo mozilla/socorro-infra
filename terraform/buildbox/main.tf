@@ -4,9 +4,9 @@ provider "aws" {
     secret_key = "${var.secret_key}"
 }
 
-resource "aws_security_group" "any_to_buildbox__ssh" {
-    name = "${var.environment}__any_to_buildbox__ssh"
-    description = "Allow (alt) SSH to the Buildbox node."
+resource "aws_security_group" "ec2-socorrobuildbox-sg" {
+    name = "ec2-socorrobuildbox-sg"
+    description = "Buildbox for socorro"
     ingress {
         from_port = "${var.alt_ssh_port}"
         to_port = "${var.alt_ssh_port}"
@@ -15,45 +15,23 @@ resource "aws_security_group" "any_to_buildbox__ssh" {
             "0.0.0.0/0"
         ]
     }
-    tags {
-        Environment = "${var.environment}"
-    }
-}
-
-resource "aws_security_group" "internet_to_elb__deadci" {
-    name = "${var.environment}__internet_to_elb__deadci"
-    description = "Allow incoming traffic from Internet to DeadCI (HTTP) on ELBs."
-    ingress {
-        from_port = 8888
-        to_port = 8888
-        protocol = "tcp"
-        cidr_blocks = [
-            "0.0.0.0/0"
-        ]
-    }
-    tags {
-        Environment = "${var.environment}"
-    }
-}
-
-resource "aws_security_group" "elb_to_buildbox__deadci" {
-    name = "${var.environment}__elb_to_buildbox__deadci"
-    description = "Allow HTTP from ELBs to buildbox."
     ingress {
         from_port = 8888
         to_port = 8888
         protocol = "tcp"
         security_groups = [
-            "${aws_security_group.internet_to_elb__deadci.id}"
+            "${var.elb_master_web_sg_id}"
         ]
     }
     tags {
         Environment = "${var.environment}"
+        role = "socorrobuildbox"
+        project = "socorro"
     }
 }
 
-resource "aws_elb" "elb_for_buildbox" {
-    name = "${var.environment}--elb-for-buildbox"
+resource "aws_elb" "elb-socorrobuildbox" {
+    name = "elb-${var.environment}-socorrobuildbox"
     availability_zones = [
         "${var.region}a",
         "${var.region}b"
@@ -65,12 +43,12 @@ resource "aws_elb" "elb_for_buildbox" {
         lb_protocol = "http"
     }
     security_groups = [
-        "${aws_security_group.internet_to_elb__deadci.id}"
+        "${aws_security_group.ec2-socorrobuildbox-sg.id}"
     ]
 }
 
-resource "aws_launch_configuration" "lc_for_buildbox_asg" {
-    name = "${var.environment}__lc_for_buildbox_asg"
+resource "aws_launch_configuration" "lc-socorrobuildbox" {
+    name = "lc-${var.environment}-socorrobuildbox"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} buildbox ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.buildbox_ami, var.region)}"
     instance_type = "t2.micro"
@@ -78,13 +56,12 @@ resource "aws_launch_configuration" "lc_for_buildbox_asg" {
     iam_instance_profile = "buildbox"
     associate_public_ip_address = true
     security_groups = [
-        "${aws_security_group.elb_to_buildbox__deadci.id}",
-        "${aws_security_group.any_to_buildbox__ssh.id}"
+        "${aws_security_group.ec2-socorrobuildbox-sg.id}"
     ]
 }
 
-resource "aws_autoscaling_group" "asg_for_buildbox" {
-    name = "${var.environment}__asg_for_buildbox"
+resource "aws_autoscaling_group" "as-socorrobuildbox" {
+    name = "as-${var.environment}-socorrobuildbox"
     vpc_zone_identifier = ["${split(",", var.subnets)}"]
     availability_zones = [
         "${var.region}a",
@@ -92,13 +69,28 @@ resource "aws_autoscaling_group" "asg_for_buildbox" {
         "${var.region}c"
     ]
     depends_on = [
-        "aws_launch_configuration.lc_for_buildbox_asg"
+        "aws_launch_configuration.lc-socorrobuildbox"
     ]
-    launch_configuration = "${aws_launch_configuration.lc_for_buildbox_asg.id}"
+    launch_configuration = "${aws_launch_configuration.lc-socorrobuildbox.id}"
     max_size = 1
     min_size = 1
     desired_capacity = 1
     load_balancers = [
-        "${var.environment}--elb-for-buildbox"
+        "elb-${var.environment}-socorrobuildbox"
     ]
+    tag {
+      key = "Environment"
+      value = "${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "role"
+      value = "socorrobuildbox"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "project"
+      value = "socorro"
+      propagate_at_launch = true
+    }
 }

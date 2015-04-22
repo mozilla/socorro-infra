@@ -4,8 +4,8 @@ provider "aws" {
     secret_key = "${var.secret_key}"
 }
 
-resource "aws_security_group" "private_to_elasticsearch__elasticsearch" {
-    name = "${var.environment}__private_to_elasticsearch__elasticsearch"
+resource "aws_security_group" "elb-socorroelasticsearch-sg" {
+    name = "elb-${var.environment}-socorroelasticsearch-sg"
     description = "Allow internal access to Elasticsearch."
     ingress {
         from_port = 9200
@@ -23,10 +23,15 @@ resource "aws_security_group" "private_to_elasticsearch__elasticsearch" {
             "172.31.0.0/16"
         ]
     }
+    tags {
+        Environment = "${var.environment}"
+        role = "elasticsearch"
+        project = "socorro"
+    }
 }
 
-resource "aws_security_group" "any_to_elasticsearch__ssh" {
-    name = "${var.environment}__any_to_elasticsearch__ssh"
+resource "aws_security_group" "ec2-socorroelasticsearch-sg" {
+    name = "ec2-${var.environment}-socorroelasticsearch-sg"
     description = "Allow (alt) SSH to the Elasticsearch node."
     ingress {
         from_port = "${var.alt_ssh_port}"
@@ -38,11 +43,13 @@ resource "aws_security_group" "any_to_elasticsearch__ssh" {
     }
     tags {
         Environment = "${var.environment}"
+        role = "elasticsearch"
+        project = "socorro"
     }
 }
 
-resource "aws_elb" "elb_for_elasticsearch" {
-    name = "${var.environment}--elb-for-elasticsearch"
+resource "aws_elb" "elb-socorroelasticsearch" {
+    name = "elb-${var.environment}-socorroelasticsearch"
     internal = true
     subnets = ["${split(",", var.subnets)}"]
     listener {
@@ -52,12 +59,17 @@ resource "aws_elb" "elb_for_elasticsearch" {
         lb_protocol = "http"
     }
     security_groups = [
-        "${aws_security_group.private_to_elasticsearch__elasticsearch.id}"
+        "${aws_security_group.elb-socorroelasticsearch-sg.id}"
     ]
+    tags {
+        Environment = "${var.environment}"
+        role = "elasticsearch"
+        project = "socorro"
+    }
 }
 
-resource "aws_launch_configuration" "lc_for_elasticsearch_asg" {
-    name = "${var.environment}__lc_for_elasticsearch_asg"
+resource "aws_launch_configuration" "lc-socorroelasticsearch" {
+    name = "lc-${var.environment}-socorroelasticsearch"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} elasticsearch ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
@@ -65,13 +77,12 @@ resource "aws_launch_configuration" "lc_for_elasticsearch_asg" {
     iam_instance_profile = "generic"
     associate_public_ip_address = true
     security_groups = [
-        "${aws_security_group.private_to_elasticsearch__elasticsearch.id}",
-        "${aws_security_group.any_to_elasticsearch__ssh.id}"
+        "${aws_security_group.ec2-socorroelasticsearch-sg.id}"
     ]
 }
 
-resource "aws_autoscaling_group" "asg_for_elasticsearch" {
-    name = "${var.environment}__asg_for_elasticsearch"
+resource "aws_autoscaling_group" "as-socorroelasticsearch" {
+    name = "as-${var.environment}-socorroelasticsearch"
     availability_zones = [
         "${var.region}a",
         "${var.region}b",
@@ -79,13 +90,28 @@ resource "aws_autoscaling_group" "asg_for_elasticsearch" {
     ]
     vpc_zone_identifier = ["${split(",", var.subnets)}"]
     depends_on = [
-        "aws_launch_configuration.lc_for_elasticsearch_asg"
+        "aws_launch_configuration.lc-socorroelasticsearch"
     ]
-    launch_configuration = "${aws_launch_configuration.lc_for_elasticsearch_asg.id}"
+    launch_configuration = "${aws_launch_configuration.lc-socorroelasticsearch.id}"
     max_size = 1
     min_size = 1
     desired_capacity = 1
     load_balancers = [
-        "${var.environment}--elb-for-elasticsearch"
+        "elb-${var.environment}-socorroelasticsearch"
     ]
+    tag {
+      key = "Environment"
+      value = "${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "role"
+      value = "elasticsearch"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "project"
+      value = "socorro"
+      propagate_at_launch = true
+    }
 }
