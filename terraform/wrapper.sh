@@ -75,9 +75,11 @@ check_symlinks
 # Nab the latest tfstate.
 aws s3 sync --exclude="*" --include="terraform.tfstate" s3://${BUCKET}/tfstate/${ENV}/${ROLE}/ ./
 
-# Run TF
+# Run TF; if this errors out we need to keep going.
+set +e
 terraform $ACTION -var "environment=${ENV}"
+set -e
 
-# Upload tfstate to S3
+# Upload tfstate to S3.
 aws s3 sync --exclude="*" --include="terraform.tfstate" ./ s3://${BUCKET}/tfstate/${ENV}/${ROLE}/
 popd
