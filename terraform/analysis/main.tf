@@ -4,9 +4,9 @@ provider "aws" {
     secret_key = "${var.secret_key}"
 }
 
-resource "aws_security_group" "any_to_analysis__ssh" {
-    name = "${var.environment}__any_to_analysis__ssh"
-    description = "Allow (alt) SSH to the CrashAnalysis node."
+resource "aws_security_group" "ec2-socorroanalysis-sg" {
+    name = "ec2-socorroanalysis-sg"
+    description = "Crashanalysis node."
     ingress {
         from_port = "${var.alt_ssh_port}"
         to_port = "${var.alt_ssh_port}"
@@ -15,63 +15,31 @@ resource "aws_security_group" "any_to_analysis__ssh" {
             "0.0.0.0/0"
         ]
     }
-    tags {
-        Environment = "${var.environment}"
-        role = "crash-analysis"
-        project = "socorro"
-    }
-}
-
-resource "aws_security_group" "internet_to_analysis_elb__http" {
-    name = "${var.environment}__internet_to_analysis_elb__http"
-    description = "Allow incoming traffic from Internet to HTTP on ELBs."
-    ingress {
-        from_port = 80
-        to_port = 80
-        protocol = "tcp"
-        cidr_blocks = [
-            "0.0.0.0/0"
-        ]
-    }
-    tags {
-        Environment = "${var.environment}"
-    }
-}
-
-resource "aws_security_group" "internet_to_analysis_elb__https" {
-    name = "${var.environment}__internet_to_analysis_elb__https"
-    description = "Allow incoming traffic from Internet to HTTPS on ELBs."
-    ingress {
-        from_port = 443
-        to_port = 443
-        protocol = "tcp"
-        cidr_blocks = [
-            "0.0.0.0/0"
-        ]
-    }
-    tags {
-        Environment = "${var.environment}"
-    }
-}
-
-resource "aws_security_group" "elb_to_analysis__http" {
-    name = "${var.environment}__elb_to_analysis__http"
-    description = "Allow HTTP from ELBs to analysis."
     ingress {
         from_port = 80
         to_port = 80
         protocol = "tcp"
         security_groups = [
-            "${aws_security_group.internet_to_analysis_elb__http.id}"
+            "${var.elb_master_web_sg_id}"
+        ]
+    }
+    ingress {
+        from_port = 443
+        to_port = 443
+        protocol = "tcp"
+        security_groups = [
+            "${var.elb_master_web_sg_id}"
         ]
     }
     tags {
         Environment = "${var.environment}"
+        role = "socorroanalysis"
+        project = "socorro"
     }
 }
 
-resource "aws_elb" "elb_for_analysis" {
-    name = "${var.environment}--elb-for-analysis"
+resource "aws_elb" "elb-socorroanalysis" {
+    name = "elb-${var.environment}-socorroanalysis"
     availability_zones = [
         "${var.region}a",
         "${var.region}b",
@@ -91,13 +59,17 @@ resource "aws_elb" "elb_for_analysis" {
         ssl_certificate_id = "${var.analysis_cert}"
     }
     security_groups = [
-        "${aws_security_group.internet_to_analysis_elb__https.id}",
-        "${aws_security_group.internet_to_analysis_elb__http.id}"
+        "${var.elb_master_web_sg_id}"
     ]
+    tags {
+        Environment = "${var.environment}"
+        role = "socorroanalysis"
+        project = "socorro"
+    }
 }
 
-resource "aws_launch_configuration" "lc_for_analysis_asg" {
-    name = "${var.environment}__lc_for_analysis_asg"
+resource "aws_launch_configuration" "lc-socorroanalysis" {
+    name = "lc-${var.environment}-socorroanalysis"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} analysis ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
@@ -105,13 +77,12 @@ resource "aws_launch_configuration" "lc_for_analysis_asg" {
     iam_instance_profile = "generic"
     associate_public_ip_address = true
     security_groups = [
-        "${aws_security_group.elb_to_analysis__http.id}",
-        "${aws_security_group.any_to_analysis__ssh.id}"
+        "${aws_security_group.ec2-socorroanalysis-sg.id}"
     ]
 }
 
-resource "aws_autoscaling_group" "asg_for_analysis" {
-    name = "${var.environment}__asg_for_analysis"
+resource "aws_autoscaling_group" "as-socorroanalysis" {
+    name = "as-${var.environment}-socorroanalysis"
     vpc_zone_identifier = ["${split(",", var.subnets)}"]
     availability_zones = [
         "${var.region}a",
@@ -119,13 +90,28 @@ resource "aws_autoscaling_group" "asg_for_analysis" {
         "${var.region}c"
     ]
     depends_on = [
-        "aws_launch_configuration.lc_for_analysis_asg"
+        "aws_launch_configuration.lc-socorroanalysis"
     ]
-    launch_configuration = "${aws_launch_configuration.lc_for_analysis_asg.id}"
+    launch_configuration = "${aws_launch_configuration.lc-socorroanalysis.id}"
     max_size = 1
     min_size = 1
     desired_capacity = 1
     load_balancers = [
-        "${var.environment}--elb-for-analysis"
+        "elb-${var.environment}-socorroanalysis"
     ]
+    tag {
+      key = "Environment"
+      value = "${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "role"
+      value = "socorroanalysis"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "project"
+      value = "socorro"
+      propagate_at_launch = true
+    }
 }

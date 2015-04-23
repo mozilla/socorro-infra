@@ -4,9 +4,9 @@ provider "aws" {
     secret_key = "${var.secret_key}"
 }
 
-resource "aws_security_group" "any_to_webapp__ssh" {
-    name = "${var.environment}__any_to_webapp__ssh"
-    description = "Allow (alt) SSH to the Webapp node."
+resource "aws_security_group" "ec2-socorroweb-sg" {
+    name = "ec2-socorroweb-sg"
+    description = "Security group for socorro web app"
     ingress {
         from_port = "${var.alt_ssh_port}"
         to_port = "${var.alt_ssh_port}"
@@ -15,61 +15,23 @@ resource "aws_security_group" "any_to_webapp__ssh" {
             "0.0.0.0/0"
         ]
     }
-    tags {
-        Environment = "${var.environment}"
-    }
-}
-
-resource "aws_security_group" "internet_to_webapp_elb__http" {
-    name = "${var.environment}__internet_to_webapp_elb__http"
-    description = "Allow incoming traffic from Internet to HTTP on ELBs."
-    ingress {
-        from_port = 80
-        to_port = 80
-        protocol = "tcp"
-        cidr_blocks = [
-            "0.0.0.0/0"
-        ]
-    }
-    tags {
-        Environment = "${var.environment}"
-    }
-}
-
-resource "aws_security_group" "internet_to_webapp_elb__https" {
-    name = "${var.environment}__internet_to_webapp_elb__https"
-    description = "Allow incoming traffic from Internet to HTTPS on ELBs."
-    ingress {
-        from_port = 443
-        to_port = 443
-        protocol = "tcp"
-        cidr_blocks = [
-            "0.0.0.0/0"
-        ]
-    }
-    tags {
-        Environment = "${var.environment}"
-    }
-}
-
-resource "aws_security_group" "elb_to_webapp__http" {
-    name = "${var.environment}__elb_to_webapp__http"
-    description = "Allow HTTP from ELBs to webapp."
     ingress {
         from_port = 80
         to_port = 80
         protocol = "tcp"
         security_groups = [
-            "${aws_security_group.internet_to_webapp_elb__http.id}"
+            "${var.elb_master_web_sg_id}"
         ]
     }
     tags {
         Environment = "${var.environment}"
+        role = "socorrowebapp"
+        project = "socorro"
     }
 }
 
-resource "aws_elb" "elb_for_webapp" {
-    name = "${var.environment}--elb-for-webapp"
+resource "aws_elb" "elb-socorroweb" {
+    name = "elb-${var.environment}-socorroweb"
     availability_zones = [
         "${var.region}a",
         "${var.region}b",
@@ -89,13 +51,12 @@ resource "aws_elb" "elb_for_webapp" {
         ssl_certificate_id = "${var.webapp_cert}"
     }
     security_groups = [
-        "${aws_security_group.internet_to_webapp_elb__https.id}",
-        "${aws_security_group.internet_to_webapp_elb__http.id}"
+        "${var.elb_master_web_sg_id}"
     ]
 }
 
-resource "aws_launch_configuration" "lc_for_webapp_asg" {
-    name = "${var.environment}__lc_for_webapp_asg"
+resource "aws_launch_configuration" "lc-socorroweb" {
+    name = "lc-${var.environment}-socorroweb"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} webapp ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
@@ -103,13 +64,12 @@ resource "aws_launch_configuration" "lc_for_webapp_asg" {
     iam_instance_profile = "generic"
     associate_public_ip_address = true
     security_groups = [
-        "${aws_security_group.elb_to_webapp__http.id}",
-        "${aws_security_group.any_to_webapp__ssh.id}"
+        "${aws_security_group.ec2-socorroweb-sg.id}"
     ]
 }
 
-resource "aws_autoscaling_group" "asg_for_webapp" {
-    name = "${var.environment}__asg_for_webapp"
+resource "aws_autoscaling_group" "as-socorroweb" {
+    name = "as-${var.environment}-socorroweb"
     vpc_zone_identifier = ["${split(",", var.subnets)}"]
     availability_zones = [
         "${var.region}a",
@@ -117,13 +77,28 @@ resource "aws_autoscaling_group" "asg_for_webapp" {
         "${var.region}c"
     ]
     depends_on = [
-        "aws_launch_configuration.lc_for_webapp_asg"
+        "aws_launch_configuration.lc-socorroweb"
     ]
-    launch_configuration = "${aws_launch_configuration.lc_for_webapp_asg.id}"
+    launch_configuration = "${aws_launch_configuration.lc-socorroweb.id}"
     max_size = 1
     min_size = 1
     desired_capacity = 1
     load_balancers = [
-        "${var.environment}--elb-for-webapp"
+        "elb-${var.environment}-socorroweb"
     ]
+    tag {
+      key = "Environment"
+      value = "${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "role"
+      value = "socorroweb"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "project"
+      value = "socorro"
+      propagate_at_launch = true
+    }
 }

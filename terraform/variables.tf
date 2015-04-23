@@ -29,6 +29,9 @@ variable "buildbox_ami" {
         us-west-2 = "ami-99614fa9"
     }
 }
+variable "elb_master_web_sg_id" {
+    default = "sg-2dbfb048"
+}
 variable "alt_ssh_port" {
     default = 22123
 }

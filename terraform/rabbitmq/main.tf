@@ -4,8 +4,8 @@ provider "aws" {
     secret_key = "${var.secret_key}"
 }
 
-resource "aws_security_group" "private_to_rabbitmq__rabbitmq" {
-    name = "${var.environment}__private_to_rabbitmq__rabbitmq"
+resource "aws_security_group" "elb-socorrorabbitmq-sg" {
+    name = "elb-socorrorabbitmq-sg"
     description = "Allow internal access to RabbitMQ."
     ingress {
         from_port = 5672
@@ -15,11 +15,16 @@ resource "aws_security_group" "private_to_rabbitmq__rabbitmq" {
             "172.31.0.0/16"
         ]
     }
+    tags {
+        Environment = "${var.environment}"
+        role = "rabbitmq"
+        project = "socorro"
+    }
 }
 
-resource "aws_security_group" "any_to_rabbitmq__ssh" {
-    name = "${var.environment}__any_to_rabbitmq__ssh"
-    description = "Allow (alt) SSH to the RabbitMQ node."
+resource "aws_security_group" "ec2-socorrorabbitmq-sg" {
+    name = "ec2-socorrorabbitmq-sg"
+    description = "EC2 security for rabbitmq."
     ingress {
         from_port = "${var.alt_ssh_port}"
         to_port = "${var.alt_ssh_port}"
@@ -30,11 +35,13 @@ resource "aws_security_group" "any_to_rabbitmq__ssh" {
     }
     tags {
         Environment = "${var.environment}"
+        role = "rabbitmq"
+        project = "socorro"
     }
 }
 
-resource "aws_elb" "elb_for_rabbitmq" {
-    name = "${var.environment}--elb-for-rabbitmq"
+resource "aws_elb" "elb-socorrorabbitmq" {
+    name = "elb-${var.environment}-socorrorabbitmq"
     internal = true
     subnets = ["${split(",", var.subnets)}"]
     listener {
@@ -44,29 +51,33 @@ resource "aws_elb" "elb_for_rabbitmq" {
         lb_protocol = "tcp"
     }
     security_groups = [
-        "${aws_security_group.private_to_rabbitmq__rabbitmq.id}"
+        "${aws_security_group.elb-socorrorabbitmq-sg.id}"
     ]
+    tags {
+        Environment = "${var.environment}"
+        role = "rabbitmq"
+        project = "socorro"
+    }
 }
 
-resource "aws_launch_configuration" "lc_for_rabbitmq_asg" {
-    name = "${var.environment}__lc_for_rabbitmq_asg"
+resource "aws_launch_configuration" "lc-socorrorabbitmq" {
+    name = "lc-${var.environment}-socorrorabbitmq"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} rabbitmq ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     security_groups = [
-        "${aws_security_group.private_to_rabbitmq__rabbitmq.id}",
-        "${aws_security_group.any_to_rabbitmq__ssh.id}"
+        "${aws_security_group.ec2-socorrorabbitmq-sg.id}"
     ]
     iam_instance_profile = "generic"
     associate_public_ip_address = true
     security_groups = [
-        "${aws_security_group.any_to_rabbitmq__ssh.id}"
+        "${aws_security_group.ec2-socorrorabbitmq-sg.id}"
     ]
 }
 
-resource "aws_autoscaling_group" "asg_for_rabbitmq" {
-    name = "${var.environment}__asg_for_rabbitmq"
+resource "aws_autoscaling_group" "as-socorrorabbitmq" {
+    name = "as-${var.environment}-socorrorabbitmq"
     availability_zones = [
         "${var.region}a",
         "${var.region}b",
@@ -74,13 +85,28 @@ resource "aws_autoscaling_group" "asg_for_rabbitmq" {
     ]
     vpc_zone_identifier = ["${split(",", var.subnets)}"]
     depends_on = [
-        "aws_launch_configuration.lc_for_rabbitmq_asg"
+        "aws_launch_configuration.lc-socorrorabbitmq"
     ]
-    launch_configuration = "${aws_launch_configuration.lc_for_rabbitmq_asg.id}"
+    launch_configuration = "${aws_launch_configuration.lc-socorrorabbitmq.id}"
     max_size = 1
     min_size = 1
     desired_capacity = 1
     load_balancers = [
-        "${var.environment}--elb-for-rabbitmq"
+        "elb-${var.environment}-socorrorabbitmq"
     ]
+    tag {
+      key = "Environment"
+      value = "${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "role"
+      value = "socorrorabbitmq"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "project"
+      value = "socorro"
+      propagate_at_launch = true
+    }
 }
