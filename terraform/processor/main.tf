@@ -24,7 +24,7 @@ resource "aws_launch_configuration" "lc_for_processor_asg" {
     name = "${var.environment}__lc_for_processor_asg"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} processor ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
-    instance_type = "t2.micro"
+    instance_type = "r3.large"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     iam_instance_profile = "generic"
     associate_public_ip_address = true
