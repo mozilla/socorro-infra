@@ -3,6 +3,7 @@
 
 TFVARS="terraform.tfvars"
 ROLES=(admin analysis buildbox collector consul elasticsearch postgres processor rabbitmq symbolapi webapp)
+SYMLINKS=(socorro_role.sh terraform.tfvars variables.tf)
 HELPARGS=("help" "-help" "--help" "-h" "-?")
 
 function help {
@@ -22,6 +23,14 @@ function contains_element () {
         [[ "$i" == "$1" ]] && return 0
     done
     return 1
+}
+
+function check_symlinks () {
+    for i in ${SYMLINKS[@]}; do
+        if [ ! -h $i ]; then
+            ln -s ../$i $i
+        fi
+    done
 }
 
 # Is this a cry for help?
@@ -58,9 +67,12 @@ ROLE=$3
 
 # Be verbose and bail on errors.
 set -ex
-
-# Grab tfstate from S3
 pushd $ROLE
+
+# Ensure the symlinks exist; hopefully TF will support includes some day.
+check_symlinks
+
+# Nab the latest tfstate.
 aws s3 sync --exclude="*" --include="terraform.tfstate" s3://${BUCKET}/tfstate/${ENV}/${ROLE}/ ./
 
 # Run TF
