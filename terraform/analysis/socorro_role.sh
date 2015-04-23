@@ -1,1 +1,0 @@
-../socorro_role.sh

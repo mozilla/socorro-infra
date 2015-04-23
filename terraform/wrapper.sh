@@ -27,7 +27,7 @@ function contains_element () {
 
 function check_symlinks () {
     for i in ${SYMLINKS[@]}; do
-        if [ ! -h $i ]; then
+        if [ ! -L $i ]; then
             ln -s ../$i $i
         fi
     done
