@@ -17,6 +17,8 @@ resource "aws_security_group" "any_to_symbolapi__ssh" {
     }
     tags {
         Environment = "${var.environment}"
+        role = "symbolapi"
+        project = "socorro"
     }
 }
 
@@ -33,6 +35,8 @@ resource "aws_security_group" "internet_to_symbolapi_elb__http" {
     }
     tags {
         Environment = "${var.environment}"
+        role = "symbolapi"
+        project = "socorro"
     }
 }
 
@@ -49,6 +53,8 @@ resource "aws_security_group" "elb_to_symbolapi__http" {
     }
     tags {
         Environment = "${var.environment}"
+        role = "symbolapi"
+        project = "socorro"
     }
 }
 

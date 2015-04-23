@@ -17,6 +17,8 @@ resource "aws_security_group" "any_to_processor__ssh" {
     }
     tags {
         Environment = "${var.environment}"
+        role = "crash-processor"
+        project = "socorro"
     }
 }
 
