@@ -69,7 +69,6 @@ resource "aws_elb" "elb-socorroelasticsearch" {
 }
 
 resource "aws_launch_configuration" "lc-socorroelasticsearch" {
-    name = "lc-${var.environment}-socorroelasticsearch"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} elasticsearch ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
@@ -79,6 +78,9 @@ resource "aws_launch_configuration" "lc-socorroelasticsearch" {
     security_groups = [
         "${aws_security_group.ec2-socorroelasticsearch-sg.id}"
     ]
+    lifecycle {
+        create_before_destroy = true
+    }
 }
 
 resource "aws_autoscaling_group" "as-socorroelasticsearch" {

@@ -23,7 +23,6 @@ resource "aws_security_group" "ec2-processor-sg" {
 }
 
 resource "aws_launch_configuration" "lc-processor" {
-    name = "lc-${var.environment}-processor"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} processor ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "r3.large"
@@ -33,6 +32,9 @@ resource "aws_launch_configuration" "lc-processor" {
     security_groups = [
         "${aws_security_group.ec2-processor-sg.id}"
     ]
+    lifecycle {
+        create_before_destroy = true
+    }
 }
 
 resource "aws_autoscaling_group" "as-processor" {

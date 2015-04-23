@@ -61,7 +61,6 @@ resource "aws_elb" "elb-socorrorabbitmq" {
 }
 
 resource "aws_launch_configuration" "lc-socorrorabbitmq" {
-    name = "lc-${var.environment}-socorrorabbitmq"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} rabbitmq ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
@@ -74,6 +73,9 @@ resource "aws_launch_configuration" "lc-socorrorabbitmq" {
     security_groups = [
         "${aws_security_group.ec2-socorrorabbitmq-sg.id}"
     ]
+    lifecycle {
+        create_before_destroy = true
+    }
 }
 
 resource "aws_autoscaling_group" "as-socorrorabbitmq" {
