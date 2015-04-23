@@ -8,6 +8,7 @@ HELPARGS=("help" "-help" "--help" "-h" "-?")
 
 function help {
     echo "USAGE: ${0} <action> <environment> <role>"
+    echo "       ${0} [symlinks]"
     echo -n "Valid roles are: "
     local i
     for i in "${ROLES[@]}"; do
@@ -25,7 +26,7 @@ function contains_element () {
     return 1
 }
 
-function check_symlinks () {
+function check_symlinks {
     for i in ${SYMLINKS[@]}; do
         if [ ! -L $i ]; then
             ln -s ../$i $i
@@ -33,10 +34,26 @@ function check_symlinks () {
     done
 }
 
+function make_symlinks {
+    set -e
+    for i in ${ROLES[@]}; do
+        pushd $i > /dev/null
+        check_symlinks
+        popd > /dev/null
+    done
+    set +e
+}
+
 # Is this a cry for help?
 contains_element $1 "${HELPARGS[@]}"
 if [ $? -eq 0 ]; then
     help
+fi
+
+# Did we want to generate symlinks?
+if [ $1 == "symlinks" ]; then
+    make_symlinks
+    exit 0
 fi
 
 # All of the args are mandatory.
