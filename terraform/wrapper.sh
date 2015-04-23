@@ -46,7 +46,7 @@ function make_symlinks {
 
 # Is this a cry for help?
 contains_element $1 "${HELPARGS[@]}"
-if [ $? -eq 0 ]; then
+if [ "${1}x" == "x" ]; then
     help
 fi
 
