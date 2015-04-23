@@ -6,4 +6,4 @@ terraform.tfstate*
 *.plan
 *.log
 terraform/*/*.sh
-terraform/*/*.tf
+terraform/*/variables.tf
