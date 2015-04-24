@@ -69,7 +69,6 @@ resource "aws_elb" "elb-socorroanalysis" {
 }
 
 resource "aws_launch_configuration" "lc-socorroanalysis" {
-    name = "lc-${var.environment}-socorroanalysis"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} analysis ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
@@ -79,6 +78,9 @@ resource "aws_launch_configuration" "lc-socorroanalysis" {
     security_groups = [
         "${aws_security_group.ec2-socorroanalysis-sg.id}"
     ]
+    lifecycle {
+        create_before_destroy = true
+    }
 }
 
 resource "aws_autoscaling_group" "as-socorroanalysis" {

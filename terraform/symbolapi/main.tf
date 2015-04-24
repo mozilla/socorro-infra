@@ -54,7 +54,6 @@ resource "aws_elb" "elb-symbolapi" {
 }
 
 resource "aws_launch_configuration" "lc-symbolapi" {
-    name = "lc-${var.environment}-symbolapi"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} symbolapi ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "c4.xlarge"
@@ -64,6 +63,9 @@ resource "aws_launch_configuration" "lc-symbolapi" {
     security_groups = [
         "${aws_security_group.ec2-symbolapi-sg.id}"
     ]
+    lifecycle {
+        create_before_destroy = true
+    }
 }
 
 resource "aws_autoscaling_group" "as-symbolapi" {

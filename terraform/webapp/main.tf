@@ -56,7 +56,6 @@ resource "aws_elb" "elb-socorroweb" {
 }
 
 resource "aws_launch_configuration" "lc-socorroweb" {
-    name = "lc-${var.environment}-socorroweb"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} webapp ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
@@ -66,6 +65,9 @@ resource "aws_launch_configuration" "lc-socorroweb" {
     security_groups = [
         "${aws_security_group.ec2-socorroweb-sg.id}"
     ]
+    lifecycle {
+        create_before_destroy = true
+    }
 }
 
 resource "aws_autoscaling_group" "as-socorroweb" {

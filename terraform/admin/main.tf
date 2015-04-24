@@ -24,7 +24,6 @@ resource "aws_security_group" "ec2-socorroadmin-sg" {
 
 # Admin (crontabber, etc)
 resource "aws_launch_configuration" "lc-socorroadmin" {
-    name = "lc-${var.environment}-socorroadmin"
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} admin ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
@@ -34,6 +33,9 @@ resource "aws_launch_configuration" "lc-socorroadmin" {
     security_groups = [
         "${aws_security_group.ec2-socorroadmin-sg.id}"
     ]
+    lifecycle {
+        create_before_destroy = true
+    }
 }
 
 resource "aws_autoscaling_group" "as-socorroadmin" {
