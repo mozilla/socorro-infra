@@ -23,6 +23,9 @@ resource "aws_security_group" "ec2-socorrobuildbox-sg" {
             "${var.elb_master_web_sg_id}"
         ]
     }
+    lifecycle {
+        create_before_destroy = true
+    }
     tags {
         Environment = "${var.environment}"
         role = "socorrobuildbox"
