@@ -44,6 +44,9 @@ resource "aws_security_group" "ec2-socorroelasticsearch-sg" {
             "0.0.0.0/0"
         ]
     }
+    lifecycle {
+        create_before_destroy = true
+    }
     tags {
         Environment = "${var.environment}"
         role = "elasticsearch"
