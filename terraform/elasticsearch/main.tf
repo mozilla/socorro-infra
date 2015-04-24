@@ -82,6 +82,7 @@ resource "aws_launch_configuration" "lc-socorroelasticsearch" {
     iam_instance_profile = "generic"
     associate_public_ip_address = true
     security_groups = [
+        "${aws_security_group.elb-socorroelasticsearch-sg.id}",
         "${aws_security_group.ec2-socorroelasticsearch-sg.id}"
     ]
     lifecycle {
