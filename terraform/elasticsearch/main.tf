@@ -23,6 +23,9 @@ resource "aws_security_group" "elb-socorroelasticsearch-sg" {
             "172.31.0.0/16"
         ]
     }
+    lifecycle {
+        create_before_destroy = true
+    }
     tags {
         Environment = "${var.environment}"
         role = "elasticsearch"
