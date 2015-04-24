@@ -111,7 +111,7 @@ resource "aws_launch_configuration" "lc-consul" {
 }
 
 resource "aws_autoscaling_group" "as-consul" {
-    name = "as-${var.environment}consul"
+    name = "as-${var.environment}-consul"
     vpc_zone_identifier = ["${split(",", var.subnets)}"]
     availability_zones = [
         "${var.region}a",
