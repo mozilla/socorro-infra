@@ -76,9 +76,6 @@ resource "aws_launch_configuration" "lc-socorrorabbitmq" {
     ]
     iam_instance_profile = "generic"
     associate_public_ip_address = true
-    security_groups = [
-        "${aws_security_group.ec2-socorrorabbitmq-sg.id}"
-    ]
     lifecycle {
         create_before_destroy = true
     }
