@@ -19,3 +19,9 @@ both for managing the Packer-built images as well as for provisioning nodes.
 [Terraform](https://www.terraform.io) is a tool for building and maintaining
 virtual infrastructure in a variety of environments.  We use it for managing
 various elements of Socorro's cloud-based deployment.
+
+## Socorro Config
+
+The `socorro-config` directory holds the initial settings for bootstrapping
+a distributed Socorro install. You'll need to customize the settings and
+load them into your Consul cluster.
