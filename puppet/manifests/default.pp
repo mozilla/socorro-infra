@@ -10,16 +10,16 @@ node default {
   }
 
   case $::socorro_role {
-    'consul': { include socorro::role::consul }
-    'buildbox': { include socorro::role::buildbox }
-    'symbolapi': { include socorro::role::symbolapi }
     'admin': { include socorro::role::admin }
     'analysis': { include socorro::role::analysis }
+    'buildbox': { include socorro::role::buildbox }
     'collector': { include socorro::role::collector }
+    'consul': { include socorro::role::consul }
     'elasticsearch': { include socorro::role::elasticsearch }
     'postgres': { include socorro::role::postgres }
     'processor': { include socorro::role::processor }
     'rabbitmq': { include socorro::role::rabbitmq }
+    'symbolapi': { include socorro::role::symbolapi }
     'webapp': { include socorro::role::webapp }
     default: {}
   }

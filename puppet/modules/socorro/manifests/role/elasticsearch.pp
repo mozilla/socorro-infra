@@ -15,10 +15,10 @@ include socorro::role::common
 
   package {
     'elasticsearch':
-      ensure=> latest;
+      ensure => latest;
 
     'socorro':
-      ensure=> latest;
+      ensure => latest;
   }
 
 }

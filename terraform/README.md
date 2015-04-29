@@ -15,6 +15,7 @@ These variables have no useful default and must be supplied:
 * `secret_bucket`: The name of the bucket in which *secrets* are stored; more
    on this below.
 * `subnets`: The name of one or more VPC subnets (comma-delimited) that you wish to launch infra in.
+* `*_cert`: ARN ID's of various SSL certificates for web-facing services.
 
 You're welcome to deal with this in any number of ways. I suggest putting the
 keys and bucket name in `terraform.tfvars` and specifying the environment at
