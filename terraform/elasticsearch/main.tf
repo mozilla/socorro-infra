@@ -102,7 +102,7 @@ resource "aws_autoscaling_group" "as-socorroelasticsearch" {
         "aws_launch_configuration.lc-socorroelasticsearch"
     ]
     launch_configuration = "${aws_launch_configuration.lc-socorroelasticsearch.id}"
-    max_size = 1
+    max_size = 10
     min_size = 1
     desired_capacity = 1
     load_balancers = [
