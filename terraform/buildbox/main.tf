@@ -37,7 +37,8 @@ resource "aws_elb" "elb-socorrobuildbox" {
     name = "elb-${var.environment}-socorrobuildbox"
     availability_zones = [
         "${var.region}a",
-        "${var.region}b"
+        "${var.region}b",
+        "${var.region}c"
     ]
     listener {
         instance_port = 8888
@@ -48,6 +49,7 @@ resource "aws_elb" "elb-socorrobuildbox" {
     security_groups = [
         "${aws_security_group.ec2-socorrobuildbox-sg.id}"
     ]
+    cross_zone_load_balancing = true
 }
 
 resource "aws_launch_configuration" "lc-socorrobuildbox" {
@@ -77,7 +79,7 @@ resource "aws_autoscaling_group" "as-socorrobuildbox" {
         "aws_launch_configuration.lc-socorrobuildbox"
     ]
     launch_configuration = "${aws_launch_configuration.lc-socorrobuildbox.id}"
-    max_size = 1
+    max_size = 10
     min_size = 1
     desired_capacity = 1
     load_balancers = [

@@ -53,7 +53,7 @@ resource "aws_autoscaling_group" "as-socorroadmin" {
         "aws_launch_configuration.lc-socorroadmin"
     ]
     launch_configuration = "${aws_launch_configuration.lc-socorroadmin.id}"
-    max_size = 1
+    max_size = 10
     min_size = 1
     desired_capacity = 1
     tag {

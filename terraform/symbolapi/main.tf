@@ -49,11 +49,19 @@ resource "aws_elb" "elb-symbolapi" {
     security_groups = [
         "${var.elb_master_web_sg_id}"
     ]
+    health_check {
+      healthy_threshold = 2
+      unhealthy_threshold = 2
+      timeout = 3
+      target = "TCP:8000/"
+      interval = 12
+    }
     tags {
         Environment = "${var.environment}"
         role = "symbolapi"
         project = "socorro"
     }
+    cross_zone_load_balancing = true
 }
 
 resource "aws_launch_configuration" "lc-symbolapi" {
@@ -83,7 +91,7 @@ resource "aws_autoscaling_group" "as-symbolapi" {
         "aws_launch_configuration.lc-symbolapi"
     ]
     launch_configuration = "${aws_launch_configuration.lc-symbolapi.id}"
-    max_size = 1
+    max_size = 10
     min_size = 1
     desired_capacity = 1
     load_balancers = [
