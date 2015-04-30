@@ -53,9 +53,22 @@ resource "aws_elb" "elb-socorroweb" {
         lb_protocol = "https"
         ssl_certificate_id = "${var.webapp_cert}"
     }
+    health_check {
+      healthy_threshold = 2
+      unhealthy_threshold = 2
+      timeout = 3
+      target = "TCP:80/"
+      interval = 12
+    }
     security_groups = [
         "${var.elb_master_web_sg_id}"
     ]
+    tags {
+        Environment = "${var.environment}"
+        role = "socorrowebapp"
+        project = "socorro"
+    }
+    cross_zone_load_balancing = true
 }
 
 resource "aws_launch_configuration" "lc-socorroweb" {

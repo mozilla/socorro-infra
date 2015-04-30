@@ -37,7 +37,8 @@ resource "aws_elb" "elb-collector" {
     name = "elb-${var.environment}-collector"
     availability_zones = [
         "${var.region}a",
-        "${var.region}b"
+        "${var.region}b",
+        "${var.region}c"
     ]
     listener {
         instance_port = 80
@@ -55,11 +56,19 @@ resource "aws_elb" "elb-collector" {
     security_groups = [
         "${var.elb_master_web_sg_id}"
     ]
+    health_check {
+      healthy_threshold = 2
+      unhealthy_threshold = 2
+      timeout = 3
+      target = "TCP:80/"
+      interval = 12
+    }
     tags {
         Environment = "${var.environment}"
         role = "collector"
         project = "socorro"
     }
+    cross_zone_load_balancing = true
 }
 
 resource "aws_launch_configuration" "lc-collector" {
@@ -89,7 +98,7 @@ resource "aws_autoscaling_group" "as-collector" {
         "aws_launch_configuration.lc-collector"
     ]
     launch_configuration = "${aws_launch_configuration.lc-collector.id}"
-    max_size = 1
+    max_size = 10
     min_size = 1
     desired_capacity = 1
     load_balancers = [
