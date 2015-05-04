@@ -15,7 +15,7 @@ include socorro::role::common
 
   package {
     'socorro':
-      ensure=> latest;
+      ensure=> installed;
 
     'nginx':
       ensure=> latest;
