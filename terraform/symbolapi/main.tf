@@ -5,7 +5,7 @@ provider "aws" {
 }
 
 resource "aws_security_group" "ec2-symbolapi-sg" {
-    name = "ec2-symbolapi-sg"
+    name = "ec2-symbolapi-${var.environment}-sg"
     description = "SG for socorro symbolapi"
     ingress {
         from_port = "${var.alt_ssh_port}"

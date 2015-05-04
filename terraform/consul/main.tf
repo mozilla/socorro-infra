@@ -7,7 +7,7 @@ provider "aws" {
 
 # Source: https://consul.io/docs/agent/options.html
 resource "aws_security_group" "ec2-consul-sg" {
-    name = "ec2-consul-sg"
+    name = "ec2-consul-${var.environment}-sg"
     description = "Allow internal access to various Consul services."
     ingress {
         from_port = 8300

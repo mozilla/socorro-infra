@@ -5,7 +5,7 @@ provider "aws" {
 }
 
 resource "aws_security_group" "elb-socorroelasticsearch-sg" {
-    name = "elb-${var.environment}-socorroelasticsearch-sg"
+    name = "elb-socorroelasticsearch-${var.environment}-sg"
     description = "Allow internal access to Elasticsearch."
     ingress {
         from_port = 9200
@@ -34,7 +34,7 @@ resource "aws_security_group" "elb-socorroelasticsearch-sg" {
 }
 
 resource "aws_security_group" "ec2-socorroelasticsearch-sg" {
-    name = "ec2-${var.environment}-socorroelasticsearch-sg"
+    name = "ec2-socorroelasticsearch-${var.environment}-sg"
     description = "Allow (alt) SSH to the Elasticsearch node."
     ingress {
         from_port = "${var.alt_ssh_port}"

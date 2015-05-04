@@ -5,7 +5,7 @@ provider "aws" {
 }
 
 resource "aws_security_group" "ec2-processor-sg" {
-    name = "ec2-processor-sg"
+    name = "ec2-processor-${var.environment}-sg"
     description = "Socorro processor security group."
     ingress {
         from_port = "${var.alt_ssh_port}"

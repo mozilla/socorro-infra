@@ -5,7 +5,7 @@ provider "aws" {
 }
 
 resource "aws_security_group" "ec2-socorroadmin-sg" {
-    name = "ec2-socorroadmin-sg"
+    name = "ec2-socorroadmin-${var.environment}-sg"
     description = "Allow (alt) SSH to the Admin node."
     ingress {
         from_port = "${var.alt_ssh_port}"
