@@ -5,7 +5,7 @@ provider "aws" {
 }
 
 resource "aws_security_group" "elb-socorrorabbitmq-sg" {
-    name = "elb-socorrorabbitmq-sg"
+    name = "elb-socorrorabbitmq-${var.environment}-sg"
     description = "Allow internal access to RabbitMQ."
     ingress {
         from_port = 5672
@@ -26,7 +26,7 @@ resource "aws_security_group" "elb-socorrorabbitmq-sg" {
 }
 
 resource "aws_security_group" "ec2-socorrorabbitmq-sg" {
-    name = "ec2-socorrorabbitmq-sg"
+    name = "ec2-socorrorabbitmq-${var.environment}-sg"
     description = "EC2 security for rabbitmq."
     ingress {
         from_port = "${var.alt_ssh_port}"

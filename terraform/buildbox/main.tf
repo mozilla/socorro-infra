@@ -5,7 +5,7 @@ provider "aws" {
 }
 
 resource "aws_security_group" "ec2-socorrobuildbox-sg" {
-    name = "ec2-socorrobuildbox-sg"
+    name = "ec2-socorrobuildbox-${var.environment}-sg"
     description = "Buildbox for socorro"
     ingress {
         from_port = "${var.alt_ssh_port}"

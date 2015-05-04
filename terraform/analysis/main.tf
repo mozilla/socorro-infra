@@ -5,7 +5,7 @@ provider "aws" {
 }
 
 resource "aws_security_group" "ec2-socorroanalysis-sg" {
-    name = "ec2-socorroanalysis-sg"
+    name = "ec2-socorroanalysis-${var.environment}-sg"
     description = "Crashanalysis node."
     ingress {
         from_port = "${var.alt_ssh_port}"
