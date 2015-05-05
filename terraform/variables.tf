@@ -6,6 +6,7 @@ variable "subnets" {}
 variable "collector_cert" {}
 variable "webapp_cert" {}
 variable "analysis_cert" {}
+variable "buildbox_cert" {}
 variable "ssh_key_file" {
     default = {
         us-west-2 = "socorro__us-west-2.pem"
@@ -26,7 +27,7 @@ variable "base_ami" {
 }
 variable "buildbox_ami" {
     default = {
-        us-west-2 = "ami-99614fa9"
+        us-west-2 = "ami-c34f7ef3"
     }
 }
 variable "elb_master_web_sg_id" {

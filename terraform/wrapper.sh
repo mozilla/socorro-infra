@@ -44,6 +44,11 @@ function make_symlinks {
     set +e
 }
 
+# Is terraform in PATH?  If not, it should be.
+if which terraform > /dev/null;then
+    PATH=$PATH:/home/centos/terraform
+fi
+
 # Is this a cry for help?
 contains_element $1 "${HELPARGS[@]}"
 if [ "${1}x" == "x" ]; then

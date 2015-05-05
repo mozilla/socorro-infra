@@ -23,6 +23,7 @@ for role in $(find ./terraform/* -maxdepth 1 -type d); do
                    -var="secret_bucket=FAKE" \
                    -var="collector_cert=FAKE" \
                    -var="analysis_cert=FAKE" \
+                   -var="buildbox_cert=FAKE" \
                    -var="webapp_cert=FAKE"
     popd
 done
