@@ -71,11 +71,12 @@ resource "aws_launch_configuration" "lc-socorrorabbitmq" {
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
-    security_groups = [
-        "${aws_security_group.ec2-socorrorabbitmq-sg.id}"
-    ]
     iam_instance_profile = "generic"
     associate_public_ip_address = true
+    security_groups = [
+        "${aws_security_group.elb-socorrorabbitmq-sg.id}",
+        "${aws_security_group.ec2-socorrorabbitmq-sg.id}"
+    ]
     lifecycle {
         create_before_destroy = true
     }
