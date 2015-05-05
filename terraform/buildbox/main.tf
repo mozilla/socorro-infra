@@ -55,7 +55,7 @@ resource "aws_elb" "elb-socorrobuildbox" {
 resource "aws_launch_configuration" "lc-socorrobuildbox" {
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} buildbox ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.buildbox_ami, var.region)}"
-    instance_type = "t2.micro"
+    instance_type = "c3.large"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     iam_instance_profile = "buildbox"
     associate_public_ip_address = true
@@ -80,8 +80,8 @@ resource "aws_autoscaling_group" "as-socorrobuildbox" {
     ]
     launch_configuration = "${aws_launch_configuration.lc-socorrobuildbox.id}"
     max_size = 10
-    min_size = 1
-    desired_capacity = 1
+    min_size = "${lookup(var.controllergroup_min_size, var.environment)}"
+    desired_capacity = "${lookup(var.controllergroup_desired_capacity, var.environment)}"
     load_balancers = [
         "elb-${var.environment}-socorrobuildbox"
     ]

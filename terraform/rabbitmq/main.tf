@@ -69,7 +69,7 @@ resource "aws_elb" "elb-socorrorabbitmq" {
 resource "aws_launch_configuration" "lc-socorrorabbitmq" {
     user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} rabbitmq ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
-    instance_type = "t2.micro"
+    instance_type = "${lookup(var.appgroup_instance_size, var.environment)}"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     security_groups = [
         "${aws_security_group.ec2-socorrorabbitmq-sg.id}"
@@ -94,8 +94,8 @@ resource "aws_autoscaling_group" "as-socorrorabbitmq" {
     ]
     launch_configuration = "${aws_launch_configuration.lc-socorrorabbitmq.id}"
     max_size = 1
-    min_size = 1
-    desired_capacity = 1
+    min_size = "${lookup(var.controllergroup_min_size, var.environment)}"
+    desired_capacity = "${lookup(var.controllergroup_desired_capacity, var.environment)}"
     load_balancers = [
         "elb-${var.environment}-socorrorabbitmq"
     ]

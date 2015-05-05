@@ -99,8 +99,8 @@ resource "aws_autoscaling_group" "as-socorroweb" {
     ]
     launch_configuration = "${aws_launch_configuration.lc-socorroweb.id}"
     max_size = 1
-    min_size = 1
-    desired_capacity = 1
+    min_size = "${lookup(var.appgroup_min_size, var.environment)}"
+    desired_capacity = "${lookup(var.appgroup_desired_capacity, var.environment)}"
     load_balancers = [
         "elb-${var.environment}-socorroweb"
     ]
