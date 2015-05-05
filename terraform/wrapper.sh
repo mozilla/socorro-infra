@@ -51,7 +51,7 @@ if [ "${1}x" == "x" ]; then
 fi
 
 # Did we want to generate symlinks?
-if [ $1 == "symlinks" ]; then
+if [ "$1" == "symlinks" ]; then
     make_symlinks
     exit 0
 fi
