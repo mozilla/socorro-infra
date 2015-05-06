@@ -18,7 +18,7 @@ include socorro::role::common
       ensure=> latest;
 
     'socorro':
-      ensure=> latest;
+      ensure=> installed;
   }
 
 }
