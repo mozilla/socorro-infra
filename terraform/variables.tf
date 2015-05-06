@@ -27,7 +27,7 @@ variable "base_ami" {
 }
 variable "buildbox_ami" {
     default = {
-        us-west-2 = "ami-c34f7ef3"
+        us-west-2 = "ami-e9eedfd9"
     }
 }
 variable "elb_master_web_sg_id" {
