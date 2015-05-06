@@ -1,6 +1,6 @@
 function create_rpm() {
     PROGSTEP="Building rpm";echo "`date` -- Building RPM for $ROLENAME"
-    # Make and prep the data directory if it does not exist
+    # Make / prep the data directory if it does not exist
     . ~/.bash_profile
     echo "Path is $PATH"
     sudo rm -rf /data/socorro || echo "`date` -- Socorro dir doesn't need removal"
