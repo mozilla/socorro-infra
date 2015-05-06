@@ -25,6 +25,8 @@ function create_rpm() {
     # Get a version-date tag to apply as a name to the AMI
     SOCORROAMINAME="${NEWSOCORROVERSION}-`date +%m%d%y`"
     # Sign the rpm file
+    echo "`date` -- Refreshing RPM repo from S3"
+    /home/centos/manage_repo.sh refresh
     rpm --addsign ${NEWRPM} < /home/centos/.rpmsign
     echo "`date` -- Signed socorro package, now copying into local repo"
     # Copy to the local repo
