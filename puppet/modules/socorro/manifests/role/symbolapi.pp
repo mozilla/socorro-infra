@@ -7,15 +7,7 @@ include socorro::role::common
     'mozilla-snappy':
       ensure  => running,
       enable  => true,
-      require => [
-        Package['mozilla-snappy'],
-        Exec['join_consul_cluster']
-      ];
-  }
-
-  package {
-    'mozilla-snappy':
-      ensure=> latest
+      require => Exec['join_consul_cluster'];
   }
 
 }

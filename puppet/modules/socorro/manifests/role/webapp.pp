@@ -14,10 +14,7 @@ include socorro::role::common
     'socorro-webapp':
       ensure  => running,
       enable  => true,
-      require => [
-        Package['socorro'],
-        Exec['join_consul_cluster']
-      ];
+      require => Exec['join_consul_cluster'];
 
     'socorro-middleware':
       ensure  => running,

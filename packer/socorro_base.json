@@ -1,7 +1,8 @@
 {
     "variables": {
         "aws_access_key": "",
-        "aws_secret_key": ""
+        "aws_secret_key": "",
+        "ssh_timeout": "10m"
     },
     "builders": [
         {
@@ -10,7 +11,7 @@
             "secret_key": "{{user `aws_secret_key`}}",
             "region": "us-west-2",
             "source_ami": "ami-c7d092f7",
-            "instance_type": "t2.micro",
+            "instance_type": "m3.medium",
             "ssh_username": "centos",
             "ami_name": "socorro_centos7__{{timestamp}}"
         }
@@ -24,6 +25,7 @@
         {
             "type": "puppet-masterless",
             "manifest_file": "../puppet/manifests/default.pp",
+            "staging_directory": "/etc/puppet",
             "module_paths": [
                 "../puppet/modules"
             ],

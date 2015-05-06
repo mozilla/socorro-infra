@@ -96,7 +96,7 @@ resource "aws_elb" "elb-consul" {
 }
 
 resource "aws_launch_configuration" "lc-consul" {
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} consul ${var.secret_bucket} ${var.environment}"
+    user_data = "${file(\"socorro_role.sh\")} consul ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
