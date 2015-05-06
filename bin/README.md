@@ -88,9 +88,16 @@ requires some minor configuration and file system permissions modifications.
   sudo service Jenkins restart
   ```
 
-### Install and configure Terraform and Packer
+### Terraform and Packer
 
-*TODO*
+RPMs for both Terraform and Packer are available in the `socorro-public` Yum
+repo and can be installed in the usual fashion.
+
+```bash
+sudo yum install packer terraform
+```
+
+*TODO*: Config details.
 
 ### Clone `socorro-infra` repo
 
