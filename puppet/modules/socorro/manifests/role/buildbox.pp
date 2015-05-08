@@ -4,18 +4,13 @@ class socorro::role::buildbox {
 include socorro::role::common
 
   service {
-    'deadci':
-      ensure  => running,
-      enable  => true,
-      require => File['deadci.ini'];
-
     'iptables':
       ensure => stopped,
       enable => false;
 
     'rabbitmq-server':
-      ensure  => running,
-      enable  => true;
+      ensure => running,
+      enable => true;
 
     'postgresql-9.3':
       ensure  => running,
@@ -23,30 +18,8 @@ include socorro::role::common
       require => Exec['postgres-trust-local'];
 
     'elasticsearch':
-      ensure  => running,
-      enable  => true;
-  }
-
-  package {
-    'deadci':
-      ensure => latest
-  }
-
-  # For use in the DeadCI config template.
-  $deadci_command = hiera('deadci_socorro_command')
-  $deadci_port = hiera('deadci_socorro_port')
-  $deadci_token = hiera('deadci_socorro_token')
-  $deadci_hmac = hiera('deadci_socorro_hmac')
-
-  file {
-    'deadci.ini':
-      ensure  => file,
-      path    => '/var/lib/deadci/deadci.ini',
-      content => template('socorro/var_lib_deadci/deadci.ini.erb'),
-      owner   => 'deadci',
-      group   => 'deadci',
-      mode    => '0640',
-      require => Package['deadci']
+      ensure => running,
+      enable => true;
   }
 
   file {

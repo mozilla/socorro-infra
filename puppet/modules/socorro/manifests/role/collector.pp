@@ -13,10 +13,7 @@ include socorro::role::common
     'socorro-collector':
       ensure  => running,
       enable  => true,
-      require => [
-        Package['socorro'],
-        Exec['join_consul_cluster']
-      ];
+      require => Exec['join_consul_cluster'];
 
     'socorro-crashmover':
       ensure  => running,
