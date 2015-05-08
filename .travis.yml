@@ -1,7 +1,11 @@
-sudo: no
+sudo: yes
 language: python
 
-install: false
+install: true
+
+before_script:
+  - wget "https://launchpad.net/ubuntu/+source/shellcheck/0.3.3-1~ubuntu14.04.1/+build/6293671/+files/shellcheck_0.3.3-1%7Eubuntu14.04.1_amd64.deb"
+  - sudo dpkg -i shellcheck_0.3.3-1~ubuntu14.04.1_amd64.deb
 
 script:
   - ./bin/test.sh

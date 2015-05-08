@@ -4,10 +4,15 @@ set -e
 
 TFORM_VERSION="0.4.2_linux_amd64"
 
+# lint check for shell scripts
+shellcheck $(find . -name "*.sh")
+
+# lint check for puppet
 gem install puppet puppet-lint
 puppet-lint --with-filename --no-80chars-check --no-autoloader_layout-check --fail-on-warnings puppet/
 puppet parser validate `find puppet/ -name '*.pp'`
 
+# ensure "terraform plan" returns no errors
 pushd terraform
 wget "https://dl.bintray.com/mitchellh/terraform/terraform_${TFORM_VERSION}.zip"
 unzip -u terraform_${TFORM_VERSION}.zip
