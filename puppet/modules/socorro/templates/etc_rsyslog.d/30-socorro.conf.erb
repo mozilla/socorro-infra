@@ -1,0 +1,16 @@
+#not set by default, needed to spool queues to disk
+$WorkDirectory /tmp
+
+$RepeatedMsgReduction off
+
+# put forward action on dedicated queue so it doesn't block writing logs
+# locally to disk if the server can't be contacted
+
+$ActionQueueType LinkedList
+$ActionQueueFileName rsyslog-forward-local.q
+$ActionQueueTimeoutEnqueue 10 #ms
+$ActionQueueSize 10000
+$ActionResumeRetryCount -1
+$ActionQueueSaveOnShutdown on
+
+*.* @<%= @logging_hostname %>:1514

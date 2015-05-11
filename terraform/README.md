@@ -29,8 +29,13 @@ sensitive data.  The wrapper expects this bucket to have a read-writeable
 `tfstate/` directory at the root level.
 
 The secret bucket also contains hiera keys, in the `hiera/` directory at the
-root level. At minimum, you must specify the hostname of the ELB to the consul
-cluster, inside a file named `hiera/${environment}/consul_hostname`.
+root level. You must specify the hostname of the ELB to the consul
+cluster, inside a file named `hiera/${environment}/consul_hostname`, and the
+hostname to a syslog server inside a file named
+`hiera/${environment}/logging_hostname`
+
+Puppet will use this to ensure that all nodes automatically join the Consul
+and logging services, respectively.
 
 Puppet will use this to ensure that all nodes automatically join the consul
 cluster.
