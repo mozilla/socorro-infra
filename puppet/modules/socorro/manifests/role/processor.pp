@@ -7,18 +7,7 @@ include socorro::role::common
     'socorro-processor':
       ensure  => running,
       enable  => true,
-      require => [
-        Package['socorro'],
-        Exec['join_consul_cluster']
-      ];
-  }
-
-  package {
-    'socorro':
-      ensure=> latest;
-
-    'nginx':
-      ensure=> latest;
+      require => Exec['join_consul_cluster'];
   }
 
 }

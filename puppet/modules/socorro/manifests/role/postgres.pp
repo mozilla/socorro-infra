@@ -7,18 +7,7 @@ include socorro::role::common
     'postgresql93-server':
       ensure  => running,
       enable  => true,
-      require => [
-        Package['socorro'],
-        Exec['join_consul_cluster']
-      ];
-  }
-
-  package {
-    'postgresql93-server':
-      ensure=> latest;
-
-    'socorro':
-      ensure=> latest;
+      require => Exec['join_consul_cluster'];
   }
 
 }

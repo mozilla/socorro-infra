@@ -7,18 +7,6 @@ include socorro::role::common
     'elasticsearch':
       ensure  => running,
       enable  => true,
-      require => [
-        Package['socorro'],
-        Exec['join_consul_cluster']
-      ];
+      require => Exec['join_consul_cluster'];
   }
-
-  package {
-    'elasticsearch':
-      ensure => latest;
-
-    'socorro':
-      ensure => latest;
-  }
-
 }

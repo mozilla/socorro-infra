@@ -14,4 +14,6 @@ techo "yum upgrade"
 yum -y upgrade
 techo "yum install puppet"
 yum -y install puppet
+techo "chown -R centos /etc/puppet"
+chown -R centos /etc/puppet
 techo "end"
