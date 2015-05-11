@@ -4,8 +4,8 @@
 # COMMON FUNCTIONS AND SETTINGS
 # Get incoming arguments
 REQUIREDARGS=1
-NUMOFARGS=$#
 ENVNAME=$1
+NUMOFARGS=$#
 if echo $2 | grep "skiprpm" > /dev/null;then
     echo "`date` -- Skipping RPM for this run"
     SKIPRPM="true"
@@ -73,12 +73,16 @@ function parse_github_payload() {
     echo "Git Payload Long: ${GITPAYLOAD}"|sed 's/,/\'$'\n/g';format_logs
     GITCOMMITHASH=`echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep head_commit | sed 's/"/ /g' | awk '{print $5}'`
     echo "Git commit hash:  ${GITCOMMITHASH}"
-    GITREF=`echo ${GITPAYLOADLONG} | sed 's/,/\'$'\n/g'| grep refs | head -n1 | sed 's/"/ /g' | awk '{print $4}'`
+    GITREF=`echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep ref | head -n1 | sed 's/"/ /g' | awk '{print $4}'`
     echo "Git Ref:  ${GITREF}"
     if echo ${GITREF} | grep tag > /dev/null;then
-        GITTAG=`echo ${GITPAYLOAD}|sed 's/,/\'$'\n/g' | grep refs | head -n1 | sed 's/"/ /g' | awk '{print $4}' | sed 's/\// /g' | awk '{print $3}'`
+        GITTAG=`echo ${GITPAYLOAD}|sed 's/,/\'$'\n/g' | grep ref | head -n1 | sed 's/"/ /g' | awk '{print $4}' | sed 's/\// /g' | awk '{print $3}'`
+        ENVNAME="prod"
+        echo "`date` -- Tag detected, # ${GITTAG}"
     else
         GITTAG="false"
+        ENVNAME="stage"
+        echo "`date` -- No tag detected, env must be stage"
     fi
     echo "Git Tag: ${GITTAG}"
     GITCOMMITTER=`echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep committer | sed 's/"/ /g'|awk '{print $5" "$6}'`
