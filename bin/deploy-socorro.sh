@@ -64,7 +64,31 @@ function error_check() {
 ####################################
 ## PROGRAM FUNCTIONS
 function format_logs() {
-    echo " ";echo " ";echo " ";echo "=================================================";echo " ";echo " ";echo " "
+    echo " ";echo " ";echo "====================";
+    environment_banner
+    echo " ====================";echo " ";echo " "
+}
+
+function environment_banner() {
+    if [ "$ENVNAME" == "stage" ]; then
+        echo ' _____ _'
+        echo '/  ___| |'
+        echo '\ `--.| |_ __ _  __ _  ___'
+        echo ' `--. \ __/ _` |/ _` |/ _ \ '
+        echo '/\__/ / || (_| | (_| |  __/'
+        echo '\____/ \__\__,_|\__, |\___|'
+        echo '                 __/ |'
+        echo '                |___/'
+    fi
+    if [ "$ENVNAME" == "prod" ]; then
+        echo '______              _'
+        echo '| ___ \            | |'
+        echo '| |_/ / __ ___   __| |'
+        echo '|  __/ `__/ _ \ / _` |'
+        echo '| |  | | | (_) | (_| |'
+        echo '\_|  |_|  \___/ \__,_|'
+    fi
+
 }
 
 function parse_github_payload() {
@@ -77,11 +101,11 @@ function parse_github_payload() {
     echo "Git Ref:  ${GITREF}"
     if echo ${GITREF} | grep tag > /dev/null;then
         GITTAG=`echo ${GITPAYLOAD}|sed 's/,/\'$'\n/g' | grep ref | head -n1 | sed 's/"/ /g' | awk '{print $4}' | sed 's/\// /g' | awk '{print $3}'`
-        ENVNAME="prod"
+        ENVNAME="prod";format_logs
         echo "`date` -- Tag detected, # ${GITTAG}"
     else
         GITTAG="false"
-        ENVNAME="stage"
+        ENVNAME="stage";format_logs
         echo "`date` -- No tag detected, env must be stage"
     fi
     echo "Git Tag: ${GITTAG}"
@@ -90,7 +114,8 @@ function parse_github_payload() {
 }
 
 function scale_in_per_elb() {
-    PROGSTEP="Scale in";echo "`date` -- Checking current desired capacity of autoscaling group for ${ROLEENVNAME}"
+    PROGSTEP="Scale in";format_logs
+    echo "`date` -- Checking current desired capacity of autoscaling group for ${ROLEENVNAME}"
     # We'll set the initial capacity and go back to that at the end
     INITIALCAPACITY=`aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names ${AUTOSCALENAME}|grep DesiredCapacity | sed 's/,//g'|awk '{print $2}'`
         RETURNCODE=$?;error_check
