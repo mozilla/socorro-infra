@@ -7,15 +7,7 @@ include socorro::role::common
     'rabbitmq-server':
       ensure  => running,
       enable  => true,
-      require => [
-        Package['rabbitmq-server'],
-        Exec['join_consul_cluster']
-      ];
-  }
-
-  package {
-    'rabbitmq-server':
-      ensure=> latest
+      require => Exec['join_consul_cluster'];
   }
 
 }

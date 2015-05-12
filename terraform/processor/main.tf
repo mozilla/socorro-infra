@@ -26,7 +26,7 @@ resource "aws_security_group" "ec2-processor-sg" {
 }
 
 resource "aws_launch_configuration" "lc-processor" {
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} processor ${var.secret_bucket} ${var.environment}"
+    user_data = "${file(\"socorro_role.sh\")} processor ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "${lookup(var.processorgroup_instance_size, var.environment)}"
     key_name = "${lookup(var.ssh_key_name, var.region)}"

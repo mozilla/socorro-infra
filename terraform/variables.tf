@@ -6,6 +6,7 @@ variable "subnets" {}
 variable "collector_cert" {}
 variable "webapp_cert" {}
 variable "analysis_cert" {}
+variable "buildbox_cert" {}
 variable "ssh_key_file" {
     default = {
         us-west-2 = "socorro__us-west-2.pem"
@@ -62,7 +63,7 @@ variable "base_ami" {
 }
 variable "buildbox_ami" {
     default = {
-        us-west-2 = "ami-99614fa9"
+        us-west-2 = "ami-e9eedfd9"
     }
 }
 variable "elb_master_web_sg_id" {
@@ -70,9 +71,6 @@ variable "elb_master_web_sg_id" {
 }
 variable "alt_ssh_port" {
     default = 22123
-}
-variable "puppet_archive" {
-    default = "https://s3-us-west-2.amazonaws.com/org.mozilla.crash-stats.packages-public/prov_cache/socorro-infra__puppet.tar.gz"
 }
 # NOTE - this deletes EBS devices, only change it for testing purposes!
 variable "del_on_term" {

@@ -75,7 +75,7 @@ resource "aws_elb" "elb-socorroelasticsearch" {
 }
 
 resource "aws_launch_configuration" "lc-socorroelasticsearch" {
-    user_data = "${file(\"socorro_role.sh\")} ${var.puppet_archive} elasticsearch ${var.secret_bucket} ${var.environment}"
+    user_data = "${file(\"socorro_role.sh\")} elasticsearch ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
@@ -102,7 +102,7 @@ resource "aws_autoscaling_group" "as-socorroelasticsearch" {
         "aws_launch_configuration.lc-socorroelasticsearch"
     ]
     launch_configuration = "${aws_launch_configuration.lc-socorroelasticsearch.id}"
-    max_size = 1
+    max_size = 10
     min_size = 1
     desired_capacity = 1
     load_balancers = [
