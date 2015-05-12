@@ -9,18 +9,6 @@ function socorro_role {
     ROLE=$1
     SECRET_BUCKET=$2
     ENV=$3
-
-<<<<<<< HEAD
-function socorro_role {
-<<<<<<< HEAD
-    if [ $# != 3 ]; then
-        echo "Syntax: $0 <role> <secret_bucket> <env>"
-        exit 1
-    fi
-
-    ROLE=$1
-    SECRET_BUCKET=$2
-    ENV=$3
     DIR="/etc/puppet"
 
     # Provide the secret bucket name to Hiera (hiera-s3).
