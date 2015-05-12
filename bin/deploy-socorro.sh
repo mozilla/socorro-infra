@@ -65,6 +65,22 @@ function error_check() {
 ## PROGRAM FUNCTIONS
 function format_logs() {
     echo " ";echo " ";echo " ";echo "=================================================";echo " ";echo " ";echo " "
+    if [ "$ENVNAME" = "stage" ];then
+        echo "\\|_____ _____ _____ _____ _____ \|"
+        echo "\\|   __\|_   _\|  _  \|   __\|   __\|\|"
+        echo "\\|__\  | \| \| \|     \|  \|  \|   __\|\|"
+        echo "\\|____\| \|_\| \|__\|__\|_____\|_____\|\|"
+        echo "\\|                                     \|"
+        echo " ";echo " "
+    fi
+    if [ "$ENVNAME" = "prod" ];then
+        echo "_____ _____ _____ ____  "
+        echo "  _  \| __  \|     \ |   \ "
+        echo "   __\|    -\|  \|  \| \| \|"
+        echo "__\|  \|__\|__\|_____\|____/ "
+        echo "======================";
+        echo " ";echo " "
+    fi
 }
 
 function parse_github_payload() {
@@ -87,6 +103,7 @@ function parse_github_payload() {
     echo "Git Tag: ${GITTAG}"
     GITCOMMITTER=`echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep committer | sed 's/"/ /g'|awk '{print $5" "$6}'`
     echo "Committer: ${GITCOMMITTER}"
+    format_logs
 }
 
 function scale_in_per_elb() {
