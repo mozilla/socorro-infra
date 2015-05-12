@@ -7,9 +7,9 @@ function create_rpm() {
         then
         echo "`date` -- Skipping RPM build"
     else
-        sudo rm -rf /data/socorro || echo "`date` -- Socorro dir doesn't need removal"
-        sudo mkdir -p /data || echo "`date` -- /data already exists"
-        sudo chown centos /data
+        rm -rf /data || echo "`date` -- Socorro dir doesn't need removal"
+        mkdir -p /data || echo "`date` -- /data already exists"
+        chown centos /data
         cd /data
         echo "`date` -- Cloning the socorro repo into /data/socorro"
         git clone https://github.com/mozilla/socorro.git
@@ -28,21 +28,26 @@ function create_rpm() {
     NEWSOCORROVERSION=$(ls -lart /home/centos/org.mozilla.crash-stats.packages-public/x86_64/socorro-*.rpm| \
                         tail -n1|sed 's/\// /g'|sed 's/\./ /g'|awk '{print $8}')
     # Get a version-date tag to apply as a name to the AMI
-    SOCORROAMINAME="${NEWSOCORROVERSION}-`date +%m%d%y`"
+    SOCORROAMINAME="${NEWSOCORROVERSION}-`date +%Y%m%d`"
     if [ "$SKIPRPM" = "true" ];then
         echo "Skipping rpm upload"
         else
         echo "`date` -- Completed build of $ROLENAME rpm with a return code of $RETURNCODE, now signing the rpm"
         # Sign the rpm file
+        echo "`date` -- Signing the RPM"
+        rpm --addsign ${NEWRPM} < /etc/jenkins/passphrase.txt
+            RETURNCODE=$?;error_check
+        echo "`date` -- Signed ${NEWRPM} with the "
         echo "`date` -- Refreshing RPM repo from S3"
         /home/centos/manage_repo.sh refresh
-        rpm --addsign ${NEWRPM} < /home/centos/.rpmsign
-        echo "`date` -- Signed socorro package, now copying into local repo"
+            RETURNCODE=$?;error_check
+        echo "`date` -- Refreshed repo with ${RETURNCODE}"
         # Copy to the local repo
+        echo "`date` -- Copying ${NEWRPM} to the repo"
         cp ${NEWRPM} ~/org.mozilla.crash-stats.packages-public/x86_64
         echo "`date` -- Uploading RPM package to S3"
         /home/centos/manage_repo.sh update
             RETURNCODE=$?;error_check
-        echo "`date` S3 update of yum repo exited with a return code of ${RETURNCODE}, verifying yum package updates"
+        echo "`date` S3 update of yum repo exited with a return code of ${RETURNCODE}"
     fi
 }

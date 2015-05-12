@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Get AWS creds injected
-. /home/centos/.aws-config
+. /etc/jenkins/aws-config.sh
 
 function log_format() {
   echo " ";echo "========================================="

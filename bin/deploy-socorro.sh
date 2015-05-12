@@ -25,7 +25,7 @@ RANDOM_STRING="$RANDOM-$RANDOM"
 STARTLOG=/var/log/jenkins/${RANDOM_STRING}-startlog.out
 ENDLOG=/var/log/jenkins/${RANDOM_STRING}-endlog.out
 # Get AWS creds injected
-. /home/centos/.aws-config
+. /etc/jenkins/aws-config.sh
 
 # Bring in functions in lib
 . /home/centos/socorro-infra/bin/lib/identify_role.sh
@@ -204,7 +204,7 @@ function monitor_overall_health() {
     until [ "${HEALTHSTATUS}" = "ALLHEALTHY" ]
         do
         ATTEMPTCOUNT=`echo $(($ATTEMPTCOUNT+1))`
-        echo "`date` -- Attempt ${ATTEMPTCOUNT} of 10 checking on healthy elbs"
+        echo "`date` -- Attempt ${ATTEMPTCOUNT} of 15 checking on healthy elbs"
         for ROLEENVNAME in $(cat /home/centos/socorro-infra/bin/lib/${ENVNAME}_socorro_master.list)
             do
             # Get the AS name and ELB name for this particular role/env
@@ -288,7 +288,7 @@ function find_ami() {
 
 function apply_ami() {
     # For each of our apps, we want to use terraform to apply the new base AMI we've just created
-    for ROLEENVNAME in $(cat /home/centos/socorro-g/bin/lib/${ENVNAME}_socorro_master.list)
+    for ROLEENVNAME in $(cat /home/centos/socorro-infra/bin/lib/${ENVNAME}_socorro_master.list)
         do
             # Get AS group name for each ROLEENVNAME
             echo "`date` -- Checking role for ${ROLEENVNAME}"

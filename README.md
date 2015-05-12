@@ -89,8 +89,21 @@ The scripts here used to deploy Socorro to numerous cluster roles are:
 * `lib/identify_role.sh`: Identifies the ELB, AS group, and Terraform
   name for a given *rolename-envname* combination.
 
+* `lib/prod_socorro_master.list`: A text list of all the
+  *rolename-envname* combinations that a Socorro deploy must touch.
+
 * `lib/stage_socorro_master.list`: A text list of all the
   *rolename-envname* combinations that a Socorro deploy must touch.
+
+*
+
+* `jenkins/backup_jenkins.sh`: A script to automate the backup of a Jenkins AWS AMI and apply it to the existing infrastructure as the backing ami.
+
+* `jenkins/terraform-plan.sh`: A script to perform a terraform plan on a given environment.
+
+* `jenkins/terraform-apply.sh`: A script to perform a terffaform apply on a given environment.
+
+* `jenkins/update-infrastructure.sh`: A script to add scaling policies, unhealthy-nodes-in-elb alarms, scaling activity notifications, and anything else Terraform isn't capable of yet.
 
 
 ## Setup for Buildbox (Jenkins)
@@ -109,71 +122,32 @@ An IAM user for Jenkins must be created and granted the following permissions:
 * Full access to the AWS EC2 API (`*`).
 * Rights to AWS IAM `PassRole` (to apply roles to newly created
   infrastructure).
+* Elasticache full rights policy applied
 
 ### Install AWS CLI
 
 The AWS CLI tool must be available. This can be installed any number of ways
-(via pip, for example) - a generic example is provided below.
+(via pip, for example).  It is installed in our infra via puppet.
 
-```bash
-curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
-unzip awscli-bundle.zip
-sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
-```
 ### AWS config file
 
-An executable config file in `/home/centos/.aws-config`:
-```bash
-export AWS_ACCESS_KEY_ID=<key>
-export AWS_SECRET_ACCESS_KEY=<secret>
-export aws_access_key=<key>
-export aws_secret_key=<secret>
-export AWS_DEFAULT_REGION=<region> # us-west-2
-```
-
-*TODO*: Explain each of the above-noted variables.
+Puppet places a file in /etc/jenkins/aws-config to allow the jenkins run to assume the previously documented AWS IAM permissions.
 
 ### Path
 
-Add the following locations to `$PATH`:
+Add the following locations to `$PATH` in jobs you create:
 `/home/centos/terraform:/usr/pgsql-9.3/bin:/usr/local/bin`
-
-### Install Jenkins
-
-```bash
-sudo wget -O /etc/yum.repos.d/Jenkins.repo http://pkg.Jenkins-ci.org/redhat/Jenkins.repo
-sudo rpm --import https://Jenkins-ci.org/redhat/Jenkins-ci.org.key
-sudo yum install Jenkins
-```
-
-### Modify the Jenkins user
-
-For simplicity we run Jenkins under the default system user, `centos`. This
-requires some minor configuration and file system permissions modifications.
-
-* Update `/etc/sysconfig/Jenkins` and update user to be `centos` instead of
-  `Jenkins`.
-* Alter ownership on the related file system locations and restart Jenkins.
-
-  ```bash
-    sudo chown -R centos /var/lib/Jenkins \
-    /var/log/Jenkins \
-    /usr/lib/Jenkins \
-    /var/cache/Jenkins
-  sudo service Jenkins restart
-  ```
+### Post creation steps on a socorro buildbox
+* update /etc/sudoers and change ```Defaults    requiretty``` to ```Defaults    !requiretty```
+* In Jenkins, install the git plugin and restart the server.
+* On the Jenkins server, git clone https://github.com/mozilla/socorro-infra into /home/centos, creating /home/centos/socorro-infra
+* In Jenkins, create job pointing to /home/centos/socorro-infra/bin/deploy-socorro.sh with a parameter of 'payload'
+* On the Jenkins server, manually run /home/centos/manage_repo.sh init one time
 
 ### Terraform and Packer
 
-RPMs for both Terraform and Packer are available in the `socorro-public` Yum
-repo and can be installed in the usual fashion.
+Both Terraform and Packer are installed via puppet in our infrastructure.
 
-```sudo yum install packer terraform```
-
-*TODO*: Config details.
-* Put the signing key in ```/home/centos/.rpmsign
-
-### Clone `socorro-infra` repo
 
 
 *TODO*

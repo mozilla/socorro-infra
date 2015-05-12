@@ -5,7 +5,7 @@ REQUIREDARGS=2
 NUMOFARGS=$#
 
 # Get AWS creds injected
-. /home/centos/.aws-config
+. /etc/jenkins/aws-config.sh
 # Bring in functions from jenkinslib scripts
 . /home/centos/socorro-infra/bin/jenkinslib/identify_role.sh
 
