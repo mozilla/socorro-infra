@@ -4,6 +4,22 @@ provider "aws" {
     secret_key = "${var.secret_key}"
 }
 
+resource "aws_elasticache_subnet_group" "ec-socorroweb-sub" {
+    name = "ec-${var.environment}-socorroweb-sub"
+    description = "Socorro webapp elasticache subnet"
+    subnet_ids = ["${split(",", var.subnets)}"]
+}
+
+resource "aws_elasticache_cluster" "ec-socorroweb" {
+    cluster_id = "ec-${var.environment}-socorroweb"
+    engine = "memcached"
+    node_type = "cache.m1.small"
+    num_cache_nodes = 1
+    parameter_group_name = "default.memcached1.4"
+    security_group_ids = [ "${aws_security_group.ec2-socorroweb-sg.id}" ]
+    subnet_group_name = "${aws_elasticache_subnet_group.ec-socorroweb-sub.name}"
+}
+
 resource "aws_security_group" "ec2-socorroweb-sg" {
     name = "ec2-socorroweb-${var.environment}-sg"
     description = "Security group for socorro web app"
