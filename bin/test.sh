@@ -2,7 +2,7 @@
 
 set -e
 
-TFORM_VERSION="0.4.2_linux_amd64"
+TFORM_VERSION="0.5.0_linux_amd64"
 
 gem install puppet puppet-lint
 puppet-lint --with-filename --no-80chars-check --no-autoloader_layout-check --fail-on-warnings puppet/
