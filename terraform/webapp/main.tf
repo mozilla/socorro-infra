@@ -10,13 +10,34 @@ resource "aws_elasticache_subnet_group" "ec-socorroweb-sub" {
     subnet_ids = ["${split(",", var.subnets)}"]
 }
 
+resource "aws_security_group" "ec-socorroweb-sg" {
+    name = "ec-${var.environment}-socorroweb-sg"
+    description = "Security group for socorro web app to memcached"
+    ingress {
+        from_port = 11211
+        to_port = 11211
+        protocol = "tcp"
+        security_groups = [
+            "${aws_security_group.ec2-socorroweb-sg.id}"
+        ]
+    }
+    lifecycle {
+        create_before_destroy = true
+    }
+    tags {
+        Environment = "${var.environment}"
+        role = "socorrowebapp"
+        project = "socorro"
+    }
+}
+
 resource "aws_elasticache_cluster" "ec-socorroweb" {
     cluster_id = "ec-${var.environment}-socorroweb"
     engine = "memcached"
     node_type = "cache.m1.small"
     num_cache_nodes = 1
     parameter_group_name = "default.memcached1.4"
-    security_group_ids = [ "${aws_security_group.ec2-socorroweb-sg.id}" ]
+    security_group_ids = [ "${aws_security_group.ec-socorroweb-sg.id}" ]
     subnet_group_name = "${aws_elasticache_subnet_group.ec-socorroweb-sub.name}"
 }
 
