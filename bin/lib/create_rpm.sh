@@ -25,7 +25,7 @@ function create_rpm() {
     # Find the rpm file we created
     NEWRPM=`ls -lart /data/socorro/socorro*.rpm|awk '{print $9}'`
     # Get the version of that socorro rpm so we log it nicely.
-    NEWSOCORROVERSION=`ls /home/centos/org.mozilla.crash-stats.packages-public/x86_64/socorro-*.rpm|tail -n1|sed 's/\// /g'|sed 's/\./ /g'|awk '{print $8}'`
+    NEWSOCORROVERSION=`ls -lart /home/centos/org.mozilla.crash-stats.packages-public/x86_64/socorro-*.rpm|tail -n1|sed 's/\// /g'|sed 's/\./ /g'|awk '{print $8}'`
     # Get a version-date tag to apply as a name to the AMI
     SOCORROAMINAME="${NEWSOCORROVERSION}-`date +%m%d%y`"
     if [ "$SKIPRPM" = "true" ];then

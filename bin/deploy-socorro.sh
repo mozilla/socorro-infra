@@ -11,8 +11,14 @@ if echo $2 | grep "skiprpm" > /dev/null;then
     SKIPRPM="true"
 fi
 if echo $3 | grep "skipami" > /dev/null;then
-    NEWAMI="ami-19102029"
+    NEWAMI="ami-19102029" #just random
     SKIPAMI="true"
+fi
+if [ "$2" = "manual" ];then
+    MANUALPUSH="true" # We're just doing a deploy by HASH
+    HASHTODEPLOY=${GITHUBHASH} # This will be build with parameters for git commit has to build in jenkins
+else
+    MANUALPUSH="false"
 fi
 GITPAYLOAD=${payload}
 RANDOM_STRING="$RANDOM-$RANDOM"
@@ -29,7 +35,7 @@ RANDOM_STRING="$RANDOM-$RANDOM"
 function show_usage() {
         echo " =================== ";echo " ";
         echo " Syntax "
-        echo " ./deploy-socorro.sh $env (stage or prod)"
+        echo " ./deploy-socorro.sh $env [manual](optional) [$githash-to-deploy](optional)"
         echo " "
         echo " Example: ./deploy-socorro.sh stage"
         exit 0
@@ -94,7 +100,9 @@ function environment_banner() {
 function parse_github_payload() {
     PROGSTEP="Parse github webhook payload"
     # We will get all sorts of fun info here!
-    echo "Git Payload Long: ${GITPAYLOAD}"|sed 's/,/\'$'\n/g';format_logs
+    echo "Git Payload for copying into jenkins build parameter"
+    echo " ";echo ${GITPAYLOAD};echo " "
+    echo "Git Payload Readable: ${GITPAYLOAD}"|sed 's/,/\'$'\n/g';format_logs
     GITCOMMITHASH=`echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep head_commit | sed 's/"/ /g' | awk '{print $5}'`
     echo "Git commit hash:  ${GITCOMMITHASH}"
     GITREF=`echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep ref | head -n1 | sed 's/"/ /g' | awk '{print $4}'`
@@ -104,9 +112,13 @@ function parse_github_payload() {
         ENVNAME="prod";format_logs
         echo "`date` -- Tag detected, # ${GITTAG}"
     else
-        GITTAG="false"
-        ENVNAME="stage";format_logs
-        echo "`date` -- No tag detected, env must be stage"
+        if [ "${MANUALPUSH}" = "true" ];then
+            GITCOMMITHASH=${GITHUBHASH}
+        else
+            GITTAG="false"
+            ENVNAME="stage";format_logs
+            echo "`date` -- No tag detected, no manual build flag, env must be stage"
+        fi
     fi
     echo "Git Tag: ${GITTAG}"
     GITCOMMITTER=`echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep committer | sed 's/"/ /g'|awk '{print $5" "$6}'`
@@ -236,10 +248,10 @@ function terminate_instances() {
     echo "`date` -- $1 termination return code of ${RETURNCODE}"
 }
 
-function find_prod_ami() {
+function find_ami() {
     PROGSTEP="Find correct prod AMI"
     echo "`date` -- Attempting to locate AMI tagged with appsha of ${GITCOMMITHASH}"
-    NEWAMI=`aws ec2 describe-images --filters Name=tag:appsha,Values=${GITCOMMITHASH}|grep ImageId | sed 's/"/ /g' | awk '{print $3}'`
+    NEWAMI=`aws ec2 describe-images --filters Name=tag:apphash,Values=${GITCOMMITHASH}|grep ImageId | sed 's/"/ /g' | awk '{print $3}'`
         RETURNCODE=$?;error_check
     echo "`date` -- AMI id ${NEWAMI} found containing github hash tag of ${GITCOMMITHASH} : Return code ${RETURNCODE}"
 }
@@ -286,12 +298,12 @@ function query_end_scale() {
 ## PROGRAM RUN
 check_syntax    # Scan for noobs
 parse_github_payload  # We check the incoming payload for some info
-if [ "${ENVNAME}" = stage ];then
+if [ "${ENVNAME}" = "stage" ] && [ "${MANUALPUSH}" = "false" ];then
     time create_rpm; format_logs    # Git clone, build, package with fpm, sign, and upload rpm to S3 public repo
     time create_ami; format_logs    # Use packer to create an AMI to use as base
 fi
-if [ "${ENVNAME}" = prod ];then
-    time find_prod_ami; format_logs
+if [ "${ENVNAME}" = prod ] || [ "${MANUALPUSH}" = "true" ];then
+    time find_ami; format_logs
 fi
 time apply_ami; format_logs    # For each ROLEENV group, set the baseAMI to the AMI we created
 time scale_in_all; format_logs    # For each ROLEENV group, double the size and get a list of old instances to kill later
