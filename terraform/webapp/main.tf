@@ -106,6 +106,8 @@ resource "aws_elb" "elb-socorroweb" {
         project = "socorro"
     }
     cross_zone_load_balancing = true
+    connection_draining = true
+    connection_draining_timeout = 30
 }
 
 resource "aws_launch_configuration" "lc-socorroweb" {
