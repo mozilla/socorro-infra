@@ -102,8 +102,8 @@ resource "aws_autoscaling_group" "as-socorrobuildbox" {
     ]
     launch_configuration = "${aws_launch_configuration.lc-socorrobuildbox.id}"
     max_size = 10
-    min_size = 1
-    desired_capacity = 1
+    min_size = "${lookup(var.controllergroup_min_size, var.environment)}"
+    desired_capacity = "${lookup(var.controllergroup_desired_capacity, var.environment)}"
     load_balancers = [
         "elb-${var.environment}-socorrobuildbox"
     ]

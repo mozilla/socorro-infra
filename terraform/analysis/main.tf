@@ -82,7 +82,7 @@ resource "aws_elb" "elb-socorroanalysis" {
 resource "aws_launch_configuration" "lc-socorroanalysis" {
     user_data = "${file(\"socorro_role.sh\")} analysis ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
-    instance_type = "t2.micro"
+    instance_type = "${lookup(var.appgroup_instance_size, var.environment)}"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     iam_instance_profile = "generic"
     associate_public_ip_address = true
@@ -107,8 +107,8 @@ resource "aws_autoscaling_group" "as-socorroanalysis" {
     ]
     launch_configuration = "${aws_launch_configuration.lc-socorroanalysis.id}"
     max_size = 10
-    min_size = 1
-    desired_capacity = 1
+    min_size = "${lookup(var.controllergroup_min_size, var.environment)}"
+    desired_capacity = "${lookup(var.controllergroup_desired_capacity, var.environment)}"
     load_balancers = [
         "elb-${var.environment}-socorroanalysis"
     ]

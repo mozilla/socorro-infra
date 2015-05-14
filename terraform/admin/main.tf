@@ -54,8 +54,8 @@ resource "aws_autoscaling_group" "as-socorroadmin" {
     ]
     launch_configuration = "${aws_launch_configuration.lc-socorroadmin.id}"
     max_size = 10
-    min_size = 1
-    desired_capacity = 1
+    min_size = "${lookup(var.controllergroup_min_size, var.environment)}"
+    desired_capacity = "${lookup(var.controllergroup_desired_capacity, var.environment)}"
     tag {
       key = "Environment"
       value = "${var.environment}"
