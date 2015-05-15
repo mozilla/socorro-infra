@@ -23,6 +23,22 @@ resource "aws_security_group" "ec2-symbolapi-sg" {
             "${var.elb_master_web_sg_id}"
         ]
     }
+    egress {
+        from_port = 0
+        to_port = 65535
+        protocol = "tcp"
+        cidr_blocks = [
+            "0.0.0.0/0"
+        ]
+    }
+    egress {
+        from_port = 1514
+        to_port = 1514
+        protocol = "udp"
+        cidr_blocks = [
+            "0.0.0.0/0"
+        ]
+    }
     lifecycle {
         create_before_destroy = true
     }
