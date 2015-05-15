@@ -15,6 +15,9 @@ variable "ssh_key_file" {
 variable "region" {
     default = "us-west-2"
 }
+variable "max_retries" {
+    default = 5
+}
 variable "ssh_key_name" {
     default = {
         us-west-2 = "socorro__us-west-2"
