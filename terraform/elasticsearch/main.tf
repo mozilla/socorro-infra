@@ -23,6 +23,22 @@ resource "aws_security_group" "elb-socorroelasticsearch-sg" {
             "172.31.0.0/16"
         ]
     }
+    egress {
+        from_port = 0
+        to_port = 65535
+        protocol = "tcp"
+        cidr_blocks = [
+            "0.0.0.0/0"
+        ]
+    }
+    egress {
+        from_port = 1514
+        to_port = 1514
+        protocol = "udp"
+        cidr_blocks = [
+            "0.0.0.0/0"
+        ]
+    }
     lifecycle {
         create_before_destroy = true
     }
@@ -40,6 +56,22 @@ resource "aws_security_group" "ec2-socorroelasticsearch-sg" {
         from_port = "${var.alt_ssh_port}"
         to_port = "${var.alt_ssh_port}"
         protocol = "tcp"
+        cidr_blocks = [
+            "0.0.0.0/0"
+        ]
+    }
+    egress {
+        from_port = 0
+        to_port = 65535
+        protocol = "tcp"
+        cidr_blocks = [
+            "0.0.0.0/0"
+        ]
+    }
+    egress {
+        from_port = 1514
+        to_port = 1514
+        protocol = "udp"
         cidr_blocks = [
             "0.0.0.0/0"
         ]
