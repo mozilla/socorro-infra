@@ -8,6 +8,9 @@ variable "webapp_cert" {}
 variable "analysis_cert" {}
 variable "buildbox_cert" {}
 variable "rds_root_password" {}
+variable "base_ami" {
+    default = {}
+}
 variable "ssh_key_file" {
     default = {
         us-west-2 = "socorro__us-west-2.pem"
@@ -22,11 +25,6 @@ variable "max_retries" {
 variable "ssh_key_name" {
     default = {
         us-west-2 = "socorro__us-west-2"
-    }
-}
-variable "base_ami" {
-    default = {
-        us-west-2 = "ami-51604e61"
     }
 }
 variable "buildbox_ami" {
