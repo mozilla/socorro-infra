@@ -103,12 +103,16 @@ function parse_github_payload() {
     echo "Git Payload for copying into jenkins build parameter"
     echo " ";echo ${GITPAYLOAD};echo " "
     echo "Git Payload Readable: ${GITPAYLOAD}"|sed 's/,/\'$'\n/g';format_logs
-    GITCOMMITHASH=`echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep head_commit | sed 's/"/ /g' | awk '{print $5}'`
+    GITCOMMITHASH=$(echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep head_commit | \
+                    sed 's/"/ /g' | awk '{print $5}')
     echo "Git commit hash:  ${GITCOMMITHASH}"
-    GITREF=`echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep ref | head -n1 | sed 's/"/ /g' | awk '{print $4}'`
+    GITREF=$(echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep ref | head -n1 | \
+             sed 's/"/ /g' | awk '{print $4}')
     echo "Git Ref:  ${GITREF}"
     if echo ${GITREF} | grep tag > /dev/null;then
-        GITTAG=`echo ${GITPAYLOAD}|sed 's/,/\'$'\n/g' | grep ref | head -n1 | sed 's/"/ /g' | awk '{print $4}' | sed 's/\// /g' | awk '{print $3}'`
+        GITTAG=$(echo ${GITPAYLOAD}|sed 's/,/\'$'\n/g' | grep ref | head -n1 | \
+                 sed 's/"/ /g' | awk '{print $4}' | \
+                 sed 's/\// /g' | awk '{print $3}')
         ENVNAME="prod";format_logs
         echo "`date` -- Tag detected, # ${GITTAG}"
     else
@@ -121,7 +125,8 @@ function parse_github_payload() {
         fi
     fi
     echo "Git Tag: ${GITTAG}"
-    GITCOMMITTER=`echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep committer | sed 's/"/ /g'|awk '{print $5" "$6}'`
+    GITCOMMITTER=$(echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep committer | \
+                   sed 's/"/ /g'|awk '{print $5" "$6}')
     echo "Committer: ${GITCOMMITTER}"
 }
 
@@ -129,7 +134,10 @@ function scale_in_per_elb() {
     PROGSTEP="Scale in";format_logs
     echo "`date` -- Checking current desired capacity of autoscaling group for ${ROLEENVNAME}"
     # We'll set the initial capacity and go back to that at the end
-    INITIALCAPACITY=`aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names ${AUTOSCALENAME}|grep DesiredCapacity | sed 's/,//g'|awk '{print $2}'`
+    INITIALCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
+                      --auto-scaling-group-names ${AUTOSCALENAME} \
+                      --output text \
+                      --query 'AutoScalingGroups[*].DesiredCapacity')
         RETURNCODE=$?;error_check
     echo "`date` -- ${AUTOSCALENAME} initial capacity is set to ${INITIALCAPACITY}"
     # How many new nodes will we need to scale in for this deploy?
@@ -137,7 +145,11 @@ function scale_in_per_elb() {
         RETURNCODE=$?;error_check
     echo "`date` -- ${AUTOSCALENAME} capacity for this deploy is set to ${DEPLOYCAPACITY}"
     # Get a list of existing instance ids to terminate later
-    INITIALINSTANCES="${INITIALINSTANCES} `aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name ${AUTOSCALENAME} | grep InstanceId|sed 's/"/ /g'|awk '{print $3}'` "
+    INITIALINSTANCES="${INITIALINSTANCES} $(aws autoscaling \
+                      describe-auto-scaling-groups \
+                      --auto-scaling-group-name ${AUTOSCALENAME} \
+                      --output text \
+                      --query 'AutoScalingGroups[*].Instances[*].InstanceId')"
         RETURNCODE=$?;error_check
     echo "`date` -- Current instance list: ${INITIALINSTANCES}"
     # Tell the AWS api to give us more instances in that role env.
@@ -149,11 +161,19 @@ function scale_in_per_elb() {
 function check_health_per_elb() {
     PROGSTEP="Checking ELB status for ${ELBNAME}"
     # We'll want to ensure the number of healthy hosts is equal to total number of hosts
-    ASCAPACITY=`aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names ${AUTOSCALENAME}| grep DesiredCapacity | sed 's/,//g'|awk '{print $2}'`
+    ASCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
+                 --auto-scaling-group-names ${AUTOSCALENAME} \
+                 --output text \
+                 --query 'AutoScalingGroups[*].DesiredCapacity')
         RETURNCODE=$?;error_check
-    HEALTHYHOSTCOUNT=`aws elb describe-instance-health --load-balancer-name ${ELBNAME} | grep InService | wc -l | awk '{print $1}'`
+    HEALTHYHOSTCOUNT=$(aws elb describe-instance-health \
+                       --load-balancer-name elb-stage-socorroweb \
+                       --output text --query 'InstanceStates[*].State' | \
+                       grep InService | wc -l | awk '{print $1}')
         RETURNCODE=$?;error_check
-    CURRENTHEALTH="${CURRENTHEALTH} `aws elb describe-instance-health --load-balancer-name ${ELBNAME} | grep State | sed 's/"/ /g'|awk '{print $3}'` "
+    CURRENTHEALTH="${CURRENTHEALTH} $(aws elb describe-instance-health \
+                   --load-balancer-name elb-stage-socorroweb \
+                   --output text --query 'InstanceStates[*].State')"
         RETURNCODE=$?;error_check
     if [ ${HEALTHYHOSTCOUNT} -lt ${ASCAPACITY} ];then
         CURRENTHEALTH="Out"
@@ -212,7 +232,9 @@ function monitor_overall_health() {
 function instance_deregister() {
     # We check to see if each instance in a given ELB is one of the doomed nodes
     if echo ${INITIALINSTANCES} | grep $1 > /dev/null;then
-        aws elb deregister-instances-from-load-balancer --load-balancer-name $2 --instances $1
+        aws elb deregister-instances-from-load-balancer \
+            --load-balancer-name $2 \
+            --instances $1
         RETURNCODE=$?;NOTFATAL="true";error_check
         echo "`date` -- Attempt to deregister $1 from $2 returned a code of ${RETURNCODE}"
     fi
@@ -231,7 +253,9 @@ function elb_query_to_drain_instances() {
              echo "No ELB to check for ${ROLEENVNAME}"
              else
              # For every instance in $ELBNAME, check if it's slated to be killed.
-             for INSTANCETOCHECK in $(aws elb describe-instance-health --load-balancer-name ${ELBNAME}|grep InstanceId|sed 's/"/ /g'|awk '{print $3}')
+             for INSTANCETOCHECK in $(aws elb describe-instance-health \
+                                      --load-balancer-name elb-stage-socorroweb \
+                                      --output text --query 'InstanceStates[*].InstanceId')
                 do
                 instance_deregister ${INSTANCETOCHECK} ${ELBNAME}
             done
@@ -251,7 +275,9 @@ function terminate_instances() {
 function find_ami() {
     PROGSTEP="Find correct prod AMI"
     echo "`date` -- Attempting to locate AMI tagged with appsha of ${GITCOMMITHASH}"
-    NEWAMI=`aws ec2 describe-images --filters Name=tag:apphash,Values=${GITCOMMITHASH}|grep ImageId | sed 's/"/ /g' | awk '{print $3}'`
+    NEWAMI=$(aws ec2 describe-images \
+             --filters Name=tag:apphash,Values=${GITCOMMITHASH} \
+             --output text --query 'Images[*].ImageId')
         RETURNCODE=$?;error_check
     echo "`date` -- AMI id ${NEWAMI} found containing github hash tag of ${GITCOMMITHASH} : Return code ${RETURNCODE}"
 }
@@ -267,7 +293,6 @@ function apply_ami() {
             echo "`date` -- Attempting to terraform plan and apply ${AUTOSCALENAME} with new AMI id ${NEWAMI} and tagging with ${SOCORROHASH}"
             /home/centos/socorro-infra/terraform/wrapper.sh "plan -var base_ami.us-west-2=${NEWAMI}" ${ENVNAME} ${TERRAFORMNAME}
             echo " ";echo " ";echo "==================================";echo " "
-            #Not used yet TERRAFORMCAPACITY=`aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names ${AUTOSCALENAME}| grep -A3 ${AUTOSCALENAME} | grep -C 3 ARN|grep DesiredCapacity | sed 's/,//g'|awk '{print $2}'`
             /home/centos/socorro-infra/terraform/wrapper.sh "apply -var base_ami.us-west-2=${NEWAMI}" ${ENVNAME} ${TERRAFORMNAME}
                 RETURNCODE=$?;error_check
             echo "`date` -- Got return code ${RETURNCODE} applying terraform update"
@@ -290,7 +315,10 @@ function query_end_scale() {
     echo "END STATE FOR AUTO SCALING GROUPS"
     for ROLEENVNAME in $(cat /home/centos/socorro-infra/bin/lib/${ENVNAME}_socorro_master.list);do
         identify_role ${ROLEENVNAME}
-        FINALCAPACITY=`aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names ${AUTOSCALENAME}| grep -A3 ${AUTOSCALENAME} | grep -C 3 ARN|grep DesiredCapacity | sed 's/,//g'|awk '{print $2}'`
+        FINALCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
+                        --auto-scaling-group-names ${AUTOSCALENAME} \
+                        --output text \
+                        --query 'AutoScalingGroups[*].DesiredCapacity')
         echo "${AUTOSCALENAME} : ${FINALCAPACITY}"
     done
 }

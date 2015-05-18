@@ -29,7 +29,9 @@ function error_check() {
 }
 
 function format_logs() {
-    echo " ";echo " ";echo " ";echo "=================================================";echo " ";echo " ";echo " "
+    echo " ";echo " ";echo " "
+    echo "================================================="
+    echo " ";echo " ";echo " "
 }
 
 ####################################
@@ -37,9 +39,17 @@ function format_logs() {
 function create_ami()  {
     PROGSTEP="Creating AMI"
     AMINAME="stage-socorrobuildbox-`date +%Y%m%d%H%M`"
-    INSTANCEID=`aws elb describe-instance-health --load-balancer-name elb-stage-socorrobuildbox | grep InstanceId | sed 's/"/ /g' | awk '{print $3}'`
+    INSTANCEID=$(aws elb describe-instance-health \
+                 --load-balancer-name elb-stage-socorrobuildbox \
+                 --output text \
+                 --query 'InstanceStates[*].InstanceId')
     echo "`date` -- Taking AMI snapshot of instance id ${INSTANCEID} named ${AMINAME}"
-    AMIID=`aws ec2 create-image --instance-id ${INSTANCEID} --no-reboot --name "${AMINAME}" --description "${AMINAME} - Buildbox Socorro"|grep ImageId | sed 's/"/ /g' | awk '{print $3}' | head -n1`
+    AMIID=$(aws ec2 create-image \
+            --instance-id ${INSTANCEID} \
+            --no-reboot --name "${AMINAME}" \
+            --description "${AMINAME} - Buildbox Socorro" \
+            --output text \
+            --query 'ImageId')
         RETURNCODE=$?;error_check
     echo "`date` -- AMI snapshot ${AMIID} started with a return code of ${RETURNCODE}"
 }
@@ -48,7 +58,7 @@ function wait_for_ami() {
     PROGSTEP="Waiting for AMI"
     echo "`date` -- Waiting 300 seconds for ${AMIID} to become available"
     sleep 300
-    until aws ec2 describe-images --image-id ${AMIID} | grep State| grep available > /dev/null;
+    until aws ec2 describe-images --image-id ${AMIID} --output text --query 'Images[*}.State'| grep available > /dev/null;
         do
         echo "`date` -- Waiting for ${AMIID} to become available"
         sleep 30

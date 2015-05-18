@@ -39,7 +39,8 @@ function error_check() {
 function create_scaling_notifications() {
     # This notification should be on every autoscaling group.  It will send an email every time
     # we autoscale, or have problems autoscaling.
-    aws autoscaling put-notification-configuration --auto-scaling-group-name ${AUTOSCALENAME} \
+    aws autoscaling put-notification-configuration \
+        --auto-scaling-group-name ${AUTOSCALENAME} \
         --topic-arn arn:aws:sns:us-west-2:293989542403:AWS-scaling-notifications \
         --notification-type "autoscaling:EC2_INSTANCE_LAUNCH" "autoscaling:EC2_INSTANCE_LAUNCH_ERROR" \
         "autoscaling:EC2_INSTANCE_TERMINATE" "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
@@ -48,9 +49,17 @@ function create_scaling_notifications() {
 function create_scaling_trigger_and_policy() {
     # First, create the scaleup and scale down triggers, called UP and DOWN
     # NOTE:  You can adjust the scaling settings, such as # to scale in, here
-    UP=`aws autoscaling put-scaling-policy --policy-name ${AUTOSCALENAME}-scale-up --auto-scaling-group-name ${AUTOSCALENAME} --scaling-adjustment ${SCALEUPADJUSTMENT} --adjustment-type ChangeInCapacity --cooldown ${SCALEUPCOOLDOWN}|grep Policy | sed 's/"/ /g'|awk '{print $3}'`
-    DOWN=`aws autoscaling put-scaling-policy --policy-name ${AUTOSCALENAME}-scale-down --auto-scaling-group-name ${AUTOSCALENAME} --scaling-adjustment ${SCALEDOWNADJUSTMENT} --adjustment-type ChangeInCapacity --cooldown ${SCALEDOWNCOOLDOWN}|grep Policy | sed 's/"/ /g'|awk '{print $3}'`
-
+    UP=$(aws autoscaling put-scaling-policy --policy-name ${AUTOSCALENAME}-scale-up \
+        --auto-scaling-group-name ${AUTOSCALENAME} \
+        --scaling-adjustment ${SCALEUPADJUSTMENT} \
+        --adjustment-type ChangeInCapacity \
+        --cooldown ${SCALEUPCOOLDOWN}| \
+        grep Policy | sed 's/"/ /g'|awk '{print $3}')
+    DOWN=$(aws autoscaling put-scaling-policy --policy-name ${AUTOSCALENAME}-scale-down \
+        --auto-scaling-group-name ${AUTOSCALENAME} \
+        --scaling-adjustment ${SCALEDOWNADJUSTMENT} \
+        --adjustment-type ChangeInCapacity -\
+        -cooldown ${SCALEDOWNCOOLDOWN}|grep Policy | sed 's/"/ /g'|awk '{print $3}')
     # Create a Cloudwatch alarm for high CPU average aggregate in the autoscale group, which triggers a scale up
     echo "`date` -- Creating a high CPU alarm to hook autoscaling to for ${AUTOSCALENAME}"
     aws cloudwatch put-metric-alarm \

@@ -14,8 +14,10 @@ function create_ami() {
         NEWAMI=`cat ${TMPLOG} |grep us-west-2|grep ami |awk '{print $2}'`
         echo "`date` -- New AMI ${NEWAMI} created with a return code of ${RETURNCODE}.    Tagging with ${SOCORROHASH}"
         # Tag that AMI with the github hash of this commit
-        aws ec2 create-tags --resources ${NEWAMI} --tags Key=apphash,Value=${GITCOMMITHASH}
-        aws ec2 create-tags --resources ${NEWAMI} --tags Key=Name,Value=${SOCORROAMINAME}
+        aws ec2 create-tags --resources ${NEWAMI} \
+                            --tags Key=apphash,Value=${GITCOMMITHASH}
+        aws ec2 create-tags --resources ${NEWAMI} \
+                            --tags Key=Name,Value=${SOCORROAMINAME}
         echo "`date` -- New tag applied: apphash = ${SOCORROHASH}"
         rm ${TMPLOG} # Cleanup after yourself, you slob.
     fi
