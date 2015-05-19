@@ -40,9 +40,18 @@ function check_syntax() {
 ROLEENVNAME="${ROLENAME}-${ENVNAME}"
 # Get the relevant info about the infra we're applying to
 identify_role ${ROLEENVNAME}
-CURRENTCAPACITY=`aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names ${AUTOSCALENAME}| grep -A3 ${AUTOSCALENAME} | grep -C 3 ARN|grep DesiredCapacity | sed 's/,//g'|awk '{print $2}'`
-CURRENTLAUNCHCONFIG=`aws autoscaling describe-auto-scaling-groups --auto-scaling-group as-stage-socorroweb|grep LaunchConfigurationName|sed 's/"/ /g' | head -n1 | awk '{print $3}'`
-CURRENTAMI=`aws autoscaling describe-launch-configurations --launch-configuration terraform-VIEyKUpAFs2ylVbOBofHU1pZvkk=|grep ImageId|sed 's/"/ /g'|awk '{print $3}'`
+CURRENTCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
+                  --auto-scaling-group-names ${AUTOSCALENAME} \
+                  --output text \
+                  --query 'AutoScalingGroups[*].DesiredCapacity')
+CURRENTLAUNCHCONFIG=$(aws autoscaling describe-auto-scaling-groups \
+                      --auto-scaling-group as-stage-socorroweb \
+                      --output text \
+                      --query 'AutoScalingGroups[*].LaunchConfigurationName')
+CURRENTAMI=$(aws autoscaling describe-launch-configurations \
+             --launch-configuration ${CURRENTLAUNCHCONFIG} \
+             --output text \
+             --query 'LaunchConfigurations[*].ImageId')
 
 ####################################
 ## PROGRAM RUN
