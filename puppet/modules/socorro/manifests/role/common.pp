@@ -23,4 +23,10 @@ class socorro::role::common {
       ensure    => running,
       enable    => true;
   }
+
+  exec {
+    'set-hostname':
+      path    => '/usr/bin',
+      command => '/bin/ec2-metadata -i |cut -d " " -f 2 > /etc/hostname && /bin/hostname -F /etc/hostname'
+  }
 }
