@@ -176,4 +176,11 @@ class socorro::packer::base {
       group  => 'root',
       mode   => '0644'
   }
+
+  exec {
+    'install-ec2-metadata':
+      path    => '/usr/bin',
+      command => '/bin/wget http://s3.amazonaws.com/ec2metadata/ec2-metadata -P /bin/ && /usr/bin/chmod 755 /bin/ec2-metadata',
+      creates => '/bin/ec2-metadata'
+  }
 }
