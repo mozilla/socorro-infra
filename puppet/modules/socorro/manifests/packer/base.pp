@@ -49,7 +49,8 @@ class socorro::packer::base {
       'php-cli',
       'rabbitmq-server',
       'supervisor',
-      'unzip'
+      'unzip',
+      'wget'
     ]:
     ensure  => latest,
     require => Package['epel-release', 'yum-plugin-fastestmirror']
@@ -181,6 +182,7 @@ class socorro::packer::base {
     'install-ec2-metadata':
       path    => '/usr/bin',
       command => '/bin/wget http://s3.amazonaws.com/ec2metadata/ec2-metadata -P /bin/ && /usr/bin/chmod 755 /bin/ec2-metadata',
-      creates => '/bin/ec2-metadata'
+      creates => '/bin/ec2-metadata',
+      require => Package['wget']
   }
 }
