@@ -91,7 +91,7 @@ resource "aws_elb" "elb-collector" {
 
 resource "aws_launch_configuration" "lc-collector" {
     user_data = "${file(\"socorro_role.sh\")} collector ${var.secret_bucket} ${var.environment}"
-    image_id = "${lookup(var.base_ami, var.region)}"
+    image_id = "${var.base_ami}"
     instance_type = "t2.micro"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     iam_instance_profile = "generic"

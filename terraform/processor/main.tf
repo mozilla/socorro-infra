@@ -43,7 +43,7 @@ resource "aws_security_group" "ec2-processor-sg" {
 
 resource "aws_launch_configuration" "lc-processor" {
     user_data = "${file(\"socorro_role.sh\")} processor ${var.secret_bucket} ${var.environment}"
-    image_id = "${lookup(var.base_ami, var.region)}"
+    image_id = "${var.base_ami}"
     instance_type = "r3.large"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     iam_instance_profile = "generic"
