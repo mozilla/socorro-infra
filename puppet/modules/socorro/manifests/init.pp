@@ -16,9 +16,8 @@ class socorro {
     'consul':
       ensure  => running,
       enable  => true,
-      require => File[
-        '/etc/consul/common.json',
-        '/etc/sysconfig/consul'
+      require => File['/etc/consul/common.json',
+                      '/etc/sysconfig/consul'
       ];
 
     'sshd':

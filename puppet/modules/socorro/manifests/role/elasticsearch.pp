@@ -9,4 +9,12 @@ include socorro::role::common
       enable  => true,
       require => Exec['join_consul_cluster'];
   }
+
+  file {
+    '/etc/dd-agent/conf.d/elastic':
+      source => 'puppet:///modules/socorro/etc_dd_agent/elastic',
+      owner  => 'dd-agent',
+      group  => 'dd-agent',
+      mode   => '0640';
+  }
 }
