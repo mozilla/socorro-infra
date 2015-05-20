@@ -31,14 +31,14 @@ class socorro::role::common {
       owner   => 'root',
       group   => 'root',
       mode    => '0644',
-      notify  => Service['rsyslog'];
+      notify  => Service['rsyslog'],
+      require => Exec['set-hostname']
   }
 
   service {
     'rsyslog':
-      ensure  => running,
-      enable  => true,
-      require => Exec['set-hostname']
+      ensure => running,
+      enable => true
   }
 
 }
