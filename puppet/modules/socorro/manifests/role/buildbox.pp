@@ -79,4 +79,12 @@ include socorro::role::common
       require => Exec['postgres-test-role'];
   }
 
+  file {
+    '/etc/dd-agent/conf.d/jenkins':
+      source => 'puppet:///modules/socorro/etc_dd_agent/jenkins',
+      owner  => 'dd-agent',
+      group  => 'dd-agent',
+      mode   => '0640';
+  }
+
 }

@@ -185,4 +185,22 @@ class socorro::packer::base {
       creates => '/bin/ec2-metadata',
       require => Package['wget']
   }
+
+  yumrepo {'datadog':
+    enabled  => 1,
+    gpgcheck => 0,
+    descr    => 'Datadog, Inc.',
+    baseurl  => 'http://yum.datadoghq.com/rpm/x86/'
+  }
+
+  package { 'datadog-agent-base':
+    ensure => absent,
+    before => Package['datadog-agent'],
+  }
+
+  package { 'datadog-agent':
+    ensure  => latest,
+    require => Yumrepo['datadog'],
+  }
+
 }

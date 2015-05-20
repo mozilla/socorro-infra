@@ -29,4 +29,26 @@ class socorro::role::common {
       path    => '/usr/bin',
       command => '/bin/ec2-metadata -i |cut -d " " -f 2 > /etc/hostname && /bin/hostname -F /etc/hostname'
   }
+
+  # Datadog agent install
+  $DATADOG_API_KEY=hiera("${::environment}/datadog_api_key")
+
+  file {
+    '/etc/dd-agent/datadog.conf':
+      mode     => '0640',
+      owner    => dd-agent,
+      content => template('socorro/etc_dd_agent/datadog.conf.erb'),
+      notify   => Service['datadog-agent']
+  }
+
+  service {
+    'datadog-agent':
+      ensure    => running,
+      enable    => true,
+      hasstatus => false,
+      pattern   => 'dd-agent',
+      require   => [ Exec['set-hostname'],
+                     File['/etc/dd-agent/datadog.conf'] ]
+  }
+
 }
