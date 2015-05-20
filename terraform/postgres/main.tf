@@ -4,12 +4,18 @@ provider "aws" {
     secret_key = "${var.secret_key}"
 }
 
-resource "aws_security_group" "private_to_postgres__postgres" {
-    name = "${var.environment}__private_to_postgres__postgres"
-    description = "Allow access to the Postgres service itself."
+resource "aws_db_subnet_group" "default" {
+    name = "main"
+    description = "Our main group of subnets"
+    subnet_ids = ["${split(",", var.subnets)}"]
+}
+
+resource "aws_security_group" "rds-socorro-sg" {
+    name = "rds-${var.environment}-socorro-sg"
+    description = "Socorro RDS security group"
     ingress {
-        from_port = "5432"
-        to_port = "5432"
+        from_port = 5432
+        to_port = 5432
         protocol = "tcp"
         cidr_blocks = [
             "172.31.0.0/16"
@@ -23,69 +29,37 @@ resource "aws_security_group" "private_to_postgres__postgres" {
             "0.0.0.0/0"
         ]
     }
-    egress {
-        from_port = 1514
-        to_port = 1514
-        protocol = "udp"
-        cidr_blocks = [
-            "0.0.0.0/0"
-        ]
+    lifecycle {
+        create_before_destroy = true
     }
     tags {
         Environment = "${var.environment}"
+        role = "postgres"
+        project = "socorro"
     }
 }
 
-resource "aws_security_group" "any_to_postgres__ssh" {
-    name = "${var.environment}__any_to_postgres__ssh"
-    description = "Allow (alt) SSH to the Postgres node."
-    ingress {
-        from_port = "${var.alt_ssh_port}"
-        to_port = "${var.alt_ssh_port}"
-        protocol = "tcp"
-        cidr_blocks = [
-            "0.0.0.0/0"
-        ]
-    }
-    egress {
-        from_port = 0
-        to_port = 65535
-        protocol = "tcp"
-        cidr_blocks = [
-            "0.0.0.0/0"
-        ]
-    }
-    egress {
-        from_port = 1514
-        to_port = 1514
-        protocol = "udp"
-        cidr_blocks = [
-            "0.0.0.0/0"
-        ]
-    }
+
+resource "aws_db_instance" "socorro" {
+    identifier = "rds-postgres-${var.environment}"
+    allocated_storage = 2500
+    engine = "postgres"
+    engine_version = "9.4.1"
+    instance_class = "db.r3.4xlarge"
+    name = "breakpad"
+    username = "root"
+    password = "${var.rds_root_password}"
+    parameter_group_name = "default.postgres9.4"
+    vpc_security_group_ids = ["${aws_security_group.rds-socorro-sg.id}"]
+    # provisioned IOPS SSD
+    storage_type = "io1"
+    iops = "10000"
+    final_snapshot_identifier = "rds-postgres-${var.environment}-final"
+    publicly_accessible = true
     tags {
+        Name = "rds-postgres-${var.environment}"
         Environment = "${var.environment}"
+        role = "postgres"
+        project = "socorro"
     }
 }
-
-resource "aws_instance" "postgres" {
-    ami = "${lookup(var.base_ami, var.region)}"
-    instance_type = "t2.micro"
-    key_name = "${lookup(var.ssh_key_name, var.region)}"
-    count = 1
-    security_groups = [
-        "${aws_security_group.private_to_postgres__postgres.name}",
-        "${aws_security_group.any_to_postgres__ssh.name}"
-    ]
-    ebs_block_device {
-        device_name = "/dev/sda1"
-        delete_on_termination = "${var.del_on_term}"
-    }
-    user_data = "${file(\"socorro_role.sh\")} postgres ${var.secret_bucket} ${var.environment}"
-    tags {
-        Name = "${var.environment}__postgres_${count.index}"
-        Environment = "${var.environment}"
-    }
-    iam_instance_profile = "generic"
-}
-
