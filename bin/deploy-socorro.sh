@@ -22,7 +22,8 @@ else
 fi
 GITPAYLOAD=${payload}
 RANDOM_STRING="$RANDOM-$RANDOM"
-
+STARTLOG=/var/log/jenkins/${RANDOM_STRING}-startlog.out
+ENDLOG=/var/log/jenkins/${RANDOM_STRING}-endlog.out
 # Get AWS creds injected
 . /home/centos/.aws-config
 
@@ -30,6 +31,7 @@ RANDOM_STRING="$RANDOM-$RANDOM"
 . /home/centos/socorro-infra/bin/lib/identify_role.sh
 . /home/centos/socorro-infra/bin/lib/create_rpm.sh
 . /home/centos/socorro-infra/bin/lib/create_ami.sh
+. /home/centos/socorro-infra/bin/lib/infra_status.sh
 
 # Show usage instructions for noobs
 function show_usage() {
@@ -132,6 +134,7 @@ function parse_github_payload() {
 
 function scale_in_per_elb() {
     PROGSTEP="Scale in";format_logs
+    infra_report ${AUTOSCALENAME} >> ${STARTLOG}
     echo "`date` -- Checking current desired capacity of autoscaling group for ${ROLEENVNAME}"
     # We'll set the initial capacity and go back to that at the end
     INITIALCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
@@ -315,11 +318,7 @@ function query_end_scale() {
     echo "END STATE FOR AUTO SCALING GROUPS"
     for ROLEENVNAME in $(cat /home/centos/socorro-infra/bin/lib/${ENVNAME}_socorro_master.list);do
         identify_role ${ROLEENVNAME}
-        FINALCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
-                        --auto-scaling-group-names ${AUTOSCALENAME} \
-                        --output text \
-                        --query 'AutoScalingGroups[*].DesiredCapacity')
-        echo "${AUTOSCALENAME} : ${FINALCAPACITY}"
+        infra_report ${AUTOSCALENAME} >> ${ENDLOG}
     done
 }
 ####################################
@@ -361,4 +360,12 @@ else
     echo "New git tag: ${GITTAG}"
 fi
 echo "Push triggered by: ${GITCOMMITTER}"
+format_logs
+echo "==========  BEGINNING STATE  =========="
+cat ${STARTLOG}
+format_logs
+echo "==========  ENDING STATE  ==========="
+cat ${ENDLOG}
+rm ${STARTLOG}
+rm ${ENDLOG}
 exit 0    # You snazzy, snazzy engineer.    You did it!
