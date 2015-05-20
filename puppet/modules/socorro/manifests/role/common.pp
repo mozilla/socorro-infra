@@ -31,7 +31,7 @@ class socorro::role::common {
   }
 
   # Datadog agent install
-  $DATADOG_API_KEY=hiera("${::environment}/datadog_api_key")
+  $datadog_api_key=hiera("${::environment}/datadog_api_key")
 
   file {
     '/etc/dd-agent/datadog.conf':
