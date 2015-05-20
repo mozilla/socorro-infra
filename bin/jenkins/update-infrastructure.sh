@@ -81,7 +81,7 @@ function create_scaling_trigger_and_policy() {
         --metric-name CPUUtilization \
         --namespace "AWS/EC2" \
         --period 300 \
-        --evaluation-periods 1 \
+        --evaluation-periods 3 \
         --threshold ${SCALEDOWNTHRESHOLD} \
         --statistic Average \
         --comparison-operator LessThanThreshold \
