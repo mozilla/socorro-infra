@@ -43,5 +43,4 @@ class socorro::role::common {
       pattern   => 'dd-agent',
       require   => File['/etc/dd-agent/datadog.conf']
   }
-
 }
