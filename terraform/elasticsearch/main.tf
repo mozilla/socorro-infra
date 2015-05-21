@@ -4,8 +4,8 @@ provider "aws" {
     secret_key = "${var.secret_key}"
 }
 
-resource "aws_security_group" "elb-socorroelasticsearch-sg" {
-    name = "elb-socorroelasticsearch-${var.environment}-sg"
+resource "aws_security_group" "elb-socorroelasticsearch2-sg" {
+    name = "elb-socorroelasticsearch2-${var.environment}-sg"
     description = "Allow internal access to Elasticsearch."
     ingress {
         from_port = 9200
@@ -49,8 +49,8 @@ resource "aws_security_group" "elb-socorroelasticsearch-sg" {
     }
 }
 
-resource "aws_security_group" "ec2-socorroelasticsearch-sg" {
-    name = "ec2-socorroelasticsearch-${var.environment}-sg"
+resource "aws_security_group" "ec2-socorroelasticsearch2-sg" {
+    name = "ec2-socorroelasticsearch2-${var.environment}-sg"
     description = "Allow (alt) SSH to the Elasticsearch node."
     ingress {
         from_port = "${var.alt_ssh_port}"
@@ -86,8 +86,8 @@ resource "aws_security_group" "ec2-socorroelasticsearch-sg" {
     }
 }
 
-resource "aws_elb" "elb-socorroelasticsearch" {
-    name = "elb-${var.environment}-socorroelasticsearch"
+resource "aws_elb" "elb-socorroelasticsearch2" {
+    name = "elb-${var.environment}-socorroelasticsearch2"
     internal = true
     subnets = ["${split(",", var.subnets)}"]
     listener {
@@ -97,7 +97,7 @@ resource "aws_elb" "elb-socorroelasticsearch" {
         lb_protocol = "http"
     }
     security_groups = [
-        "${aws_security_group.elb-socorroelasticsearch-sg.id}"
+        "${aws_security_group.elb-socorroelasticsearch2-sg.id}"
     ]
     tags {
         Environment = "${var.environment}"
@@ -106,24 +106,56 @@ resource "aws_elb" "elb-socorroelasticsearch" {
     }
 }
 
-resource "aws_launch_configuration" "lc-socorroelasticsearch" {
-    user_data = "${file(\"socorro_role.sh\")} elasticsearch ${var.secret_bucket} ${var.environment}"
+resource "aws_launch_configuration" "lc-socorroelasticsearch2-master" {
+    user_data = "${file(\"socorro_role.sh\")} 'elasticsearch FACTER_elasticsearch_role=master' ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
-    instance_type = "t2.micro"
+    instance_type = "${lookup(var.es_master_ec2_type, var.environment)}"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
-    iam_instance_profile = "generic"
+    iam_instance_profile = "socorro_elasticsearch"
     associate_public_ip_address = true
     security_groups = [
-        "${aws_security_group.elb-socorroelasticsearch-sg.id}",
-        "${aws_security_group.ec2-socorroelasticsearch-sg.id}"
+        "${aws_security_group.elb-socorroelasticsearch2-sg.id}",
+        "${aws_security_group.ec2-socorroelasticsearch2-sg.id}"
     ]
     lifecycle {
         create_before_destroy = true
     }
 }
 
-resource "aws_autoscaling_group" "as-socorroelasticsearch" {
-    name = "as-${var.environment}-socorroelasticsearch"
+resource "aws_launch_configuration" "lc-socorroelasticsearch2-interface" {
+    user_data = "${file(\"socorro_role.sh\")} 'elasticsearch FACTER_elasticsearch_role=interface' ${var.secret_bucket} ${var.environment}"
+    image_id = "${lookup(var.base_ami, var.region)}"
+    instance_type = "${lookup(var.es_interface_ec2_type, var.environment)}"
+    key_name = "${lookup(var.ssh_key_name, var.region)}"
+    iam_instance_profile = "socorro_elasticsearch"
+    associate_public_ip_address = true
+    security_groups = [
+        "${aws_security_group.elb-socorroelasticsearch2-sg.id}",
+        "${aws_security_group.ec2-socorroelasticsearch2-sg.id}"
+    ]
+    lifecycle {
+        create_before_destroy = true
+    }
+}
+
+resource "aws_launch_configuration" "lc-socorroelasticsearch2-data" {
+    user_data = "${file(\"socorro_role.sh\")} 'elasticsearch FACTER_elasticsearch_role=data' ${var.secret_bucket} ${var.environment}"
+    image_id = "${lookup(var.base_ami, var.region)}"
+    instance_type = "${lookup(var.es_data_ec2_type, var.environment)}"
+    key_name = "${lookup(var.ssh_key_name, var.region)}"
+    iam_instance_profile = "socorro_elasticsearch"
+    associate_public_ip_address = true
+    security_groups = [
+        "${aws_security_group.elb-socorroelasticsearch2-sg.id}",
+        "${aws_security_group.ec2-socorroelasticsearch2-sg.id}"
+    ]
+    lifecycle {
+        create_before_destroy = true
+    }
+}
+
+resource "aws_autoscaling_group" "as-socorroelasticsearch2-master" {
+    name = "as-${var.environment}-socorroelasticsearch2-master"
     availability_zones = [
         "${var.region}a",
         "${var.region}b",
@@ -131,15 +163,79 @@ resource "aws_autoscaling_group" "as-socorroelasticsearch" {
     ]
     vpc_zone_identifier = ["${split(",", var.subnets)}"]
     depends_on = [
-        "aws_launch_configuration.lc-socorroelasticsearch"
+        "aws_launch_configuration.lc-socorroelasticsearch2-master"
     ]
-    launch_configuration = "${aws_launch_configuration.lc-socorroelasticsearch.id}"
-    max_size = 10
-    min_size = 1
-    desired_capacity = 1
+    launch_configuration = "${aws_launch_configuration.lc-socorroelasticsearch2-master.id}"
+    max_size = "${lookup(var.es_master_num, var.environment)}"
+    min_size = "${lookup(var.es_master_num, var.environment)}"
+    desired_capacity = "${lookup(var.es_master_num, var.environment)}"
+    tag {
+      key = "Environment"
+      value = "${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "role"
+      value = "elasticsearch"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "project"
+      value = "socorro"
+      propagate_at_launch = true
+    }
+}
+
+resource "aws_autoscaling_group" "as-socorroelasticsearch2-interface" {
+    name = "as-${var.environment}-socorroelasticsearch2-interface"
+    availability_zones = [
+        "${var.region}a",
+        "${var.region}b",
+        "${var.region}c"
+    ]
+    vpc_zone_identifier = ["${split(",", var.subnets)}"]
+    depends_on = [
+        "aws_launch_configuration.lc-socorroelasticsearch2-interface"
+    ]
+    launch_configuration = "${aws_launch_configuration.lc-socorroelasticsearch2-interface.id}"
+    max_size = "${lookup(var.es_interface_num, var.environment)}"
+    min_size = "${lookup(var.es_interface_num, var.environment)}"
+    desired_capacity = "${lookup(var.es_interface_num, var.environment)}"
     load_balancers = [
-        "elb-${var.environment}-socorroelasticsearch"
+        "elb-${var.environment}-socorroelasticsearch2"
     ]
+    tag {
+      key = "Environment"
+      value = "${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "role"
+      value = "elasticsearch"
+      propagate_at_launch = true
+    }
+    tag {
+      key = "project"
+      value = "socorro"
+      propagate_at_launch = true
+    }
+}
+
+resource "aws_autoscaling_group" "as-socorroelasticsearch2-data" {
+    name = "as-${var.environment}-socorroelasticsearch2-data"
+    availability_zones = [
+        "${var.region}a",
+        "${var.region}b",
+        "${var.region}c"
+    ]
+    vpc_zone_identifier = ["${split(",", var.subnets)}"]
+    depends_on = [
+        "aws_launch_configuration.lc-socorroelasticsearch2-data"
+    ]
+    launch_configuration = "${aws_launch_configuration.lc-socorroelasticsearch2-data.id}"
+    max_size = "${lookup(var.es_data_num, var.environment)}"
+    min_size = "${lookup(var.es_data_num, var.environment)}"
+    desired_capacity = "${lookup(var.es_data_num, var.environment)}"
     tag {
       key = "Environment"
       value = "${var.environment}"

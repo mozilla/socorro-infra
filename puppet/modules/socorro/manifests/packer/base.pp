@@ -79,6 +79,12 @@ class socorro::packer::base {
       ]
   }
 
+  package {
+    'elasticsearch-plugin-cloud-aws':
+      ensure  => latest,
+      require => Package['elasticsearch']
+  }
+
   file {
     '/etc/socorro':
       ensure => directory;
