@@ -178,11 +178,22 @@ class socorro::packer::base {
       mode   => '0644'
   }
 
+  # This little script is used to quickly pull out EC2 metadata via CLI.
+  # TODO: Package it properly.
   exec {
     'install-ec2-metadata':
-      path    => '/usr/bin',
-      command => '/bin/wget http://s3.amazonaws.com/ec2metadata/ec2-metadata -P /bin/ && /usr/bin/chmod 755 /bin/ec2-metadata',
-      creates => '/bin/ec2-metadata',
-      require => Package['wget']
+      path    => '/bin',
+      cwd     => '/bin',
+      command => 'curl -O https://s3.amazonaws.com/ec2metadata/ec2-metadata',
+      creates => '/bin/ec2-metadata'
   }
+
+  file {
+    '/bin/ec2-metadata':
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0755',
+      require => Exec['install-ec2-metadata']
+  }
+
 }

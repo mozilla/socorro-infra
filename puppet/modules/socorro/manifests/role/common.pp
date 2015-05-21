@@ -1,11 +1,27 @@
 # Elements common to all Socorro roles.
 class socorro::role::common {
 
+  # Ensure that the hostname is the same as the EC2 instance ID.
+  file {
+    '/etc/hostname':
+      mode    => '0644',
+      owner   => 'root',
+      group   => 'root',
+      content => $::ec2_instance_id
+  }
+
+  exec {
+    'set-hostname':
+      path    => '/bin:/usr/bin',
+      command => 'hostname -F /etc/hostname',
+      require => File['/etc/hostname']
+  }
+
   # We expect this to come from the secret S3 bucket
   $consul_hostname = hiera("${::environment}/consul_hostname")
   exec {
-      'join_consul_cluster':
-        command => "/usr/bin/consul join ${consul_hostname}"
+    'join_consul_cluster':
+      command => "/usr/bin/consul join ${consul_hostname}"
   }
 
   $logging_hostname = hiera("${::environment}/logging_hostname")
@@ -15,18 +31,14 @@ class socorro::role::common {
       owner   => 'root',
       group   => 'root',
       mode    => '0644',
-      notify  => Service['rsyslog'];
+      notify  => Service['rsyslog'],
+      require => Exec['set-hostname']
   }
 
   service {
     'rsyslog':
-      ensure    => running,
-      enable    => true;
+      ensure => running,
+      enable => true
   }
 
-  exec {
-    'set-hostname':
-      path    => '/usr/bin',
-      command => '/bin/ec2-metadata -i |cut -d " " -f 2 > /etc/hostname && /bin/hostname -F /etc/hostname'
-  }
 }
