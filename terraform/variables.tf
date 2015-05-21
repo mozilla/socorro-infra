@@ -40,6 +40,44 @@ variable "elb_master_web_sg_id" {
 variable "alt_ssh_port" {
     default = 22123
 }
+# Start Elasticsearch block
+variable "es_master_ec2_type" {
+    default = {
+        stage = "t2.medium"
+        prod = "t2.medium"
+    }
+}
+variable "es_master_num" {
+    default = {
+        stage = "2"
+        prod = "3"
+    }
+}
+variable "es_interface_ec2_type" {
+    default = {
+        stage = "r3.large"
+        prod = "r3.xlarge"
+    }
+}
+variable "es_interface_num" {
+    default = {
+        stage = "2"
+        prod = "3"
+    }
+}
+variable "es_data_ec2_type" {
+    default = {
+        stage = "i2.xlarge"
+        prod = "i2.2xlarge"
+    }
+}
+variable "es_data_num" {
+    default = {
+        stage = "3"
+        prod = "9"
+    }
+}
+# End Elasticsearch block
 # NOTE - this deletes EBS devices, only change it for testing purposes!
 variable "del_on_term" {
     default = "false"

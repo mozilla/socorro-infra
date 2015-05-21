@@ -29,7 +29,6 @@ class socorro::packer::buildbox {
       'subversion',
       'time',
       'vim-enhanced',
-      'wget'
     ]:
     ensure  => latest,
     require => Package['epel-release', 'yum-plugin-fastestmirror']
