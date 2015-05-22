@@ -6,7 +6,7 @@ provider "aws" {
 
 resource "aws_security_group" "elb-socorrobuildbox-sg" {
     name = "elb-socorrobuildbox-${var.environment}-sg"
-    description = "Allow internal access to RabbitMQ."
+    description = "Allow external access to Buildbox."
     ingress {
         from_port = 443
         to_port = 443
@@ -36,7 +36,7 @@ resource "aws_security_group" "elb-socorrobuildbox-sg" {
     }
     tags {
         Environment = "${var.environment}"
-        role = "rabbitmq"
+        role = "socorrobuildbox"
         project = "socorro"
     }
 }
