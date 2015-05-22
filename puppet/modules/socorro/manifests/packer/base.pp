@@ -43,7 +43,7 @@ class socorro::packer::base {
     [
       'bind-utils',
       'consul-ui',
-      'java-1.7.0-openjdk',
+      'java-1.8.0-openjdk',
       'mod_wsgi',
       'nginx',
       'php-cli',
@@ -75,8 +75,14 @@ class socorro::packer::base {
       ensure  => latest,
       require => [
         Yumrepo['elasticsearch'],
-        Package['java-1.7.0-openjdk']
+        Package['java-1.8.0-openjdk']
       ]
+  }
+
+  package {
+    'elasticsearch-plugin-cloud-aws':
+      ensure  => latest,
+      require => Package['elasticsearch']
   }
 
   file {
