@@ -145,7 +145,7 @@ resource "aws_elb" "elb-socorroweb" {
 resource "aws_launch_configuration" "lc-socorroweb" {
     user_data = "${file(\"socorro_role.sh\")} webapp ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
-    instance_type = "t2.micro"
+    instance_type = "${lookup(var.socorroweb_ec2_type, var.environment)}"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     iam_instance_profile = "generic"
     associate_public_ip_address = true
@@ -170,8 +170,8 @@ resource "aws_autoscaling_group" "as-socorroweb" {
     ]
     launch_configuration = "${aws_launch_configuration.lc-socorroweb.id}"
     max_size = 10
-    min_size = 1
-    desired_capacity = 1
+    min_size = "${lookup(var.socorroweb_num, var.environment)}"
+    desired_capacity = "${lookup(var.socorroweb_num, var.environment)}"
     load_balancers = [
         "elb-${var.environment}-socorroweb"
     ]

@@ -8,6 +8,7 @@ function identify_role() {
             SSLELB="true"
             APPLYSCALINGPOLICY="true"
             NOTIFYFORUNHEALTHYELB="true"
+            SCALEVARIABLE="socorroweb_num.stage"
             ;;
 
         collector-stage )
@@ -17,6 +18,7 @@ function identify_role() {
             SSLELB="true"
             APPLYSCALINGPOLICY="true"
             NOTIFYFORUNHEALTHYELB="true"
+            SCALEVARIABLE="collector_num.stage"
             ;;
 
         processor-stage )
@@ -26,6 +28,7 @@ function identify_role() {
             SSLELB="false"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="false"
+            SCALEVARIABLE="processor_num.stage"
             ;;
 
         socorroanalysis-stage )
@@ -35,6 +38,7 @@ function identify_role() {
             SSLELB="true"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="true"
+            SCALEVARIABLE="socorroanalysis_num.stage"
             ;;
 
         socorroadmin-stage )
@@ -44,6 +48,7 @@ function identify_role() {
             SSLELB="false"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="false"
+            SCALEVARIABLE="socorroadmin_num.stage"
             ;;
 
         symbolapi-stage )
@@ -53,6 +58,7 @@ function identify_role() {
             SSLELB="true"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="false"
+            SCALEVARIABLE="symbolapi_num.stage"
             ;;
 
         consul-stage )
@@ -62,6 +68,7 @@ function identify_role() {
             SSLELB="false"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="true"
+            SCALEVARIABLE="socorroconsul_num.stage"
             ;;
 
         socorrorabbitmq-stage )
@@ -71,6 +78,7 @@ function identify_role() {
             SSLELB="false"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="true"
+            SCALEVARIABLE="socorrorabbitmq_num.stage"
             ;;
 
         elasticsearch-stage )
@@ -80,6 +88,7 @@ function identify_role() {
             SSLELB="false"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="true"
+            SCALEVARIABLE="todo"
             ;;
 
         socorrobuildbox-stage )
@@ -89,6 +98,7 @@ function identify_role() {
             SSLELB="true"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="true"
+            SCALEVARIABLE="socorrobuildbox_num.stage"
             ;;
 
         socorroweb-prod )
@@ -98,6 +108,7 @@ function identify_role() {
             SSLELB="true"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="true"
+            SCALEVARIABLE="socorroweb_num.prod"
             ;;
 
         collector-prod )
@@ -107,6 +118,7 @@ function identify_role() {
             SSLELB="true"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="true"
+            SCALEVARIABLE="collector_num.prod"
             ;;
 
         processor-prod )
@@ -116,6 +128,7 @@ function identify_role() {
             SSLELB="false"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="false"
+            SCALEVARIABLE="processor_num.prod"
             ;;
 
         socorroanalysis-prod )
@@ -125,6 +138,7 @@ function identify_role() {
             SSLELB="true"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="true"
+            SCALEVARIABLE="socorroanalysis_num.prod"
             ;;
 
         socorroadmin-prod )
@@ -134,6 +148,7 @@ function identify_role() {
             SSLELB="false"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="false"
+            SCALEVARIABLE="socorroadmin_num.prod"
             ;;
 
         symbolapi-prod )
@@ -143,6 +158,7 @@ function identify_role() {
             SSLELB="false"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="true"
+            SCALEVARIABLE="symbolapi_num.prod"
             ;;
 
         consul-prod )
@@ -152,6 +168,7 @@ function identify_role() {
             SSLELB="false"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="true"
+            SCALEVARIABLE="consul_num.prod"
             ;;
 
         rabbitmq-prod )
@@ -161,6 +178,7 @@ function identify_role() {
             SSLELB="false"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="true"
+            SCALEVARIABLE="socorrorabbitmq_num.prod"
             ;;
 
         elasticsearch-prod )
@@ -170,6 +188,7 @@ function identify_role() {
             SSLELB="false"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="true"
+            SCALEVARIABLE="todo"
             ;;
 
         socorrobuildbox-prod )
@@ -179,6 +198,7 @@ function identify_role() {
             SSLELB="true"
             APPLYSCALINGPOLICY="false"
             NOTIFYFORUNHEALTHYELB="true"
+            SCALEVARIABLE="socorrobuildbox_num.prod"
             ;;
 
         * )

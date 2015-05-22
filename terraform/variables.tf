@@ -40,6 +40,115 @@ variable "elb_master_web_sg_id" {
 variable "alt_ssh_port" {
     default = 22123
 }
+# Start App Tier scale type block
+variable "socorroadmin_num" {
+    default = {
+        stage = "1"
+        prod = "1"
+    }
+}
+variable "socorroadmin_ec2_type" {
+    default = {
+        stage = "t2.micro"
+        prod = "t2.micro"
+    }
+}
+variable "socorroanalysis_num" {
+    default = {
+        stage = "1"
+        prod = "1"
+    }
+}
+variable "socorroanalysis_ec2_type" {
+    default = {
+        stage = "t2.micro"
+        prod = "t2.micro"
+    }
+}
+variable "socorrobuildbox_num" {
+    default = {
+        stage = "1"
+        prod = "1"
+    }
+}
+variable "socorrobuildbox_ec2_type" {
+    default = {
+        stage = "c3.large"
+        prod = "c3.large"
+    }
+}
+variable "socorroconsul_num" {
+    default = {
+        stage = "3"
+        prod = "3"
+    }
+}
+variable "socorroconsul_ec2_type" {
+    default = {
+        stage = "t2.micro"
+        prod = "m3.medium"
+    }
+}
+variable "collector_num" {
+    default = {
+        stage = "1"
+        prod = "6"
+    }
+}
+variable "collector_ec2_type" {
+    default = {
+        stage = "t2.micro"
+        prod = "m3.medium"
+    }
+}
+variable "processor_num" {
+    default = {
+        stage = "1"
+        prod = "3"
+    }
+}
+variable "processor_ec2_type" {
+    default = {
+        stage = "r3.large"
+        prod = "r3.xlarge"
+    }
+}
+variable "socorrorabbitmq_num" {
+    default = {
+        stage = "1"
+        prod = "1"
+    }
+}
+variable "socorrorabbitmq_ec2_type" {
+    default = {
+        stage = "t2.micro"
+        prod = "m3.medium"
+    }
+}
+variable "symbolapi_num" {
+    default = {
+        stage = "1"
+        prod = "1"
+    }
+}
+variable "symbolapi_ec2_type" {
+    default = {
+        stage = "t2.micro"
+        prod = "r3.xlarge"
+    }
+}
+variable "socorroweb_num" {
+    default = {
+        stage = "1"
+        prod = "3"
+    }
+}
+variable "socorroweb_ec2_type" {
+    default = {
+        stage = "t2.micro"
+        prod = "m3.medium"
+    }
+}
 # Start Elasticsearch block
 variable "es_master_ec2_type" {
     default = {

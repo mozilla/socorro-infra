@@ -114,7 +114,7 @@ resource "aws_elb" "elb-consul" {
 resource "aws_launch_configuration" "lc-consul" {
     user_data = "${file(\"socorro_role.sh\")} consul ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
-    instance_type = "t2.micro"
+    instance_type = "${lookup(var.socorroconsul_ec2_type, var.environment)}"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     iam_instance_profile = "generic"
     associate_public_ip_address = true
@@ -138,9 +138,9 @@ resource "aws_autoscaling_group" "as-consul" {
         "aws_launch_configuration.lc-consul"
     ]
     launch_configuration = "${aws_launch_configuration.lc-consul.id}"
-    max_size = 3
-    min_size = 3
-    desired_capacity = 3
+    max_size = 30
+    min_size = "${lookup(var.socorroconsul_num, var.environment)}"
+    desired_capacity = "${lookup(var.socorroconsul_num, var.environment)}"
     health_check_type = "EC2"
     load_balancers = [
         "elb-${var.environment}-consul"
