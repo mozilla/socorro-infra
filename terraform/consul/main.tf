@@ -91,6 +91,7 @@ resource "aws_security_group" "ec2-consul-sg" {
     }
 }
 
+# TODO: Fix this sec group
 resource "aws_elb" "elb-consul" {
     name = "elb-${var.environment}-consul"
     internal = true

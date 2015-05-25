@@ -23,14 +23,6 @@ resource "aws_security_group" "elb-socorrorabbitmq-sg" {
             "0.0.0.0/0"
         ]
     }
-    egress {
-        from_port = 1514
-        to_port = 1514
-        protocol = "udp"
-        cidr_blocks = [
-            "0.0.0.0/0"
-        ]
-    }
     lifecycle {
         create_before_destroy = true
     }
