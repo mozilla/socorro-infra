@@ -157,6 +157,12 @@ resource "aws_launch_configuration" "lc-socorroes-data" {
     lifecycle {
         create_before_destroy = true
     }
+    ebs_block_device {
+        device_name = "/dev/xvdb"
+        volume_type = "gp2"
+        volume_size = "${lookup(var.es_data_ebs_size, var.environment)}"
+        delete_on_termination = true
+    }
 }
 
 resource "aws_autoscaling_group" "as-socorroes-master" {
@@ -175,19 +181,19 @@ resource "aws_autoscaling_group" "as-socorroes-master" {
     min_size = "${lookup(var.es_master_num, var.environment)}"
     desired_capacity = "${lookup(var.es_master_num, var.environment)}"
     tag {
-      key = "Environment"
-      value = "${var.environment}"
-      propagate_at_launch = true
+        key = "Environment"
+        value = "${var.environment}"
+        propagate_at_launch = true
     }
     tag {
-      key = "role"
-      value = "elasticsearch"
-      propagate_at_launch = true
+        key = "role"
+        value = "elasticsearch"
+        propagate_at_launch = true
     }
     tag {
-      key = "project"
-      value = "socorro"
-      propagate_at_launch = true
+        key = "project"
+        value = "socorro"
+        propagate_at_launch = true
     }
 }
 
@@ -210,19 +216,19 @@ resource "aws_autoscaling_group" "as-socorroes-interface" {
         "elb-${var.environment}-socorroes"
     ]
     tag {
-      key = "Environment"
-      value = "${var.environment}"
-      propagate_at_launch = true
+        key = "Environment"
+        value = "${var.environment}"
+        propagate_at_launch = true
     }
     tag {
-      key = "role"
-      value = "elasticsearch"
-      propagate_at_launch = true
+        key = "role"
+        value = "elasticsearch"
+        propagate_at_launch = true
     }
     tag {
-      key = "project"
-      value = "socorro"
-      propagate_at_launch = true
+        key = "project"
+        value = "socorro"
+        propagate_at_launch = true
     }
 }
 
@@ -242,18 +248,18 @@ resource "aws_autoscaling_group" "as-socorroes-data" {
     min_size = "${lookup(var.es_data_num, var.environment)}"
     desired_capacity = "${lookup(var.es_data_num, var.environment)}"
     tag {
-      key = "Environment"
-      value = "${var.environment}"
-      propagate_at_launch = true
+        key = "Environment"
+        value = "${var.environment}"
+        propagate_at_launch = true
     }
     tag {
-      key = "role"
-      value = "elasticsearch"
-      propagate_at_launch = true
+        key = "role"
+        value = "elasticsearch"
+        propagate_at_launch = true
     }
     tag {
-      key = "project"
-      value = "socorro"
-      propagate_at_launch = true
+        key = "project"
+        value = "socorro"
+        propagate_at_launch = true
     }
 }
