@@ -104,7 +104,6 @@ function parse_github_payload() {
     # We will get all sorts of fun info here!
     echo "Git Payload for copying into jenkins build parameter"
     echo " ";echo ${GITPAYLOAD};echo " "
-    echo "Git Payload Readable: ${GITPAYLOAD}"|sed 's/,/\'$'\n/g';format_logs
     GITCOMMITHASH=$(echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep head_commit | \
                     sed 's/"/ /g' | awk '{print $5}')
     echo "Git commit hash:  ${GITCOMMITHASH}"
@@ -156,6 +155,9 @@ function scale_in_per_elb() {
         RETURNCODE=$?;error_check
     echo "`date` -- Current instance list: ${INITIALINSTANCES}"
     # Tell the AWS api to give us more instances in that role env.
+    aws autoscaling update-auto-scaling-group --auto-scaling-group-name ${AUTOSCALENAME} --min-size ${DEPLOYCAPACITY}
+         RETURNCODE=$?;error_check
+    echo "`date` -- Minimum capacity set with a return code of ${RETURNCODE}"
     aws autoscaling set-desired-capacity --auto-scaling-group-name ${AUTOSCALENAME} --desired-capacity ${DEPLOYCAPACITY}
          RETURNCODE=$?;error_check
     echo "`date` -- Desired capacity set with a return code of ${RETURNCODE}"
@@ -217,8 +219,8 @@ function monitor_overall_health() {
         if echo ${CURRENTHEALTH} | grep Out > /dev/null;then
             CURRENTHEALTH=""
             sleep 60 # We want to be polite to the API
-            if [ $ATTEMPTCOUNT -eq 10 ]; then
-                echo "`date` -- ALERT!  We've tried for over 10 minutes to wait for healthy nodes, continuing"
+            if [ $ATTEMPTCOUNT -gt 14 ]; then
+                echo "`date` -- ALERT!  We've tried for 15 minutes to wait for healthy nodes, continuing"
                 NOHEALTHALERT="true"
                 HEALTHSTATUS="ALLHEALTHY"
             fi
@@ -243,25 +245,24 @@ function instance_deregister() {
     fi
 }
 
-function elb_query_to_drain_instances() {
+function deregister_elb_nodes() {
     # We'll list every ELB involved, and for each, list every instance.    Then, for each instance
     # we check if it is on the doomed list.    If so, we deregister it to allow a 30s drain
-    PROGSTEP="Draining load balancer traffic by deregistering doomed instances"
+    PROGSTEP="Starting scale down"
     echo "`date` -- ${PROGSTEP}"
     for ROLEENVNAME in $(cat /home/centos/socorro-infra/bin/lib/${ENVNAME}_socorro_master.list)
         do
-         # Get ELB and AS group name.
-         identify_role ${ROLEENVNAME}
-         if [ "${ELBNAME}" = "NONE" ];then
-             echo "No ELB to check for ${ROLEENVNAME}"
-             else
-             # For every instance in $ELBNAME, check if it's slated to be killed.
-             for INSTANCETOCHECK in $(aws elb describe-instance-health \
-                                      --load-balancer-name elb-stage-socorroweb \
-                                      --output text --query 'InstanceStates[*].InstanceId')
-                do
-                instance_deregister ${INSTANCETOCHECK} ${ELBNAME}
-            done
+        # Get ELB and AS group name.
+        if [ "${ELBNAME}" = "NONE" ];then
+            echo "No ELB to check for ${ROLEENVNAME}"
+            else
+            # For every instance in $ELBNAME, check if it's slated to be killed.
+            for INSTANCETOCHECK in $(aws elb describe-instance-health \
+                                     --load-balancer-name elb-stage-socorroweb \
+                                     --output text --query 'InstanceStates[*].InstanceId')
+               do
+               instance_deregister ${INSTANCETOCHECK} ${ELBNAME}
+           done
         fi
     done
     echo "`date` -- All instances in ELBs deregistered, waiting for the 30 second drain period"
@@ -287,16 +288,20 @@ function find_ami() {
 
 function apply_ami() {
     # For each of our apps, we want to use terraform to apply the new base AMI we've just created
-    for ROLEENVNAME in $(cat /home/centos/socorro-infra/bin/lib/${ENVNAME}_socorro_master.list)
+    for ROLEENVNAME in $(cat /home/centos/socorro-g/bin/lib/${ENVNAME}_socorro_master.list)
         do
             # Get AS group name for each ROLEENVNAME
             echo "`date` -- Checking role for ${ROLEENVNAME}"
             identify_role ${ROLEENVNAME}
+            ASCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
+                         --auto-scaling-group-names ${AUTOSCALENAME} \
+                         --output text \
+                         --query 'AutoScalingGroups[*].DesiredCapacity')
             cd /home/centos/socorro-infra/terraform
             echo "`date` -- Attempting to terraform plan and apply ${AUTOSCALENAME} with new AMI id ${NEWAMI} and tagging with ${SOCORROHASH}"
-            /home/centos/socorro-infra/terraform/wrapper.sh "plan -var base_ami.us-west-2=${NEWAMI}" ${ENVNAME} ${TERRAFORMNAME}
+            /home/centos/socorro-infra/terraform/wrapper.sh "plan -var base_ami.us-west-2=${NEWAMI} -var ${SCALEVARIABLE}=${ASCAPACITY}" ${ENVNAME} ${TERRAFORMNAME}
             echo " ";echo " ";echo "==================================";echo " "
-            /home/centos/socorro-infra/terraform/wrapper.sh "apply -var base_ami.us-west-2=${NEWAMI}" ${ENVNAME} ${TERRAFORMNAME}
+            /home/centos/socorro-infra/terraform/wrapper.sh "apply -var base_ami.us-west-2=${NEWAMI} -var ${SCALEVARIABLE}=${ASCAPACITY}" ${ENVNAME} ${TERRAFORMNAME}
                 RETURNCODE=$?;error_check
             echo "`date` -- Got return code ${RETURNCODE} applying terraform update"
         done
@@ -305,6 +310,24 @@ function apply_ami() {
 
 function terminate_instances_all() {
     PROGSTEP="Terminating instances"
+    for ROLEENVNAME in $(cat /home/centos/socorro-infra/bin/lib/${ENVNAME}_socorro_master.list)
+        do
+        # First, we halve the number of minimum size for each group
+        echo "`date` -- Setting min size for ${ROLEENVNAME}"
+        identify_role ${ROLEENVNAME}
+        ASCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
+                     --auto-scaling-group-names ${AUTOSCALENAME} \
+                     --output text \
+                     --query 'AutoScalingGroups[*].DesiredCapacity')
+        SCALEDOWNCAPACITY=$(echo $(($ASCAPACITY/2)))
+        if [ ${SCALEDOWNCAPACITY} -lt 1 ]; then
+            SCALEDOWNCAPACITY=1
+        fi
+        # Scale back to half current min size, unless that'd bring us to 0
+        echo "`date` -- Setting ${AUTOSCALENAME} from ${ASCAPACITY} min size to ${SCALEDOWNCAPACITY} to prep for instance killings"
+        aws autoscaling update-auto-scaling-group --auto-scaling-group-name ${AUTOSCALENAME} --min-size ${SCALEDOWNCAPACITY}
+            RETURNCODE=$?;error_check
+    done
     echo "`date` -- Shooting servers in the face"
     # With the list we built earlier of old instances, iterate over it and terminate/decrement
     for doomedinstances in $(echo ${INITIALINSTANCES} )
@@ -340,7 +363,7 @@ if [ "${NOHEALTHALERT}" = "true" ];then
     # This means earlier, the health check process tried 10 times, and never got an all healthy response
     echo "`date` -- Not going to scale out, since we aren't all healthy"
 else
-    time elb_query_to_drain_instances; format_logs    # For anything with an elb, dereg instances to allow for connection drain
+    time deregister_elb_nodes; format_logs    # For anything with an elb, dereg instances to allow for connection drain
     sleep 30    # Wait for drain, default we set is to 30s
     time terminate_instances_all; format_logs    # Kill the instances we listed in ${INITIALINSTANCES}
 fi

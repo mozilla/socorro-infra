@@ -45,7 +45,7 @@ resource "aws_security_group" "ec2-socorroadmin-sg" {
 resource "aws_launch_configuration" "lc-socorroadmin" {
     user_data = "${file(\"socorro_role.sh\")} admin ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
-    instance_type = "t2.micro"
+    instance_type = "${lookup(var.socorroadmin_ec2_type, var.environment)}"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     iam_instance_profile = "generic"
     associate_public_ip_address = true
@@ -70,8 +70,8 @@ resource "aws_autoscaling_group" "as-socorroadmin" {
     ]
     launch_configuration = "${aws_launch_configuration.lc-socorroadmin.id}"
     max_size = 10
-    min_size = 1
-    desired_capacity = 1
+    min_size = "${lookup(var.socorroadmin_num, var.environment)}"
+    desired_capacity = "${lookup(var.socorroadmin_num, var.environment)}"
     tag {
       key = "Environment"
       value = "${var.environment}"

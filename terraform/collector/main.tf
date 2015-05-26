@@ -92,7 +92,7 @@ resource "aws_elb" "elb-collector" {
 resource "aws_launch_configuration" "lc-collector" {
     user_data = "${file(\"socorro_role.sh\")} collector ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
-    instance_type = "t2.micro"
+    instance_type = "${lookup(var.collector_ec2_type, var.environment)}"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     iam_instance_profile = "generic"
     associate_public_ip_address = true
@@ -116,9 +116,9 @@ resource "aws_autoscaling_group" "as-collector" {
         "aws_launch_configuration.lc-collector"
     ]
     launch_configuration = "${aws_launch_configuration.lc-collector.id}"
-    max_size = 10
-    min_size = 1
-    desired_capacity = 1
+    max_size = 30
+    min_size = "${lookup(var.collector_num, var.environment)}"
+    desired_capacity = "${lookup(var.collector_num, var.environment)}"
     load_balancers = [
         "elb-${var.environment}-collector"
     ]
