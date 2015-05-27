@@ -158,7 +158,7 @@ variable "es_master_ec2_type" {
 }
 variable "es_master_num" {
     default = {
-        stage = "2"
+        stage = "3"
         prod = "3"
     }
 }
@@ -176,14 +176,20 @@ variable "es_interface_num" {
 }
 variable "es_data_ec2_type" {
     default = {
-        stage = "i2.xlarge"
-        prod = "i2.2xlarge"
+        stage = "r3.xlarge"
+        prod = "r3.2xlarge"
     }
 }
 variable "es_data_num" {
     default = {
         stage = "3"
         prod = "9"
+    }
+}
+variable "es_data_ebs_size" {
+    default = {
+        stage = "100"
+        prod = "100"
     }
 }
 # End Elasticsearch block
