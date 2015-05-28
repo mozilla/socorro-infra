@@ -37,6 +37,14 @@ resource "aws_security_group" "ec2-socorrorabbitmq-sg" {
     name = "ec2-socorrorabbitmq-${var.environment}-sg"
     description = "EC2 security for rabbitmq."
     ingress {
+        from_port = 5672
+        to_port = 5672
+        protocol = "tcp"
+        cidr_blocks = [
+            "172.31.0.0/16"
+        ]
+    }
+    ingress {
         from_port = "${var.alt_ssh_port}"
         to_port = "${var.alt_ssh_port}"
         protocol = "tcp"
