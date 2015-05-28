@@ -31,6 +31,23 @@ resource "aws_security_group" "ec2-socorroadmin-sg" {
             "0.0.0.0/0"
         ]
     }
+    # Consul (tcp and udp).
+    ingress {
+        from_port = 8300
+        to_port = 8302
+        protocol = "tcp"
+        cidr_blocks = [
+            "172.31.0.0/16"
+        ]
+    }
+    ingress {
+        from_port = 8301
+        to_port = 8302
+        protocol = "udp"
+        cidr_blocks = [
+            "172.31.0.0/16"
+        ]
+    }
     lifecycle {
         create_before_destroy = true
     }
