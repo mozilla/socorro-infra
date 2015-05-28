@@ -13,7 +13,7 @@ SCALEDOWNTHRESHOLD=20  # Avg CPU utilization of cluster before scale down
 
 # Source functions in lib scripts
 . /home/centos/socorro-infra/bin/lib/identify_role.sh
-. /home/centos/.aws-config
+. /etc/jenkins/aws-config.sh
 
 ############################
 # PROGRAM FUNCTIONS

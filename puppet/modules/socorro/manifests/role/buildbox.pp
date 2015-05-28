@@ -3,6 +3,13 @@ class socorro::role::buildbox {
 
 include socorro::role::common
 
+# Set config variables to inject into templates
+$aws_access_key=hiera("${::environment}/buildbox_aws_access_key")
+$aws_secret_access_key=hiera("${::environment}/buildbox_aws_secret_access_key")
+$aws_default_region=hiera("${::environment}/buildbox_default_aws_region")
+$buildbox_rpm_key=hiera("${::environment}/buildbox_rpm_key")
+$secret_bucket=hiera("${::environment}/secret_bucket")
+
   service {
     'iptables':
       ensure => stopped,
@@ -20,6 +27,60 @@ include socorro::role::common
     'elasticsearch':
       ensure => running,
       enable => true;
+
+    'jenkins':
+      ensure => running,
+      enable => true;
+  }
+
+  file {
+    '/data':
+      ensure => directory,
+      owner  => 'centos',
+      mode   => '0755'
+  }
+
+  file {
+    '/etc/jenkins':
+      ensure => directory,
+      owner  => 'centos',
+      mode   => '0755'
+  }
+
+  file {
+    'aws-config.sh':
+      ensure  => file,
+      content => template('socorro/etc_jenkins/aws-config.sh.erb'),
+      path    => '/etc/jenkins/aws-config.sh',
+      owner   => 'centos',
+      mode    => '0755',
+      require => File['/etc/jenkins']
+  }
+
+  file {
+    'passphrase.txt':
+      ensure  => file,
+      path    => '/etc/jenkins/passphrase.txt',
+      content => template('socorro/etc_jenkins/passphrase.txt.erb'),
+      owner   => 'centos',
+      require => File['/etc/jenkins']
+  }
+
+  file {
+    '.rpmmacros':
+      ensure  => file,
+      path    => '/home/centos/.rpmmacros',
+      source  => 'puppet:///modules/socorro/etc_jenkins/rpmmacros',
+      owner   => 'centos'
+  }
+
+  file {
+    'manage_repo.sh':
+      ensure  => file,
+      content => template('socorro/bin_manage_repo/manage_repo.sh.erb'),
+      path    => '/home/centos/manage_repo.sh',
+      owner   => 'centos',
+      mode    => '0755',
   }
 
   file {
