@@ -28,7 +28,7 @@ function create_rpm() {
     NEWSOCORROVERSION=$(ls -lart /home/centos/org.mozilla.crash-stats.packages-public/x86_64/socorro-*.rpm| \
                         tail -n1|sed 's/\// /g'|sed 's/\./ /g'|awk '{print $8}')
     # Get a version-date tag to apply as a name to the AMI
-    SOCORROAMINAME="${NEWSOCORROVERSION}-`date +%m%d%y`"
+    SOCORROAMINAME="${NEWSOCORROVERSION}-`date +%Y%m%d%H%M`"
     if [ "$SKIPRPM" = "true" ];then
         echo "Skipping rpm upload"
         else
