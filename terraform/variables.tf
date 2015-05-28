@@ -26,7 +26,7 @@ variable "ssh_key_name" {
 }
 variable "base_ami" {
     default = {
-        us-west-2 = "ami-51604e61"
+        us-west-2 = "ami-e9734cd9"
     }
 }
 variable "buildbox_ami" {
@@ -188,8 +188,8 @@ variable "es_data_num" {
 }
 variable "es_data_ebs_size" {
     default = {
-        stage = "100"
-        prod = "100"
+        stage = "1024"
+        prod = "1024"
     }
 }
 # End Elasticsearch block
