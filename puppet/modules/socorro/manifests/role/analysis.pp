@@ -5,9 +5,9 @@ include socorro::role::common
 
   service {
     'nginx':
-      ensure  => running,
-      enable  => true,
-      require => Package['nginx'],
+      ensure    => running,
+      enable    => true,
+      require   => Package['nginx'],
       subscribe => File['/etc/nginx/conf.d/socorro-analysis.conf'];
   }
 
@@ -20,8 +20,7 @@ include socorro::role::common
       require => Package['nginx'];
 
     '/etc/nginx/conf.d/socorro-analysis.conf':
-      source  =>
-        'puppet:///modules/socorro/etc_nginx/conf_d/socorro-analysis.conf',
+      source  => 'puppet:///modules/socorro/etc_nginx/conf_d/socorro-analysis.conf',
       owner   => 'root',
       group   => 'nginx',
       mode    => '0664',
@@ -29,11 +28,11 @@ include socorro::role::common
   }
 
   package {
-    'nginx':
-      ensure=> latest;
-
-    'php-cli':
-      ensure=> latest;
+    [
+      'php-cli',
+      'nginx'
+    ]:
+    ensure => latest
   }
 
 }

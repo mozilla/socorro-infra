@@ -5,11 +5,13 @@ include socorro::role::common
 
   service {
     'nginx':
-      ensure  => running,
-      enable  => true,
-      require => Package['nginx'],
-      subscribe => File['/etc/nginx/conf.d/socorro-webapp.conf',
-                        '/etc/nginx/conf.d/socorro-middleware.conf'];
+      ensure    => running,
+      enable    => true,
+      require   => Package['nginx'],
+      subscribe => File[
+        '/etc/nginx/conf.d/socorro-webapp.conf',
+        '/etc/nginx/conf.d/socorro-middleware.conf'
+      ];
 
     'socorro-webapp':
       ensure  => running,
@@ -34,16 +36,14 @@ include socorro::role::common
       require => Package['nginx'];
 
     '/etc/nginx/conf.d/socorro-webapp.conf':
-      source  =>
-        'puppet:///modules/socorro/etc_nginx/conf_d/socorro-webapp.conf',
+      source  => 'puppet:///modules/socorro/etc_nginx/conf_d/socorro-webapp.conf',
       owner   => 'root',
       group   => 'nginx',
       mode    => '0664',
       require => File['/etc/nginx/nginx.conf'];
 
     '/etc/nginx/conf.d/socorro-middleware.conf':
-      source  =>
-        'puppet:///modules/socorro/etc_nginx/conf_d/socorro-middleware.conf',
+      source  => 'puppet:///modules/socorro/etc_nginx/conf_d/socorro-middleware.conf',
       owner   => 'root',
       group   => 'nginx',
       mode    => '0664',
@@ -51,11 +51,11 @@ include socorro::role::common
   }
 
   package {
-    'socorro':
-      ensure=> latest;
-
-    'nginx':
-      ensure=> latest;
+    [
+      'nginx',
+      'socorro'
+    ]:
+    ensure => latest
   }
 
 }
