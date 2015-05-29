@@ -14,6 +14,11 @@ class socorro::packer::base {
       enable  => false,
       require => Package['postgresql93-server'];
 
+    'datadog-agent':
+      ensure  => stopped,
+      enable  => false,
+      require => Package['datadog-agent'];
+
     'elasticsearch':
       ensure  => stopped,
       enable  => false,
@@ -32,11 +37,25 @@ class socorro::packer::base {
     'PGDG':
       baseurl => 'http://yum.postgresql.org/9.3/redhat/rhel-$releasever-$basearch',
       gpgkey  => 'http://yum.postgresql.org/RPM-GPG-KEY-PGDG';
+    'datadog-agent':
+      baseurl => 'http://yum.datadoghq.com/rpm/x86_64/',
   }
 
   Yumrepo['elasticsearch', 'PGDG'] {
     enabled  => 1,
     gpgcheck => 1
+  }
+
+  Yumrepo['datadog-agent'] {
+    enabled  => 1,
+    gpgcheck => 0
+  }
+
+  package {
+    'datadog-agent':
+      ensure  => latest,
+      require => Yumrepo['datadogagent']
+
   }
 
   package {

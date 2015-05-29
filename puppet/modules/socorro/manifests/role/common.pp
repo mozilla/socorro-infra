@@ -42,4 +42,24 @@ class socorro::role::common {
       enable => true
   }
 
+  # Datadog agent install
+  $datadog_api_key=hiera("${::environment}/datadog_api_key")
+
+  file {
+    '/etc/dd-agent/datadog.conf':
+      mode    => '0640',
+      owner   => dd-agent,
+      content => template('socorro/datadog-agent/datadog.conf.erb'),
+      notify  => Service['datadog-agent'],
+      require => Package['datadog-agent']
+  }
+
+  service {
+    'datadog-agent':
+      ensure    => running,
+      enable    => true,
+      hasstatus => false,
+      pattern   => 'datadog-agent',
+      require   => File['/etc/dd-agent/datadog.conf']
+  }
 }
