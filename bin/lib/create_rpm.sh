@@ -37,7 +37,7 @@ function create_rpm() {
         echo "`date` -- Signing the RPM"
         rpm --addsign ${NEWRPM} < /etc/jenkins/passphrase.txt
             RETURNCODE=$?;error_check
-        echo "`date` -- Signed ${NEWRPM} with the "
+        echo "`date` -- Signed ${NEWRPM} with the return code of ${RETURNCODE} "
         echo "`date` -- Refreshing RPM repo from S3"
         /home/centos/manage_repo.sh refresh
             RETURNCODE=$?;error_check
