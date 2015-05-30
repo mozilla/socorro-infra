@@ -32,8 +32,8 @@ resource "aws_security_group" "ec2-symbolapi-sg" {
         ]
     }
     egress {
-        from_port = 1514
-        to_port = 1514
+        from_port = 0
+        to_port = 65535
         protocol = "udp"
         cidr_blocks = [
             "0.0.0.0/0"
