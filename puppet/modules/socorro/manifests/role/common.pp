@@ -48,10 +48,10 @@ class socorro::role::common {
   file {
     '/etc/dd-agent/datadog.conf':
       mode    => '0640',
-      owner   => dd-agent,
+      owner   => 'dd-agent',
       content => template('socorro/datadog-agent/datadog.conf.erb'),
       notify  => Service['datadog-agent'],
-      require => Package['datadog-agent']
+      require => Exec['set-hostname']
   }
 
   service {
