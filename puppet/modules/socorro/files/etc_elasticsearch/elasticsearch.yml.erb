@@ -1,0 +1,25 @@
+---
+name: "<%= @ec2_instance_id %>"
+cluster:
+    name: "sss_<%= @environment %>"
+discovery:
+    zen:
+        minimum_master_hosts: 2
+    type: "ec2"
+    ec2:
+        tag:
+            Environment: "<%= @environment %>"
+            role: "elasticsearch"
+index:
+    number_of_replicas: 1
+action:
+    disable_shutdown: true
+    disable_delete_all_indices: true
+cloud:
+    aws:
+        region: "<%= @ec2_placement_availability_zone.chop %>"
+node:
+    master: <%= @es_master %>
+    data: <%= @es_data %>
+http:
+    enabled: <%= @es_interface %>
