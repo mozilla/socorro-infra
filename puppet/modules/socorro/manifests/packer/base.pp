@@ -54,7 +54,7 @@ class socorro::packer::base {
   package {
     'datadog-agent':
       ensure  => latest,
-      require => Yumrepo['datadogagent']
+      require => Yumrepo['datadog-agent']
 
   }
 

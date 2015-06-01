@@ -288,7 +288,7 @@ function find_ami() {
 
 function apply_ami() {
     # For each of our apps, we want to use terraform to apply the new base AMI we've just created
-    for ROLEENVNAME in $(cat /home/centos/socorro-g/bin/lib/${ENVNAME}_socorro_master.list)
+    for ROLEENVNAME in $(cat /home/centos/socorro-infra/bin/lib/${ENVNAME}_socorro_master.list)
         do
             # Get AS group name for each ROLEENVNAME
             echo "`date` -- Checking role for ${ROLEENVNAME}"
