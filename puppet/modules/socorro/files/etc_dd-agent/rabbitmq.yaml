@@ -1,0 +1,6 @@
+init_config:
+
+instances:
+    -  rabbitmq_api_url: http://localhost:15672/api/
+       rabbitmq_user: guest # defaults to 'guest'
+       rabbitmq_pass: guest # defaults to 'guest'
