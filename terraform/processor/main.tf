@@ -71,6 +71,11 @@ resource "aws_launch_configuration" "lc-processor" {
     lifecycle {
         create_before_destroy = true
     }
+
+    ephemeral_block_device {
+        device_name = "/dev/xvdc"
+        virtual_name = "ephemeral0"
+    }
 }
 
 resource "aws_autoscaling_group" "as-processor" {
