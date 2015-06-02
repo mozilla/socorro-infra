@@ -104,13 +104,13 @@ variable "collector_ec2_type" {
 variable "processor_num" {
     default = {
         stage = "1"
-        prod = "3"
+        prod = "9"
     }
 }
 variable "processor_ec2_type" {
     default = {
         stage = "r3.large"
-        prod = "r3.xlarge"
+        prod = "r3.2xlarge"
     }
 }
 variable "socorrorabbitmq_num" {
