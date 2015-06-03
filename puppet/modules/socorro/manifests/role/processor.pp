@@ -10,7 +10,7 @@ include socorro::role::common
   }
 
   mount {
-    '/tmp/symbols':
+    '/mnt':
       ensure  => mounted,
       device  => '/dev/xvdc',
       fstype  => 'ext4',
@@ -18,8 +18,11 @@ include socorro::role::common
       require => Exec['format-symbol-cache']
   }
 
-  File['/tmp/symbols'] {
-      require => Mount['/tmp/symbols']
+  file {
+    '/mnt/symbolcache':
+      ensure  => directory,
+      owner   => 'socorro',
+      require => Mount['/mnt']
   }
 
   service {
@@ -28,7 +31,7 @@ include socorro::role::common
       enable  => true,
       require => [
         Exec['join_consul_cluster'],
-        File['/tmp/symbols']
+        File['/mnt/symbolcache']
       ]
   }
 
