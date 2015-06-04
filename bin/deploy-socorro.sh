@@ -253,6 +253,7 @@ function deregister_elb_nodes() {
     for ROLEENVNAME in $(cat /home/centos/socorro-infra/bin/lib/${ENVNAME}_socorro_master.list)
         do
         # Get ELB and AS group name.
+        identify_role ${ROLEENVNAME}
         if [ "${ELBNAME}" = "NONE" ];then
             echo "No ELB to check for ${ROLEENVNAME}"
             else
