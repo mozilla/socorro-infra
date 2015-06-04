@@ -173,12 +173,12 @@ function check_health_per_elb() {
         RETURNCODE=$?;error_check
     HEALTHYHOSTCOUNT=$(aws elb describe-instance-health \
                        --load-balancer-name ${ELBNAME} \
-                       --output text --query 'InstanceStates[*].State' | \
+                       --output text | awk '{print $5}' | \
                        grep InService | wc -l | awk '{print $1}')
         RETURNCODE=$?;error_check
     CURRENTHEALTH="${CURRENTHEALTH} $(aws elb describe-instance-health \
                    --load-balancer-name ${ELBNAME} \
-                   --output text --query 'InstanceStates[*].State')"
+                   --output text | awk '{print $5}')"
         RETURNCODE=$?;error_check
     if [ ${HEALTHYHOSTCOUNT} -lt ${ASCAPACITY} ];then
         CURRENTHEALTH="Out"
