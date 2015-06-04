@@ -27,13 +27,14 @@ function infra_report() {
         --auto-scaling-group-names ${AUTOSCALENAME} \
         --query 'AutoScalingGroups[*].[MinSize, DesiredCapacity, MaxSize]' \
         --output text
+
     ELBNAME=$(aws autoscaling describe-auto-scaling-groups \
               --auto-scaling-group-names ${AUTOSCALENAME} \
               --query 'AutoScalingGroups[*].LoadBalancerNames' \
               --output text)
     echo "=== ELB ENDPOINT ==="
     aws elb describe-load-balancers \
-        --load-balancer-name elb-stage-socorroweb \
+        --load-balancer-name ${ELBNAME} \
         --query 'LoadBalancerDescriptions[*].DNSName' \
         --output text
     echo "=== ELB HEALTH ==="
