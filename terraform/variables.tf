@@ -50,7 +50,7 @@ variable "socorroadmin_num" {
 variable "socorroadmin_ec2_type" {
     default = {
         stage = "t2.micro"
-        prod = "t2.micro"
+        prod = "m3.medium"
     }
 }
 variable "socorroanalysis_num" {
