@@ -75,4 +75,21 @@ include socorro::role::common
     }
   }
 
+if $::elasticsearch_role == 'interface'  {
+    file {
+    '/etc/dd-agent/conf.d/elasticsearch.yaml':
+      mode   => '0640',
+      owner  => 'dd-agent',
+      source => 'puppet:///modules/socorro/etc_dd-agent/elasticsearch.yaml',
+      notify => Service['datadog-agent']
+  }
+
+  service {
+    'datadog-agent':
+      ensure    => running,
+      enable    => true,
+      hasstatus => false,
+      pattern   => 'datadog-agent'
+  }
+}
 }
