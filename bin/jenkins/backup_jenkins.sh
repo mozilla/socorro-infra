@@ -58,10 +58,10 @@ function wait_for_ami() {
     PROGSTEP="Waiting for AMI"
     echo "`date` -- Waiting 300 seconds for ${AMIID} to become available"
     sleep 300
-    until aws ec2 describe-images --image-id ${AMIID} --output text --query 'Images[*}.State'| grep available > /dev/null;
+    until aws ec2 describe-images --image-id ${AMIID} --output text | grep available > /dev/null
         do
         echo "`date` -- Waiting for ${AMIID} to become available"
-        sleep 30
+        sleep 60
     done
 }
 
