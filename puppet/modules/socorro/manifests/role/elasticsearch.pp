@@ -74,16 +74,4 @@ include socorro::role::common
       require => Mount['/var/lib/elasticsearch']
     }
   }
-
-# If this is an interface node, we want the datadog agent on it
-if $::elasticsearch_role == 'interface'  {
-    file {
-    '/etc/dd-agent/conf.d/elasticsearch.yaml':
-      mode   => '0640',
-      owner  => 'dd-agent',
-      source => 'puppet:///modules/socorro/etc_dd-agent/elasticsearch.yaml',
-      notify => Service['datadog-agent']
-  }
-}
-
 }
