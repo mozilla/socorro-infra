@@ -172,12 +172,12 @@ function check_health_per_elb() {
                  --query 'AutoScalingGroups[*].DesiredCapacity')
         RETURNCODE=$?;error_check
     HEALTHYHOSTCOUNT=$(aws elb describe-instance-health \
-                       --load-balancer-name elb-stage-socorroweb \
+                       --load-balancer-name ${ELBNAME} \
                        --output text --query 'InstanceStates[*].State' | \
                        grep InService | wc -l | awk '{print $1}')
         RETURNCODE=$?;error_check
     CURRENTHEALTH="${CURRENTHEALTH} $(aws elb describe-instance-health \
-                   --load-balancer-name elb-stage-socorroweb \
+                   --load-balancer-name ${ELBNAME} \
                    --output text --query 'InstanceStates[*].State')"
         RETURNCODE=$?;error_check
     if [ ${HEALTHYHOSTCOUNT} -lt ${ASCAPACITY} ];then
@@ -204,7 +204,7 @@ function monitor_overall_health() {
     until [ "${HEALTHSTATUS}" = "ALLHEALTHY" ]
         do
         ATTEMPTCOUNT=`echo $(($ATTEMPTCOUNT+1))`
-        echo "`date` -- Attempt ${ATTEMPTCOUNT} of 10 checking on healthy elbs"
+        echo "`date` -- Attempt ${ATTEMPTCOUNT} of 15 checking on healthy elbs"
         for ROLEENVNAME in $(cat /home/centos/socorro-infra/bin/lib/${ENVNAME}_socorro_master.list)
             do
             # Get the AS name and ELB name for this particular role/env
