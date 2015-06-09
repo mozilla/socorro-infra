@@ -12,6 +12,15 @@ include socorro::role::common
       source => 'puppet:///modules/socorro/etc_security_limits.d/90-elasticsearch.conf'
   }
 
+  # Use swap in emergencies only.
+  file {
+    '/etc/sysctl.d/10-swappiness.conf':
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0644',
+      source => 'puppet:///modules/socorro/etc_sysctl.d/10-swappiness.conf'
+  }
+
   # These switches determine the role of the node: master, interface, or data.
   $es_master = $::elasticsearch_role ? {
     'master' => true,
