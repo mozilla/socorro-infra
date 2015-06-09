@@ -3,11 +3,11 @@ ES_HOME=/usr/share/elasticsearch
 
 # Heap Size (defaults to 256m min, 1g max)
 <% if @es_master %>
-ES_HEAP_SIZE=24g
+ES_HEAP_SIZE=15g
 <% elsif @es_data %>
-ES_HEAP_SIZE=40g
+ES_HEAP_SIZE=20g
 <% elsif @es_interface %>
-ES_HEAP_SIZE=30g
+ES_HEAP_SIZE=16g
 <% end %>
 
 # Heap new generation
