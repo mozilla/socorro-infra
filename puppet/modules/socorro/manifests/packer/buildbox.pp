@@ -19,7 +19,6 @@ class socorro::packer::buildbox {
       'mercurial',
       'openldap-devel',
       'python-devel',
-      'python-pip',
       'python-virtualenv',
       'rpm-build',
       'rpm-sign',
@@ -40,23 +39,6 @@ class socorro::packer::buildbox {
       source => 'puppet:///modules/socorro/etc_profile.d/rpmbuild.sh',
       owner  => 'root',
       group  => 'root'
-  }
-
-  # RHEL-alike and pip provider relationship status: It's Complicated
-  # Workaround is to have a symlink called "pip-python" because reasons.
-  # https://github.com/evenup/evenup-curator/issues/24 for example.
-  file {
-    '/usr/bin/pip-python':
-      ensure  => link,
-      target  => '/usr/bin/pip',
-      require => Package['python-pip']
-  }
-
-  package {
-    'awscli':
-      ensure   => latest,
-      provider => 'pip',
-      require  => File['/usr/bin/pip-python']
   }
 
   package {

@@ -26,4 +26,20 @@ include socorro::role::common
       requires => Service['consul'];
   }
 
+  # We want to backup consul servers every 20 min.
+  file {
+    '/usr/bin/backup-consul.sh':
+      content => template('socorro/bin_consul/backup-consul.sh.erb'),
+      owner   => 'centos',
+      mode    => '0750'
+  }
+
+  $consul_environment = $::environment
+
+  cron { 'backup-consul':
+    command => '/usr/bin/backup-consul.sh 2>&1 >> /var/log/backup-consul.log',
+    user    => 'centos',
+    minute  => [03,23,43],
+    require => File['/usr/bin/backup-consul.sh']
+  }
 }

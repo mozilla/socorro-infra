@@ -66,6 +66,7 @@ class socorro::packer::base {
       'mod_wsgi',
       'nginx',
       'php-cli',
+      'python-pip',
       'rabbitmq-server',
       'supervisor',
       'unzip',
@@ -104,6 +105,7 @@ class socorro::packer::base {
       require => Package['elasticsearch']
   }
 
+
   file {
     '/etc/socorro':
       ensure => directory;
@@ -121,6 +123,31 @@ class socorro::packer::base {
       owner   => 'root',
       require => Package['elasticsearch'],
       notify  => Service['elasticsearch'];
+  }
+
+
+  # RHEL-alike and pip provider relationship status: It's Complicated
+  # Workaround is to have a symlink called "pip-python" because reasons.
+  # https://github.com/evenup/evenup-curator/issues/24 for example.
+  file {
+    '/usr/bin/pip-python':
+      ensure  => link,
+      target  => '/usr/bin/pip',
+      require => Package['python-pip']
+  }
+
+  package {
+    'awscli':
+      ensure   => latest,
+      provider => 'pip',
+      require  => File['/usr/bin/pip-python']
+  }
+
+  package {
+    'consulate':
+      ensure   => latest,
+      provider => 'pip',
+      require  => Package['python-pip']
   }
 
   package {
