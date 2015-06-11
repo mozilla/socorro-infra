@@ -71,9 +71,8 @@ resource "aws_launch_configuration" "lc-processor" {
     lifecycle {
         create_before_destroy = true
     }
-
     ephemeral_block_device {
-        device_name = "/dev/xvdc"
+        device_name = "/dev/xvdb"
         virtual_name = "ephemeral0"
     }
 }
@@ -94,18 +93,18 @@ resource "aws_autoscaling_group" "as-processor" {
     min_size = "${lookup(var.processor_num, var.environment)}"
     desired_capacity = "${lookup(var.processor_num, var.environment)}"
     tag {
-      key = "Environment"
-      value = "${var.environment}"
-      propagate_at_launch = true
+        key = "Environment"
+        value = "${var.environment}"
+        propagate_at_launch = true
     }
     tag {
-      key = "role"
-      value = "processor"
-      propagate_at_launch = true
+        key = "role"
+        value = "processor"
+        propagate_at_launch = true
     }
     tag {
-      key = "project"
-      value = "socorro"
-      propagate_at_launch = true
+        key = "project"
+        value = "socorro"
+        propagate_at_launch = true
     }
 }
