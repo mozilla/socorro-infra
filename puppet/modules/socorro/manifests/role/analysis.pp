@@ -30,6 +30,10 @@ include socorro::role::common
   package {
     [
       'php-cli',
+      'php-pgsql',
+      'php-xml',
+      'mercurial',
+      'nano',       # really?
       'nginx'
     ]:
     ensure => latest
