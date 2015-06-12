@@ -12,6 +12,13 @@ discovery:
             role: "elasticsearch"
 index:
     number_of_replicas: 1
+    refresh_interval: "30s"
+indices:
+    memory:
+        index_buffer_size: "30%"
+    store:
+        throttle:
+            max_bytes_per_sec: "100mb"
 action:
     disable_shutdown: true
     disable_delete_all_indices: true
