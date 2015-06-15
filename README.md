@@ -177,3 +177,80 @@ repo and can be installed in the usual fashion.
 
 
 *TODO*
+
+### Bootstrapping long-running services
+
+These services hold local state and care should be taken when bringing up
+and upgrading them. They all support clustering/replication/backups/etc., these
+should be set up according to your specific needs.
+
+We suggest using S3 as your datastore-of-record, which will hold "raw" JSON and
+minidumps from Collector, as well as "processed" JSON from processors. Still,
+these datastores will maintain state that is important such as users/permissions
+and other configuration specific to your site.
+
+# PostgreSQL
+
+PostgreSQL needs to have the initial schema and some required data loaded,
+in order for crash-stats to function. A user/password must be created, and
+the Processors and Webapp must be able to connect.
+
+See the Socorro-provided "setup-socorro.sh", which can do this with the postgres
+arg: `sudo setup-socorro.sh postgres`
+
+Additionally, some Django-specific tables must be set up in order for
+crash-stats to function: `sudo setup-socorro.sh webapp`
+
+If you're using AWS RDS, we suggest using the automated snapshot feature to
+automatically backup, and also doing periodic dumps with pg_dump (this kind
+of backup is more portable, and will ensure that the DB has not become
+corrupt.)
+
+You should also consider using using replication, and having databases in
+multiple availability zones.
+
+# Consul
+
+Consul servers must be joined into a cluster and `consul join` used to
+join them together.
+
+The initial Socorro configuration must be loaded, a working example can be
+found in `./socorro-config/`
+
+Put this directory on one of the consul servers and run `./bulk_load.sh` to
+load the configuration into Consul.
+
+We suggest setting up automated backups of Consul using the Consulate
+tool: https://pypi.python.org/pypi/consulate
+
+# Elasticsearch
+
+Elastic search indexes must be set up for Socorro.
+
+See the Socorro-provided "setup-socorro.sh", which can do this:
+`sudo setup-socorro.sh elasticsearch`
+
+Elasticsearch contains the same JSON data that is present on both S3 and
+Postgres, so it can be rebuilt from these if necessary, although this can
+take a while if you have a lot of data. See the Socorro "copy_raw_and_processed"
+app (`socorro --help`).
+
+If you wish to make backups of Elasticsearch, consider snapshots:
+https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html
+
+# RabbitMQ
+
+RabbitMQ user must exist, and must have permission on the default vhost
+(or whatever vhost you choose to use for Socorro, if changed):
+
+`sudo rabbitmqctl add_user socorro ${RABBIT_PASSWORD}`
+`sudo rabbitmqctl set_permissions -p / socorro ".*" ".*" "."`
+
+If you want a cluster with multiple RabbitMQ servers, they must be joined
+together into a cluster. Stop all but the primary, and join the others to
+it using `rabbitmqctl join_cluster <primary_hostname>`
+
+Backups are generally not an issue for Rabbit since it is a queue that holds
+crash IDs and nothing more (generally these crash IDs are logged elsewhere and
+can be re-queued), but if backups are desired then we suggest shutting down
+Rabbit and making a cold backup of its data files.
