@@ -57,12 +57,32 @@ resource "aws_security_group" "ec2-consul-sg" {
             "172.31.0.0/16"
         ]
     }
+    # phrawzty home
     ingress {
         from_port = "${var.alt_ssh_port}"
         to_port = "${var.alt_ssh_port}"
         protocol = "tcp"
         cidr_blocks = [
-            "0.0.0.0/0"
+            "${var.phrawzty_ip}"
+        ]
+    }
+    # jp home
+    ingress {
+        from_port = "${var.alt_ssh_port}"
+        to_port = "${var.alt_ssh_port}"
+        protocol = "tcp"
+        cidr_blocks = [
+            "${var.jp_ip}"
+        ]
+    }
+
+    # rhelmer home
+    ingress {
+        from_port = "${var.alt_ssh_port}"
+        to_port = "${var.alt_ssh_port}"
+        protocol = "tcp"
+        cidr_blocks = [
+            "${var.rhelmer_ip}"
         ]
     }
     egress {

@@ -8,6 +8,15 @@ variable "webapp_cert" {}
 variable "analysis_cert" {}
 variable "buildbox_cert" {}
 variable "rds_root_password" {}
+variable "rhelmer_ip" {
+    default = "fake"
+}
+variable "phrawzty_ip" {
+    default = "fake"
+}
+variable "jp_ip" {
+    default = "fake"
+}
 variable "ssh_key_file" {
     default = {
         us-west-2 = "socorro__us-west-2.pem"

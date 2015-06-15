@@ -36,12 +36,32 @@ resource "aws_security_group" "elb-socorroes-sg" {
 resource "aws_security_group" "ec2-socorroes-sg" {
     name = "ec2-socorroes-${var.environment}-sg"
     description = "Allow internal access to ES, etc."
+    # phrawzty home
     ingress {
         from_port = "${var.alt_ssh_port}"
         to_port = "${var.alt_ssh_port}"
         protocol = "tcp"
         cidr_blocks = [
-            "0.0.0.0/0"
+            "${var.phrawzty_ip}"
+        ]
+    }
+    # jp home
+    ingress {
+        from_port = "${var.alt_ssh_port}"
+        to_port = "${var.alt_ssh_port}"
+        protocol = "tcp"
+        cidr_blocks = [
+            "${var.jp_ip}"
+        ]
+    }
+
+    # rhelmer home
+    ingress {
+        from_port = "${var.alt_ssh_port}"
+        to_port = "${var.alt_ssh_port}"
+        protocol = "tcp"
+        cidr_blocks = [
+            "${var.rhelmer_ip}"
         ]
     }
     ingress {
