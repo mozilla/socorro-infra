@@ -178,7 +178,7 @@ repo and can be installed in the usual fashion.
 
 *TODO*
 
-### Bootstrapping long-running services
+# Long-running services
 
 These services hold local state and care should be taken when bringing up
 and upgrading them. They all support clustering/replication/backups/etc., these
@@ -189,13 +189,13 @@ minidumps from Collector, as well as "processed" JSON from processors. Still,
 these datastores will maintain state that is important such as users/permissions
 and other configuration specific to your site.
 
-# PostgreSQL
+## PostgreSQL
 
 PostgreSQL needs to have the initial schema and some required data loaded,
 in order for crash-stats to function. A user/password must be created, and
 the Processors and Webapp must be able to connect.
 
-See the Socorro-provided "setup-socorro.sh", which can do this with the postgres
+See the Socorro-provided `setup-socorro.sh`, which can do this with the postgres
 arg: `sudo setup-socorro.sh postgres`
 
 Additionally, some Django-specific tables must be set up in order for
@@ -209,7 +209,7 @@ corrupt.)
 You should also consider using using replication, and having databases in
 multiple availability zones.
 
-# Consul
+## Consul
 
 Consul servers must be joined into a cluster and `consul join` used to
 join them together.
@@ -223,11 +223,11 @@ load the configuration into Consul.
 We suggest setting up automated backups of Consul using the Consulate
 tool: https://pypi.python.org/pypi/consulate
 
-# Elasticsearch
+## Elasticsearch
 
 Elastic search indexes must be set up for Socorro.
 
-See the Socorro-provided "setup-socorro.sh", which can do this:
+See the Socorro-provided `setup-socorro.sh`, which can do this:
 `sudo setup-socorro.sh elasticsearch`
 
 Elasticsearch contains the same JSON data that is present on both S3 and
@@ -238,7 +238,7 @@ app (`socorro --help`).
 If you wish to make backups of Elasticsearch, consider snapshots:
 https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html
 
-# RabbitMQ
+## RabbitMQ
 
 RabbitMQ user must exist, and must have permission on the default vhost
 (or whatever vhost you choose to use for Socorro, if changed):
