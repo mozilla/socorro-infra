@@ -89,7 +89,7 @@ resource "aws_autoscaling_group" "as-processor" {
         "aws_launch_configuration.lc-processor"
     ]
     launch_configuration = "${aws_launch_configuration.lc-processor.id}"
-    max_size = 30
+    max_size = 100
     min_size = "${lookup(var.processor_num, var.environment)}"
     desired_capacity = "${lookup(var.processor_num, var.environment)}"
     tag {
