@@ -7,12 +7,32 @@ provider "aws" {
 resource "aws_security_group" "ec2-socorroanalysis-sg" {
     name = "ec2-socorroanalysis-${var.environment}-sg"
     description = "Crashanalysis node."
+    # phrawzty home
     ingress {
         from_port = "${var.alt_ssh_port}"
         to_port = "${var.alt_ssh_port}"
         protocol = "tcp"
         cidr_blocks = [
-            "0.0.0.0/0"
+            "${var.phrawzty_ip}"
+        ]
+    }
+    # jp home
+    ingress {
+        from_port = "${var.alt_ssh_port}"
+        to_port = "${var.alt_ssh_port}"
+        protocol = "tcp"
+        cidr_blocks = [
+            "${var.jp_ip}"
+        ]
+    }
+
+    # rhelmer home
+    ingress {
+        from_port = "${var.alt_ssh_port}"
+        to_port = "${var.alt_ssh_port}"
+        protocol = "tcp"
+        cidr_blocks = [
+            "${var.rhelmer_ip}"
         ]
     }
     ingress {
