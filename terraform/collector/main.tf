@@ -84,7 +84,7 @@ resource "aws_elb" "elb-collector" {
         instance_protocol = "http"
         lb_port = 443
         lb_protocol = "https"
-        ssl_certificate_id = "${var.collector_cert}"
+        ssl_certificate_id = "${lookup(var.collector_cert, var.environment)}"
     }
     security_groups = [
         "${var.elb_master_web_sg_id}"
@@ -124,7 +124,7 @@ resource "aws_elb" "elb-collector-oldssl" {
         instance_protocol = "http"
         lb_port = 443
         lb_protocol = "https"
-        ssl_certificate_id = "${var.collector_cert}"
+        ssl_certificate_id = "${lookup(var.oldsslcollector_cert, var.environment)}"
     }
     security_groups = [
         "${var.elb_master_web_sg_id}"

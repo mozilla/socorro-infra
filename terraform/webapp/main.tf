@@ -137,7 +137,7 @@ resource "aws_elb" "elb-socorroweb" {
         instance_protocol = "http"
         lb_port = 443
         lb_protocol = "https"
-        ssl_certificate_id = "${var.webapp_cert}"
+        ssl_certificate_id = "${lookup(var.webapp_cert, var.environment)}"
     }
     health_check {
       healthy_threshold = 2

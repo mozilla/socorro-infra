@@ -92,7 +92,7 @@ resource "aws_elb" "elb-socorroanalysis" {
         instance_protocol = "http"
         lb_port = 443
         lb_protocol = "https"
-        ssl_certificate_id = "${var.analysis_cert}"
+        ssl_certificate_id = "${lookup(var.analysis_cert, var.environment)}"
     }
     security_groups = [
         "${var.elb_master_web_sg_id}"

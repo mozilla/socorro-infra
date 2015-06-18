@@ -2,7 +2,7 @@
 
 set -e
 
-TFORM_VERSION="0.5.0_linux_amd64"
+TFORM_VERSION="0.5.3_linux_amd64"
 
 gem install puppet puppet-lint
 puppet-lint --with-filename --no-80chars-check --no-autoloader_layout-check --fail-on-warnings puppet/
@@ -22,10 +22,7 @@ for environment in stage prod; do
                        -var="access_key=FAKE" \
                        -var="subnets=FAKE" \
                        -var="secret_bucket=FAKE" \
-                       -var="collector_cert=FAKE" \
-                       -var="analysis_cert=FAKE" \
                        -var="buildbox_cert=FAKE" \
-                       -var="webapp_cert=FAKE" \
                        -var="rds_root_password=FAKE"
         popd
     done

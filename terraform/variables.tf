@@ -3,9 +3,30 @@ variable "access_key" {}
 variable "secret_key" {}
 variable "secret_bucket" {}
 variable "subnets" {}
-variable "collector_cert" {}
-variable "webapp_cert" {}
-variable "analysis_cert" {}
+variable "collector_cert" {
+    default = {
+        prod  = ""
+        stage = ""
+    }
+}
+variable "webapp_cert" {
+    default = {
+        prod = ""
+        stage = ""
+    }
+}
+variable "analysis_cert" {
+    default = {
+        prod = ""
+        stage = ""
+    }
+}
+variable "oldsslcollector_cert" {
+    default = {
+        prod  = ""
+        stage = ""
+    }
+}
 variable "buildbox_cert" {}
 variable "rds_root_password" {}
 variable "ssh_key_file" {
