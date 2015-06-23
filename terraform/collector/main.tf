@@ -104,6 +104,8 @@ resource "aws_elb" "elb-collector" {
     cross_zone_load_balancing = true
     connection_draining = true
     connection_draining_timeout = 30
+    # give extra time for symbol uploads
+    idle_timeout = 300
 }
 
 resource "aws_elb" "elb-collector-oldssl" {
