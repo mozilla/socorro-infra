@@ -6,7 +6,7 @@
 SCALEUPADJUSTMENT=6  # How many nodes to scale in upon receiving a trigger?
 SCALEDOWNADJUSTMENT=-3  # How many nodes to scale away upon receiving a trigger?  (Note, make this a -#)
 SCALEUPCOOLDOWN=300  # Seconds to wait before allowing further scale up adjustments
-SCALEUPCOOLDOWN=300  # Seconds to wait before allowing further scale down adjustments
+SCALEDOWNCOOLDOWN=300  # Seconds to wait before allowing further scale down adjustments
 SCALEUPTHRESHOLD=70  # Avg CPU utilization of cluster before scale up
 SCALEDOWNTHRESHOLD=20  # Avg CPU utilization of cluster before scale down
 
@@ -57,8 +57,8 @@ function create_scaling_trigger_and_policy() {
     DOWN=$(aws autoscaling put-scaling-policy --policy-name ${AUTOSCALENAME}-scale-down \
         --auto-scaling-group-name ${AUTOSCALENAME} \
         --scaling-adjustment ${SCALEDOWNADJUSTMENT} \
-        --adjustment-type ChangeInCapacity -\
-        -cooldown ${SCALEDOWNCOOLDOWN}|grep Policy | sed 's/"/ /g'|awk '{print $3}')
+        --adjustment-type ChangeInCapacity \
+        --cooldown ${SCALEDOWNCOOLDOWN}|grep Policy | sed 's/"/ /g'|awk '{print $3}')
     # Create a Cloudwatch alarm for high CPU average aggregate in the autoscale group, which triggers a scale up
     echo "`date` -- Creating a high CPU alarm to hook autoscaling to for ${AUTOSCALENAME}"
     aws cloudwatch put-metric-alarm \
