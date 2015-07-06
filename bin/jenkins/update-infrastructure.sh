@@ -128,12 +128,12 @@ for ROLEENVNAME in $(cat /home/centos/socorro-infra/bin/lib/infra_to_update.list
         echo "`date` -- Setting scaling notifications for ${AUTOSCALENAME}"
         create_scaling_notifications || echo "`date` -- Scaling notifications already set for ${AUTOSCALENAME}"
         # Decide if we apply good cipher policies to a SSL-enabled ELB
-        if [ "${SSLELB}" = "true" ]; then
-            echo "`date` -- Customizing ELB SSL ciphers for ${ELBNAME}"
-            customize_ciphers
-              RETURNCODE=$?
-            echo "`date` -- Cipher customization returned code ${RETURNCODE}"
-        fi
+        # if [ "${SSLELB}" = "true" ]; then
+        #     echo "`date` -- Customizing ELB SSL ciphers for ${ELBNAME}"
+        #     customize_ciphers
+        #       RETURNCODE=$?
+        #     echo "`date` -- Cipher customization returned code ${RETURNCODE}"
+        # fi
         # Decide if we create autoscaling for this group
         if [ "${APPLYSCALINGPOLICY}" = "true" ]; then
             echo "`date` -- Creating Cloudwatch alarms for scaling triggers and scaling policies for ${AUTOSCALENAME}"
