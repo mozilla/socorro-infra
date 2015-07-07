@@ -133,7 +133,6 @@ function parse_github_payload() {
 
 function scale_in_per_elb() {
     PROGSTEP="Scale in";format_logs
-    infra_report ${AUTOSCALENAME} >> ${STARTLOG}
     echo "`date` -- Checking current desired capacity of autoscaling group for ${ROLEENVNAME}"
     # We'll set the initial capacity and go back to that at the end
     INITIALCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
@@ -294,6 +293,7 @@ function apply_ami() {
             # Get AS group name for each ROLEENVNAME
             echo "`date` -- Checking role for ${ROLEENVNAME}"
             identify_role ${ROLEENVNAME}
+            infra_report ${AUTOSCALENAME} >> ${STARTLOG}
             ASCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
                          --auto-scaling-group-names ${AUTOSCALENAME} \
                          --output text \
