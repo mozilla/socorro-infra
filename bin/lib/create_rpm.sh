@@ -18,9 +18,26 @@ function create_rpm() {
         # Get the hash for later use to feed packer
         export SOCORROHASH=`git log | head -n1 | awk '{print $2}'`
         echo "`date` -- Clone of commit for ${SOCORROHASH} returned ${RETURNCODE}"
+        CONTINUE="no"
+        until [ "${CONTINUE}" = "yes" ];do
         # Build the actual rpm file
-        /usr/bin/env PYTHON=python make package BUILD_TYPE=rpm
-            RETURNCODE=$?;error_check
+        set -o pipefail
+        /usr/bin/env PYTHON=python make package BUILD_TYPE=rpm | tee /var/log/${RANDOM_STRING}
+            RETURNCODE=$?
+        if [ ${RETURNCODE} -ne 0 ]; then
+            if grep "Traceback" /var/log/${RANDOM_STRING};then
+                echo "`date` -- We see a Traceback in our log, we're going to retry to build"
+                CONTINUE="no"
+                rm /var/log/${RANDOM_STRING}
+            else
+                echo "`date` -- There was a non traceback error while creating the RPM, exiting"
+                exit 1
+            fi
+        else
+            CONTINUE="yes"
+            rm /var/log/${RANDOM_STRING}
+            echo "`date` -- Got a 0 return code from package build, continuing"
+        fi
     fi
     # Find the rpm file we created
     NEWRPM=$(ls -lart /data/socorro/socorro*.rpm|awk '{print $9}')
