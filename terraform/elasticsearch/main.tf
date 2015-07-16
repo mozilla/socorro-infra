@@ -56,8 +56,8 @@ resource "aws_security_group" "ec2-socorroes-sg" {
         from_port = 9300
         to_port = 9300
         protocol = "tcp"
-        cidr_blocks = [
-            "172.31.0.0/16"
+        security_groups = [
+            "${aws_security_group.ec2-socorroes-sg.id}"
         ]
     }
     ingress {
