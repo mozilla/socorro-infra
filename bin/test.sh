@@ -11,7 +11,6 @@ puppet parser validate `find puppet/ -name '*.pp'`
 pushd terraform
 wget "https://dl.bintray.com/mitchellh/terraform/terraform_${TFORM_VERSION}.zip"
 unzip -u terraform_${TFORM_VERSION}.zip
-./wrapper.sh symlinks
 popd
 
 for environment in stage prod; do
