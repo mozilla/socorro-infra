@@ -1,16 +1,16 @@
-#not set by default, needed to spool queues to disk
-$WorkDirectory /tmp
+#Setup disk assisted queues
+$WorkDirectory /var/spool/rsyslog # where to place spool files
+$ActionQueueFileName fwdRule1     # unique name prefix for spool files
+$ActionQueueMaxDiskSpace 1g       # 1gb space limit (use as much as possible)
+$ActionQueueSaveOnShutdown on     # save messages to disk on shutdown
+$ActionQueueType LinkedList       # run asynchronously
+$ActionResumeRetryCount -1        # infinite retries if host is down
 
-$RepeatedMsgReduction off
+template(name="LogglyFormat" type="string"
+ string="<%pri%>%protocol-version% %timestamp:::date-rfc3339% %HOSTNAME% %app-name% %procid% %msgid% [b003f28a-5fdc-46d6-ae23-4109ffc80c54@41058 tag=\"socorro\"] %msg%\n")
 
-# put forward action on dedicated queue so it doesn't block writing logs
-# locally to disk if the server can't be contacted
+# Send messages to Loggly over TCP using the template.
+action(type="omfwd" protocol="tcp" target="logs-01.loggly.com" port="514" template="LogglyFormat")
 
-$ActionQueueType LinkedList
-$ActionQueueFileName rsyslog-forward-local.q
-$ActionQueueTimeoutEnqueue 10 #ms
-$ActionQueueSize 10000
-$ActionResumeRetryCount -1
-$ActionQueueSaveOnShutdown on
 
-*.* @<%= @logging_hostname %>:15627
+
