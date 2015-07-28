@@ -19,6 +19,14 @@ function socorro_role {
     puppet apply \
     --modulepath=${DIR}/module-0:/etc/puppet/modules \
     ${DIR}/manifests/default.pp
+
+    # Set hostname of $env-$role-instanceid
+    # We'll get the instance id from ec2metadta
+    INSTANCEID=$(/bin/ec2-metadata | grep instance-id \
+                 awk '{print $2}')
+    NEWHOSTNAME=${ENV}-${ROLE}-${INSTANCEID}
+    /bin/echo ${NEWHOSTNAME} > /etc/hostname
+    /bin/hostname -F /etc/hostname
 }
 
 # Required variables will be inserted by Terraform.
