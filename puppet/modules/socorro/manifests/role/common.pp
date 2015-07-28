@@ -25,15 +25,23 @@ class socorro::role::common {
       require => Exec['set-hostname']
   }
 
-  $logging_hostname = hiera("${::environment}/logging_hostname")
+  #  $logging_hostname = hiera("${::environment}/logging_hostname")
   file {
     '/etc/rsyslog.d/30-socorro.conf':
-      content => template('socorro/etc_rsyslog.d/30-socorro.conf.erb'),
+      source  => 'puppet:///modules/socorro/etc_rsyslog/30-socorro.conf',
       owner   => 'root',
       group   => 'root',
       mode    => '0644',
       notify  => Service['rsyslog'],
       require => Exec['set-hostname']
+  }
+
+
+  file {
+    '/etc/dd-agent/conf.d/rabbitmq.yaml':
+      mode   => '0640',
+      owner  => 'dd-agent',
+      source => 'puppet:///modules/socorro/etc_dd-agent/rabbitmq.yaml',
   }
 
   service {
