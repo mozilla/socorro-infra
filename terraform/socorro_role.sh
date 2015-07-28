@@ -28,6 +28,7 @@ function socorro_role {
     NEWHOSTNAME=${ENV}-${ROLE}-${INSTANCEID}
     /bin/echo ${NEWHOSTNAME} > /etc/hostname
     /bin/hostname -F /etc/hostname
+    service restart rsyslog
 }
 
 # Required variables will be inserted by Terraform.
