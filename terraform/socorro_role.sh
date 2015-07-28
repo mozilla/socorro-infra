@@ -23,7 +23,8 @@ function socorro_role {
     # Set hostname of $env-$role-instanceid
     # We'll get the instance id from ec2metadta
     INSTANCEID=$(/bin/ec2-metadata | grep instance-id | \
-                 awk '{print $2}')
+                 awk '{print $2}' | \
+                 head -n1 )
     NEWHOSTNAME=${ENV}-${ROLE}-${INSTANCEID}
     /bin/echo ${NEWHOSTNAME} > /etc/hostname
     /bin/hostname -F /etc/hostname
