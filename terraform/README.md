@@ -40,7 +40,7 @@ and logging services, respectively.
 
 ## Runtime
 
-The `wrapper.sh` script should be used instead of calling `terraform` directly.
+The `wrapper.sh` script should be used instead of calling `terraform` directly. (Note: Not currently used at Mozilla)
 This script effectively does two important things:
 * Manages the idea of roles for you.
 * Ensures that you're using the freshest `.tfstate` for a given role.
