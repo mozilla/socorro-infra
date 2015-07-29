@@ -5,5 +5,3 @@ terraform.tfstate*
 *.swp
 *.plan
 *.log
-terraform/*/*.sh
-terraform/*/variables.tf
