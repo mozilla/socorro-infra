@@ -189,7 +189,7 @@ resource "aws_autoscaling_group" "as-socorroweb" {
         "aws_launch_configuration.lc-socorroweb"
     ]
     launch_configuration = "${aws_launch_configuration.lc-socorroweb.id}"
-    max_size = 10
+    max_size = 30
     min_size = "${lookup(var.socorroweb_num, var.environment)}"
     desired_capacity = "${lookup(var.socorroweb_num, var.environment)}"
     load_balancers = [
