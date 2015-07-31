@@ -18,6 +18,15 @@ class socorro::role::common {
   }
 
   file {
+    '/etc/rsyslog.d/21-nginx-loggly.conf':
+      source => 'puppet:///modules/socorro/etc_rsyslog/21-nginx-loggly.conf',
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0644',
+      notify => Service['rsyslog'],
+  }
+
+  file {
     '/etc/dd-agent/conf.d/rabbitmq.yaml':
       mode   => '0640',
       owner  => 'dd-agent',
