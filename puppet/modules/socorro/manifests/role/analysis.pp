@@ -25,6 +25,36 @@ include socorro::role::common
       group   => 'nginx',
       mode    => '0664',
       require => File['/etc/nginx/nginx.conf'];
+
+    '/data/bin/cron_daily_reports.sh':
+      source => 'puppet:///modules/socorro/data_bin/cron_daily_reports.sh',
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0755';
+
+    '/data/bin/cron_libraries.sh':
+      source => 'puppet:///modules/socorro/data_bin/cron_libraries.sh',
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0755';
+
+    '/data/bin/cron_missing_symbols.sh':
+      source => 'puppet:///modules/socorro/data_bin/cron_missing_symbols.sh',
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0755';
+
+    '/etc/cron.d/socorro':
+      mode    => '0600',
+      owner   => 'root',
+      group   => 'root',
+      source  => 'puppet:///modules/socorro/etc_cron.d/analysis',
+      require => [
+        Exec['join_consul_cluster'],
+        File['/data/bin/cron_daily_reports.sh'],
+        File['/data/bin/cron_libraries.sh'],
+        File['cron_missing_symbols.sh']
+      ];
   }
 
   package {
