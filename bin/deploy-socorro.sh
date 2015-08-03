@@ -278,12 +278,17 @@ function terminate_instances() {
 
 function find_ami() {
     PROGSTEP="Find correct prod AMI"
+    if grep "^ami-" ${GITHUBHASH} > /dev/null;then
+        echo "`date` -- AMI id ${GITHUBHASH} is going to be used"
+        NEWAMI=${GITHUBHASH}
+    else
     echo "`date` -- Attempting to locate AMI tagged with appsha of ${GITCOMMITHASH}"
-    NEWAMI=$(aws ec2 describe-images \
-             --filters Name=tag:apphash,Values=${GITCOMMITHASH} \
-             --output text --query 'Images[*].ImageId')
-        RETURNCODE=$?;error_check
-    echo "`date` -- AMI id ${NEWAMI} found containing github hash tag of ${GITCOMMITHASH} : Return code ${RETURNCODE}"
+        NEWAMI=$(aws ec2 describe-images \
+                 --filters Name=tag:apphash,Values=${GITCOMMITHASH} \
+                 --output text --query 'Images[*].ImageId')
+            RETURNCODE=$?;error_check
+        echo "`date` -- AMI id ${NEWAMI} found containing github hash tag of ${GITCOMMITHASH} : Return code ${RETURNCODE}"
+    fi
 }
 
 function apply_ami() {
