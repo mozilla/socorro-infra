@@ -4,6 +4,7 @@ provider "aws" {
     secret_key = "${var.secret_key}"
 }
 
+
 resource "aws_security_group" "ec2-collector-sg" {
     name = "ec2-collector-${var.environment}-sg"
     description = "Security group for EC2 socorro collector."
