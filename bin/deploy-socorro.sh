@@ -278,7 +278,7 @@ function terminate_instances() {
 
 function find_ami() {
     PROGSTEP="Find correct prod AMI"
-    if grep "^ami-" ${GITHUBHASH} > /dev/null;then
+    if echo ${GITHUBHASH} | grep "^ami-" > /dev/null;then
         echo "`date` -- AMI id ${GITHUBHASH} is going to be used"
         NEWAMI=${GITHUBHASH}
     else
