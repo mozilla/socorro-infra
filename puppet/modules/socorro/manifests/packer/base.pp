@@ -9,10 +9,10 @@ class socorro::packer::base {
       enable  => false,
       require => Package['nginx'];
 
-    'postgresql-9.3':
+    'postgresql-9.4':
       ensure  => stopped,
       enable  => false,
-      require => Package['postgresql93-server'];
+      require => Package['postgresql94-server'];
 
     'datadog-agent':
       ensure  => stopped,
@@ -35,7 +35,7 @@ class socorro::packer::base {
       baseurl => 'http://packages.elasticsearch.org/elasticsearch/1.4/centos',
       gpgkey  => 'https://packages.elasticsearch.org/GPG-KEY-elasticsearch';
     'PGDG':
-      baseurl => 'http://yum.postgresql.org/9.3/redhat/rhel-$releasever-$basearch',
+      baseurl => 'http://yum.postgresql.org/9.4/redhat/rhel-$releasever-$basearch',
       gpgkey  => 'http://yum.postgresql.org/RPM-GPG-KEY-PGDG';
     'datadog-agent':
       baseurl => 'http://yum.datadoghq.com/rpm/x86_64/',
@@ -78,10 +78,9 @@ class socorro::packer::base {
 
   package {
     [
-      'postgresql93-contrib',
-      'postgresql93-devel',
-      'postgresql93-plperl',
-      'postgresql93-server'
+      'postgresql94-contrib',
+      'postgresql94-devel',
+      'postgresql94-server'
     ]:
     ensure  => latest,
     require => [
