@@ -45,7 +45,7 @@ variable "socorroanalysis_num" {
 variable "socorroanalysis_ec2_type" {
     default = {
         stage = "t2.micro"
-        prod = "t2.micro"
+        prod = "m3.xlarge"
     }
 }
 # NOTE - this deletes EBS devices, only change it for testing purposes!
