@@ -128,7 +128,7 @@ class socorro::packer::base {
       owner  => 'socorro',
       group  => 'nginx';
 
-    '/home/socorro/crashes',
+    '/home/socorro/crashes':
       ensure  => directory,
       owner   => 'socorro',
       group   => 'nginx',
