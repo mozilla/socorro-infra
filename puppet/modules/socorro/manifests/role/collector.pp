@@ -35,24 +35,6 @@ include socorro::role::common
       group   => 'root',
       mode    => '0664',
       require => File['/etc/nginx/nginx.conf'];
-
-    '/home/socorro':
-      ensure => directory,
-      owner  => 'socorro',
-      group  => 'nginx'
-      require => User['socorro'];
-
-    '/home/socorro/crashes':
-      ensure  => directory,
-      owner   => 'socorro',
-      group   => 'nginx',
-      require => File['/home/socorro'];
-  }
-
-  user {
-    name => 'socorro',
-    ensure => present,
-    groups => 'nginx'
   }
 
 }
