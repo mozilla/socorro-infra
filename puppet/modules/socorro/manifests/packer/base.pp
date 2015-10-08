@@ -124,7 +124,6 @@ class socorro::packer::base {
       notify  => Service['elasticsearch'];
   }
 
-
   # RHEL-alike and pip provider relationship status: It's Complicated
   # Workaround is to have a symlink called "pip-python" because reasons.
   # https://github.com/evenup/evenup-curator/issues/24 for example.
