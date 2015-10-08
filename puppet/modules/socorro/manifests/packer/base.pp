@@ -126,7 +126,8 @@ class socorro::packer::base {
     '/home/socorro':
       ensure => directory,
       owner  => 'socorro',
-      group  => 'nginx';
+      group  => 'nginx'
+      require => User['socorro'];
 
     '/home/socorro/crashes':
       ensure  => directory,
@@ -135,6 +136,11 @@ class socorro::packer::base {
       require => File['/home/socorro'];
   }
 
+  user {
+    name => 'socorro',
+    ensure => present,
+    groups => 'nginx'
+  }
 
   # RHEL-alike and pip provider relationship status: It's Complicated
   # Workaround is to have a symlink called "pip-python" because reasons.
