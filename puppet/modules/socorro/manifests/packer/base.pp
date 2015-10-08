@@ -122,17 +122,6 @@ class socorro::packer::base {
       owner   => 'root',
       require => Package['elasticsearch'],
       notify  => Service['elasticsearch'];
-
-    '/home/socorro':
-      ensure => directory,
-      owner  => 'socorro',
-      group  => 'nginx';
-
-    '/home/socorro/crashes':
-      ensure  => directory,
-      owner   => 'socorro',
-      group   => 'nginx',
-      require => File['/home/socorro'];
   }
 
 
