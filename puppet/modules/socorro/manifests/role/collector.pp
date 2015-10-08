@@ -39,7 +39,7 @@ include socorro::role::common
     '/home/socorro':
       ensure => directory,
       owner  => 'socorro',
-      group  => 'nginx',
+      group  => 'nginx'
       require => User['socorro'];
 
     '/home/socorro/crashes':
