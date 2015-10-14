@@ -24,6 +24,7 @@ GITPAYLOAD=${payload}
 RANDOM_STRING="$RANDOM-$RANDOM"
 STARTLOG=/var/log/jenkins/${RANDOM_STRING}-startlog.out
 ENDLOG=/var/log/jenkins/${RANDOM_STRING}-endlog.out
+ENDRETURNCODE=0
 # Get AWS creds injected
 . /home/centos/.aws-config
 
@@ -368,6 +369,7 @@ time monitor_overall_health; format_logs # After updates go out, monitor for all
 if [ "${NOHEALTHALERT}" = "true" ];then
     # This means earlier, the health check process tried 10 times, and never got an all healthy response
     echo "`date` -- Not going to scale out, since we aren't all healthy"
+    ENDRETURNCODE=1
 else
     time deregister_elb_nodes; format_logs    # For anything with an elb, dereg instances to allow for connection drain
     sleep 30    # Wait for drain, default we set is to 30s
@@ -397,4 +399,4 @@ echo "==========  ENDING STATE  ==========="
 cat ${ENDLOG}
 rm ${STARTLOG}
 rm ${ENDLOG}
-exit 0    # You snazzy, snazzy engineer.    You did it!
+exit ${ENDRETURNCODE}    # You snazzy, snazzy engineer.    You did it! (Probably)
