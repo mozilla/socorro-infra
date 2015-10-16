@@ -45,7 +45,7 @@ variable "processor_num" {
 }
 variable "processor_ec2_type" {
     default = {
-        stage = "r3.large"
+        stage = "r3.2xlarge"
         prod = "r3.2xlarge"
     }
 }
