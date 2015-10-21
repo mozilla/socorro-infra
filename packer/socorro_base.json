@@ -11,7 +11,7 @@
             "secret_key": "{{user `aws_secret_key`}}",
             "region": "us-west-2",
             "source_ami": "ami-c7d092f7",
-            "instance_type": "m3.medium",
+            "instance_type": "m4.4xlarge",
             "ssh_username": "centos",
             "ami_name": "socorro_centos7__{{timestamp}}"
         }
