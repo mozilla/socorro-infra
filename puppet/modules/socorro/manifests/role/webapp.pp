@@ -3,6 +3,9 @@ class socorro::role::webapp {
 
 include socorro::role::common
 
+  $newrelic_app = "${::environment}-socorroweb"
+  $newrelic_apikey = hiera("${::environment}/newrelic_apikey")
+
   service {
     'nginx':
       ensure    => running,
