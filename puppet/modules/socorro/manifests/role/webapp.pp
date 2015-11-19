@@ -3,7 +3,7 @@ class socorro::role::webapp {
 
 include socorro::role::common
 
-  $newrelic_app = "${::environment}-socorroweb"
+  $newrelic_app = hiera("${::environment}/newrelic_app")
   $newrelic_apikey = hiera("${::environment}/newrelic_apikey")
 
   service {
