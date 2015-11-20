@@ -35,6 +35,19 @@ include socorro::role::common
       group   => 'root',
       mode    => '0664';
 
+    '/etc/newrelic':
+      ensure => directory,
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0644';
+
+    '/etc/newrelic/newrelic.ini':
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0664',
+      content => template('socorro/etc_newrelic/newrelic.ini.erb'),
+      require => File['/etc/newrelic'];
+
     '/etc/nginx/conf.d/socorro-webapp.conf':
       source  => 'puppet:///modules/socorro/etc_nginx/conf_d/socorro-webapp.conf',
       owner   => 'root',
