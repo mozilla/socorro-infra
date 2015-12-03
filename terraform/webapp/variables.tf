@@ -45,7 +45,7 @@ variable "socorroweb_num" {
 variable "socorroweb_ec2_type" {
     default = {
         stage = "t2.micro"
-        prod = "m3.medium"
+        prod = "m3.xlarge"
     }
 }
 variable "del_on_term" {
