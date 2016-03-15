@@ -2,15 +2,16 @@
 
 set -e
 
-TFORM_VERSION="0.5.3_linux_amd64"
+TFORM_VERSION="0.5.3"
+TFORM_PLATFORM="linux_amd64"
 
 gem install puppet puppet-lint
 puppet-lint --with-filename --no-80chars-check --no-autoloader_layout-check --fail-on-warnings puppet/
 puppet parser validate `find puppet/ -name '*.pp'`
 
 pushd terraform
-wget "https://dl.bintray.com/mitchellh/terraform/terraform_${TFORM_VERSION}.zip"
-unzip -u terraform_${TFORM_VERSION}.zip
+wget "https://releases.hashicorp.com/terraform/${TFORM_VERSION}/terraform_${TFORM_VERSION}_${TFORM_PLATFORM}.zip"
+unzip -u terraform_${TFORM_VERSION}_${TFORM_PLATFORM}.zip
 popd
 
 for environment in stage prod; do
