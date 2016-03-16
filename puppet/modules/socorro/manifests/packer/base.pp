@@ -247,4 +247,13 @@ class socorro::packer::base {
       require => Exec['install-ec2-metadata']
   }
 
+  # Rotate syslog every seven days
+  file {
+    'syslog':
+      path   => '/etc/logrotate.d/syslog',
+      source => 'puppet:///modules/socorro/etc_logrotate/syslog',
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0644'
+  }
 }
