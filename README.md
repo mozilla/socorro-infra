@@ -34,7 +34,7 @@ deals with two cases: `packer_profile` and `socorro_role`.
 
 ## `packer_profile`
 
-This case deals with the [Packer](../packer/) phase. There is no reasonable
+This case deals with the Packer (`packer/`) phase. There is no reasonable
 default.
 
 ## `socorro_role`
