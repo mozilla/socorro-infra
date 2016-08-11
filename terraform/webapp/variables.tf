@@ -44,7 +44,7 @@ variable "socorroweb_num" {
 }
 variable "socorroweb_ec2_type" {
     default = {
-        stage = "t2.micro"
+        stage = "m3.xlarge"
         prod = "m3.xlarge"
     }
 }
