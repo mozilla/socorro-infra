@@ -6,7 +6,7 @@ TFORM_VERSION="0.5.3"
 TFORM_PLATFORM="linux_amd64"
 
 gem install puppet puppet-lint
-puppet-lint --with-filename --no-80chars-check --no-autoloader_layout-check --fail-on-warnings puppet/
+puppet-lint --with-filename --no-140chars-check --no-autoloader_layout-check --fail-on-warnings puppet/
 puppet parser validate `find puppet/ -name '*.pp'`
 
 pushd terraform
