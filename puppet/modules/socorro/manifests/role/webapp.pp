@@ -30,10 +30,10 @@ include socorro::role::common
 
   file {
     '/etc/nginx/nginx.conf':
-      source  => 'puppet:///modules/socorro/etc_nginx/nginx.conf',
-      owner   => 'root',
-      group   => 'root',
-      mode    => '0664';
+      source => 'puppet:///modules/socorro/etc_nginx/nginx.conf',
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0664';
 
     '/etc/newrelic':
       ensure => directory,

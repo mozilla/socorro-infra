@@ -24,10 +24,10 @@ include socorro::role::common
 
   file {
     '/etc/nginx/nginx.conf':
-      source  => 'puppet:///modules/socorro/etc_nginx/nginx.conf',
-      owner   => 'root',
-      group   => 'root',
-      mode    => '0664';
+      source => 'puppet:///modules/socorro/etc_nginx/nginx.conf',
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0664';
 
     '/etc/nginx/conf.d/socorro-collector.conf':
       source  => 'puppet:///modules/socorro/etc_nginx/conf_d/socorro-collector.conf',
