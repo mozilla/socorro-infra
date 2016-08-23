@@ -19,7 +19,7 @@ function create_rpm() {
         export SOCORROHASH=`git log | head -n1 | awk '{print $2}'`
         echo "`date` -- Clone of commit for ${SOCORROHASH} returned ${RETURNCODE}"
         # Build the actual rpm file
-        /usr/bin/env PYTHON=python make package BUILD_TYPE=rpm
+        /usr/bin/env make package BUILD_TYPE=rpm
             RETURNCODE=$?;error_check
     fi
     # Find the rpm file we created
