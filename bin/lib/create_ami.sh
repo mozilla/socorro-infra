@@ -8,8 +8,8 @@ function create_ami() {
         # We need to grab the new AMI id, so we send it to a log file to grep out
         TMPLOG=/home/centos/packer-socorro.${RANDOM_STRING}.out
         # Build the image using packer.
-        /usr/bin/packer build /home/centos/socorro-infra/packer/socorro_base.json | tee ${TMPLOG}
-            RETURNCODE=$?;error_check
+        /usr/bin/packer build -color=false /home/centos/socorro-infra/packer/socorro_base.json | tee ${TMPLOG}
+        RETURNCODE=${PIPESTATUS[0]};error_check
         # Assign the sparkly new AMI id to a variable
         NEWAMI=`cat ${TMPLOG} |grep us-west-2|grep ami |awk '{print $2}'`
         echo "`date` -- New AMI ${NEWAMI} created with a return code of ${RETURNCODE}.    Tagging with ${SOCORROHASH}"
