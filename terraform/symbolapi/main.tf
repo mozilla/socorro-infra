@@ -138,6 +138,11 @@ resource "aws_autoscaling_group" "as-symbolapi" {
       propagate_at_launch = true
     }
     tag {
+      key = "Name"
+      value = "symbolapi-${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
       key = "role"
       value = "symbolapi"
       propagate_at_launch = true

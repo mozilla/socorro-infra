@@ -53,6 +53,11 @@ resource "aws_autoscaling_group" "as-stagesubmitter" {
       propagate_at_launch = true
     }
     tag {
+      key = "Name"
+      value = "stagesubmitter-${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
       key = "role"
       value = "stagesubmitter"
       propagate_at_launch = true

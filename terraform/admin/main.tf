@@ -95,6 +95,11 @@ resource "aws_autoscaling_group" "as-socorroadmin" {
       propagate_at_launch = true
     }
     tag {
+      key = "Name"
+      value = "socorroadmin-${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
       key = "role"
       value = "socorroadmin"
       propagate_at_launch = true

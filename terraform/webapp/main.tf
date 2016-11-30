@@ -201,6 +201,11 @@ resource "aws_autoscaling_group" "as-socorroweb" {
       propagate_at_launch = true
     }
     tag {
+      key = "Name"
+      value = "socorroweb-${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
       key = "role"
       value = "socorroweb"
       propagate_at_launch = true
