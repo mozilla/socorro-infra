@@ -144,7 +144,7 @@ resource "aws_elb" "elb-socorroweb" {
       healthy_threshold = 2
       unhealthy_threshold = 2
       timeout = 3
-      target = "HTTP:80/monitoring/healthcheck/?elb=true"
+      target = "HTTPS:80/monitoring/healthcheck/?elb=true"
       interval = 12
     }
     security_groups = [
