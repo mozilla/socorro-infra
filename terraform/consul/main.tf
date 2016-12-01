@@ -152,6 +152,11 @@ resource "aws_autoscaling_group" "as-consul" {
       propagate_at_launch = true
     }
     tag {
+      key = "Name"
+      value = "consul-${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
       key = "role"
       value = "consul"
       propagate_at_launch = true

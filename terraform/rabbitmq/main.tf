@@ -154,6 +154,11 @@ resource "aws_autoscaling_group" "as-socorrorabbitmq" {
       propagate_at_launch = true
     }
     tag {
+      key = "Name"
+      value = "socorrorabbitmq-${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
       key = "role"
       value = "socorrorabbitmq"
       propagate_at_launch = true

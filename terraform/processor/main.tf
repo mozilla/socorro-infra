@@ -98,6 +98,11 @@ resource "aws_autoscaling_group" "as-processor" {
         propagate_at_launch = true
     }
     tag {
+        key = "Name"
+        value = "processor-${var.environment}"
+        propagate_at_launch = true
+    }
+    tag {
         key = "role"
         value = "processor"
         propagate_at_launch = true

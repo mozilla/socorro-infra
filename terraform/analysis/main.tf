@@ -153,6 +153,11 @@ resource "aws_autoscaling_group" "as-socorroanalysis" {
       propagate_at_launch = true
     }
     tag {
+      key = "Name"
+      value = "socorroanalysis-${var.environment}"
+      propagate_at_launch = true
+    }
+    tag {
       key = "role"
       value = "socorroanalysis"
       propagate_at_launch = true

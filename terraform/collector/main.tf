@@ -195,6 +195,11 @@ resource "aws_autoscaling_group" "as-collector" {
         propagate_at_launch = true
     }
     tag {
+        key = "Name"
+        value = "collector-${var.environment}"
+        propagate_at_launch = true
+    }
+    tag {
         key = "role"
         value = "collector"
         propagate_at_launch = true
