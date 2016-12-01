@@ -94,6 +94,14 @@ resource "aws_security_group" "ec2-socorroweb-sg" {
             "${var.elb_master_web_sg_id}"
         ]
     }
+    ingress {
+        from_port = 443
+        to_port = 443
+        protocol = "tcp"
+        security_groups = [
+            "${var.elb_master_web_sg_id}"
+        ]
+    }
     egress {
         from_port = 0
         to_port = 65535
@@ -134,7 +142,7 @@ resource "aws_elb" "elb-socorroweb" {
         lb_protocol = "http"
     }
     listener {
-        instance_port = 80
+        instance_port = 443
         instance_protocol = "http"
         lb_port = 443
         lb_protocol = "https"
@@ -144,7 +152,7 @@ resource "aws_elb" "elb-socorroweb" {
       healthy_threshold = 2
       unhealthy_threshold = 2
       timeout = 3
-      target = "HTTPS:80/monitoring/healthcheck/?elb=true"
+      target = "HTTP:443/monitoring/healthcheck/?elb=true"
       interval = 12
     }
     security_groups = [
