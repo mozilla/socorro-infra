@@ -2,7 +2,7 @@
 
 set -e
 
-TFORM_VERSION="0.5.3"
+TFORM_VERSION="0.7.13"
 TFORM_PLATFORM="linux_amd64"
 
 gem install puppet puppet-lint
