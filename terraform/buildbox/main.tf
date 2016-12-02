@@ -118,7 +118,7 @@ resource "aws_elb" "elb-socorrobuildbox" {
 }
 
 resource "aws_launch_configuration" "lc-socorrobuildbox" {
-    user_data = "${file(\"socorro_role.sh\")} buildbox ${var.secret_bucket} ${var.environment}"
+    user_data = "${file("socorro_role.sh")} buildbox ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.buildbox_ami, var.region)}"
     instance_type = "${lookup(var.socorrobuildbox_ec2_type, var.environment)}"
     key_name = "${lookup(var.ssh_key_name, var.region)}"

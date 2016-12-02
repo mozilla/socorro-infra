@@ -100,7 +100,7 @@ resource "aws_elb" "elb-symbolapi" {
 }
 
 resource "aws_launch_configuration" "lc-symbolapi" {
-    user_data = "${file(\"socorro_role.sh\")} symbolapi ${var.secret_bucket} ${var.environment}"
+    user_data = "${file("socorro_role.sh")} symbolapi ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "${lookup(var.symbolapi_ec2_type, var.environment)}"
     key_name = "${lookup(var.ssh_key_name, var.region)}"

@@ -171,7 +171,7 @@ resource "aws_elb" "elb-socorroweb" {
 }
 
 resource "aws_launch_configuration" "lc-socorroweb" {
-    user_data = "${file(\"socorro_role.sh\")} webapp ${var.secret_bucket} ${var.environment}"
+    user_data = "${file("socorro_role.sh")} webapp ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "${lookup(var.socorroweb_ec2_type, var.environment)}"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
