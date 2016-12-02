@@ -293,6 +293,7 @@ function find_ami() {
 }
 
 function apply_ami() {
+    PROGSTEP="Apply AMI using Terraform"
     # For each of our apps, we want to use terraform to apply the new base AMI we've just created
     for ROLEENVNAME in $(cat /home/centos/socorro-infra/bin/lib/${ENVNAME}_socorro_master.list)
         do
