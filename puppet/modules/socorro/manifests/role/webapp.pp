@@ -5,6 +5,7 @@ include socorro::role::common
 
   $newrelic_app = hiera("${::environment}/newrelic_app")
   $newrelic_apikey = hiera("${::environment}/newrelic_apikey")
+  $crashstats_hostname = hiera("${::environment}/crashstats_hostname")
 
   service {
     'nginx':
@@ -49,7 +50,7 @@ include socorro::role::common
       require => File['/etc/newrelic'];
 
     '/etc/nginx/conf.d/socorro-webapp.conf':
-      source  => 'puppet:///modules/socorro/etc_nginx/conf_d/socorro-webapp.conf',
+      content => template('socorro/etc_nginx/conf_d/socorro-webapp.conf.erb'),
       owner   => 'root',
       group   => 'nginx',
       mode    => '0664',

@@ -74,7 +74,7 @@ server {
 
     location /monitoring/healthcheck/ {
         # sets HTTP_HOST for AWS ELB Health Check
-        uwsgi_param HTTP_HOST 'crash-stats.allizom.org';
+        uwsgi_param HTTP_HOST <%= @crashstats_hostname %>;
         uwsgi_pass unix:/var/run/uwsgi/socorro/socorro-webapp.sock;
         uwsgi_read_timeout 300s;
         include uwsgi_params;
