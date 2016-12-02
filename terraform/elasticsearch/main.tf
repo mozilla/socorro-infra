@@ -132,7 +132,7 @@ resource "aws_elb" "elb-socorroes" {
 }
 
 resource "aws_launch_configuration" "lc-socorroes-master" {
-    user_data = "${file(\"socorro_role.sh\")} 'elasticsearch FACTER_elasticsearch_role=master' ${var.secret_bucket} ${var.environment}"
+    user_data = "${file("socorro_role.sh")} 'elasticsearch FACTER_elasticsearch_role=master' ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "${lookup(var.es_master_ec2_type, var.environment)}"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
@@ -147,7 +147,7 @@ resource "aws_launch_configuration" "lc-socorroes-master" {
 }
 
 resource "aws_launch_configuration" "lc-socorroes-interface" {
-    user_data = "${file(\"socorro_role.sh\")} 'elasticsearch FACTER_elasticsearch_role=interface' ${var.secret_bucket} ${var.environment}"
+    user_data = "${file("socorro_role.sh")} 'elasticsearch FACTER_elasticsearch_role=interface' ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "${lookup(var.es_interface_ec2_type, var.environment)}"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
@@ -162,7 +162,7 @@ resource "aws_launch_configuration" "lc-socorroes-interface" {
 }
 
 resource "aws_launch_configuration" "lc-socorroes-data" {
-    user_data = "${file(\"socorro_role.sh\")} 'elasticsearch FACTER_elasticsearch_role=data' ${var.secret_bucket} ${var.environment}"
+    user_data = "${file("socorro_role.sh")} 'elasticsearch FACTER_elasticsearch_role=data' ${var.secret_bucket} ${var.environment}"
     image_id = "${lookup(var.base_ami, var.region)}"
     instance_type = "${lookup(var.es_data_ec2_type, var.environment)}"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
