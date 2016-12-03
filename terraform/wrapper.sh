@@ -70,7 +70,8 @@ aws s3 sync --exclude="*" --include="terraform.tfstate" "s3://${BUCKET}/tfstate/
 
 # Run TF; if this errors out we need to keep going.
 set +e
-terraform $ACTION -no-color -var "environment=${ENV}"
+# terraform.tfvars has secrets and is not in this repo
+terraform $ACTION -no-color -var-file="../terraform.tfvars" -var "environment=${ENV}"
 EXIT_CODE=$?
 set -e
 
