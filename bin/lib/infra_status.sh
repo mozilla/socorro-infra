@@ -28,19 +28,22 @@ function infra_report() {
         --query 'AutoScalingGroups[*].[MinSize, DesiredCapacity, MaxSize]' \
         --output text
 
-    ELBNAME=$(aws autoscaling describe-auto-scaling-groups \
+    ELBNAMES=$(aws autoscaling describe-auto-scaling-groups \
               --auto-scaling-group-names ${AUTOSCALENAME} \
               --query 'AutoScalingGroups[*].LoadBalancerNames' \
               --output text)
     echo "=== ELB ENDPOINT ==="
     aws elb describe-load-balancers \
-        --load-balancer-name ${ELBNAME} \
+        --load-balancer-names ${ELBNAMES} \
         --query 'LoadBalancerDescriptions[*].DNSName' \
         --output text
     echo "=== ELB HEALTH ==="
     echo "InstanceID      InstanceHealth"
-    aws elb describe-instance-health \
-        --load-balancer-name ${ELBNAME} \
-        --query 'InstanceStates[*].[InstanceId, State]' \
-        --output text
+    for ELBNAME in $ELBNAMES; do
+      echo "=== ELB ${ELBNAME} ==="
+      aws elb describe-instance-health \
+          --load-balancer-name ${ELBNAME} \
+          --query 'InstanceStates[*].[InstanceId, State]' \
+          --output text
+    done
 }

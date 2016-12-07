@@ -345,7 +345,6 @@ function terminate_instances_all() {
 }
 
 function query_end_scale() {
-    format_logs
     echo "END STATE FOR AUTO SCALING GROUPS"
     for ROLEENVNAME in $(cat /home/centos/socorro-infra/bin/lib/${ENVNAME}_socorro_master.list);do
         identify_role ${ROLEENVNAME}
