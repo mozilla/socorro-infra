@@ -31,7 +31,7 @@ function identify_role() {
             SCALEVARIABLE="processor_num.stage"
             ;;
 
-        submitter-stage )
+        stage-submitter )
             AUTOSCALENAME="as-stage-submitter"
             ELBNAME="elb-stage-socorroweb"
             TERRAFORMNAME="stagesubmitter"
