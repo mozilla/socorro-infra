@@ -156,8 +156,8 @@ resource "aws_elb" "elb-collector-oldssl" {
 }
 
 resource "aws_launch_configuration" "lc-collector" {
-    user_data = "${file("socorro_role.sh")} collector ${var.secret_bucket} ${var.environment}"
-    image_id = "${lookup(var.base_ami, var.region)}"
+    user_data = "${file("../socorro_role.sh")} collector ${var.secret_bucket} ${var.environment}"
+    image_id = "${var.base_ami}"
     instance_type = "${lookup(var.collector_ec2_type, var.environment)}"
     key_name = "${lookup(var.ssh_key_name, var.region)}"
     iam_instance_profile = "generic"

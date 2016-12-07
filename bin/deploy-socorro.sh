@@ -307,9 +307,9 @@ function apply_ami() {
                          --query 'AutoScalingGroups[*].DesiredCapacity')
             cd /home/centos/socorro-infra/terraform
             echo "`date` -- Attempting to terraform plan and apply ${AUTOSCALENAME} with new AMI id ${NEWAMI} and tagging with ${SOCORROHASH}"
-            /home/centos/socorro-infra/terraform/wrapper.sh "plan -var base_ami.us-west-2=${NEWAMI} -var ${SCALEVARIABLE}=${ASCAPACITY}" ${ENVNAME} ${TERRAFORMNAME}
+            /home/centos/socorro-infra/terraform/wrapper.sh "plan -var base_ami=${NEWAMI} -var ${SCALEVARIABLE}=${ASCAPACITY}" ${ENVNAME} ${TERRAFORMNAME}
             echo " ";echo " ";echo "==================================";echo " "
-            /home/centos/socorro-infra/terraform/wrapper.sh "apply -var base_ami.us-west-2=${NEWAMI} -var ${SCALEVARIABLE}=${ASCAPACITY}" ${ENVNAME} ${TERRAFORMNAME}
+            /home/centos/socorro-infra/terraform/wrapper.sh "apply -var base_ami=${NEWAMI} -var ${SCALEVARIABLE}=${ASCAPACITY}" ${ENVNAME} ${TERRAFORMNAME}
                 RETURNCODE=$?;error_check
             echo "`date` -- Got return code ${RETURNCODE} applying terraform update"
         done
