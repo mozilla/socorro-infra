@@ -41,7 +41,13 @@ include socorro::role::common
       owner   => 'root',
       group   => 'elasticsearch',
       mode    => '0644',
-      content => template('socorro/etc_elasticsearch/elasticsearch.yml.erb')
+      content => template('socorro/etc_elasticsearch/elasticsearch.yml.erb');
+
+    '/etc/sysconfig/elasticsearch':
+      owner   => 'root',
+      group   => 'elasticsearch',
+      mode    => '0644',
+      content => template('socorro/etc_sysconfig/elasticsearch.erb');
   }
 
   file {
@@ -57,7 +63,8 @@ include socorro::role::common
         Exec['join_consul_cluster'],
         File['/etc/security/limits.d/90-elasticsearch.conf'],
         File['/etc/elasticsearch/elasticsearch.yml'],
-        File['/var/lib/elasticsearch']
+        File['/etc/sysconfig/elasticsearch'],
+        File['/var/lib/elasticsearch'],
       ]
   }
 
