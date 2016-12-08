@@ -116,12 +116,12 @@ class socorro::packer::base {
       owner  => 'root';
 
     'elasticsearch.yml':
-      ensure   => file,
-      path     => '/etc/elasticsearch/elasticsearch.yml',
-      template => template('socorro/etc_elasticsearch/elasticsearch.yml.erb'),
-      owner    => 'root',
-      require  => Package['elasticsearch'],
-      notify   => Service['elasticsearch'];
+      ensure  => file,
+      path    => '/etc/elasticsearch/elasticsearch.yml',
+      content => template('socorro/etc_elasticsearch/elasticsearch.yml.erb'),
+      owner   => 'root',
+      require => Package['elasticsearch'],
+      notify  => Service['elasticsearch'];
   }
 
 
