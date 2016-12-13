@@ -66,7 +66,7 @@ class socorro::packer::base {
       'mod_wsgi',
       'nginx',
       'php-cli',
-      'python-pip',
+      'python2-pip',
       'rabbitmq-server',
       'supervisor',
       'unzip',
@@ -132,7 +132,7 @@ class socorro::packer::base {
     '/usr/bin/pip-python':
       ensure  => link,
       target  => '/usr/bin/pip',
-      require => Package['python-pip']
+      require => Package['python2-pip']
   }
 
   package {
@@ -146,7 +146,7 @@ class socorro::packer::base {
     'consulate':
       ensure   => latest,
       provider => 'pip',
-      require  => Package['python-pip']
+      require  => Package['python2-pip']
   }
 
   package {
