@@ -20,7 +20,9 @@ if [ "$2" = "manual" ];then
 else
     MANUALPUSH="false"
 fi
-GITPAYLOAD=${payload}
+
+# GITPAYLOAD=${payload}
+
 RANDOM_STRING="$RANDOM-$RANDOM"
 STARTLOG=/var/log/jenkins/${RANDOM_STRING}-startlog.out
 ENDLOG=/var/log/jenkins/${RANDOM_STRING}-endlog.out
@@ -105,9 +107,9 @@ function parse_github_payload() {
     # We will get all sorts of fun info here!
     echo "Git Payload for copying into jenkins build parameter"
     echo " ";echo ${GITPAYLOAD};echo " "
-    GITCOMMITHASH=$(echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep head_commit | \
+    GIT_COMMIT_HASH=$(echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep head_commit | \
                     sed 's/"/ /g' | awk '{print $5}')
-    echo "Git commit hash:  ${GITCOMMITHASH}"
+    echo "Git commit hash:  ${GIT_COMMIT_HASH}"
     GITREF=$(echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep ref | head -n1 | \
              sed 's/"/ /g' | awk '{print $4}')
     echo "Git Ref:  ${GITREF}"
@@ -119,7 +121,7 @@ function parse_github_payload() {
         echo "`date` -- Tag detected, # ${GITTAG}"
     else
         if [ "${MANUALPUSH}" = "true" ];then
-            GITCOMMITHASH=${GITHUBHASH}
+            GIT_COMMIT_HASH=${GITHUBHASH}
         else
             GITTAG="false"
             ENVNAME="stage";format_logs
@@ -130,6 +132,24 @@ function parse_github_payload() {
     GITCOMMITTER=$(echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep committer | \
                    sed 's/"/ /g'|awk '{print $5" "$6}')
     echo "Committer: ${GITCOMMITTER}"
+}
+
+function get_stage_git_info() {
+    # short sha of latest commit from master
+    GIT_COMMIT_HASH=$(git rev-parse --short=8 -n 1 master)
+    COMMITTER_INFO=$(git log -n 1 --format="%an committed %h %ad" ${GIT_COMMIT_HASH})
+    echo "Latest commit on master: ${COMMITTER_INFO}"
+}
+
+function get_prod_git_info() {
+    # most recent tag on master
+    MOST_RECENT_TAG=$(git describe --abbrev=0 --tags master)
+    # short sha of commit most recent tag points to
+    # git's API is inconsistent.
+    GIT_COMMIT_HASH=$(git rev-list -n 1 ${MOST_RECENT_TAG} | cut -c -8)
+    TAGGER_INFO=$(git log --tags -n 1 --pretty="format:%aN tagged ${MOST_RECENT_TAG} (%h) %ad")
+    COMMITTER_INFO=$(git log -n 1 --format="%an committed %h %ad" ${GIT_COMMIT_HASH})
+    echo "Lastest tag on master: ${TAGGER_INFO}"
 }
 
 function scale_in_per_elb() {
@@ -283,12 +303,12 @@ function find_ami() {
         echo "`date` -- AMI id ${GITHUBHASH} is going to be used"
         NEWAMI=${GITHUBHASH}
     else
-    echo "`date` -- Attempting to locate AMI tagged with appsha of ${GITCOMMITHASH}"
+    echo "`date` -- Attempting to locate AMI tagged with appsha of ${GIT_COMMIT_HASH}"
         NEWAMI=$(aws ec2 describe-images \
-                 --filters Name=tag:apphash,Values=${GITCOMMITHASH} \
+                 --filters Name=tag:apphash,Values=${GIT_COMMIT_HASH} \
                  --output text --query 'Images[*].ImageId')
             RETURNCODE=$?;error_check
-        echo "`date` -- AMI id ${NEWAMI} found containing github hash tag of ${GITCOMMITHASH} : Return code ${RETURNCODE}"
+        echo "`date` -- AMI id ${NEWAMI} found containing github hash tag of ${GIT_COMMIT_HASH} : Return code ${RETURNCODE}"
     fi
 }
 
@@ -354,12 +374,17 @@ function query_end_scale() {
 ####################################
 ## PROGRAM RUN
 check_syntax    # Scan for noobs
-parse_github_payload  # We check the incoming payload for some info
+
+# no longer taking hooks from github
+# parse_github_payload  # We check the incoming payload for some info
+
 if [ "${ENVNAME}" = "stage" ] && [ "${MANUALPUSH}" = "false" ];then
+    get_stage_git_info
     time create_rpm; format_logs    # Git clone, build, package with fpm, sign, and upload rpm to S3 public repo
     time create_ami; format_logs    # Use packer to create an AMI to use as base
 fi
 if [ "${ENVNAME}" = prod ] || [ "${MANUALPUSH}" = "true" ];then
+    get_prod_git_info
     time find_ami; format_logs
 fi
 time apply_ami; format_logs    # For each ROLEENV group, set the baseAMI to the AMI we created
@@ -384,13 +409,13 @@ query_end_scale; format_logs # What did our groups end at?
 echo "New Socorro RPM Version: ${NEWSOCORROVERSION}"
 echo "New AMI Name: ${SOCORROAMINAME}"
 echo "New AMI ID: ${NEWAMI}"
-echo "New AMI Hash Tag: ${GITCOMMITHASH}"
-if [ "$GITTAG" = "false" ];then
-    echo "No tag"
-else
-    echo "New git tag: ${GITTAG}"
-fi
-echo "Push triggered by: ${GITCOMMITTER}"
+echo "New AMI Hash Tag: ${GIT_COMMIT_HASH}"
+# if [ "$GITTAG" = "false" ];then
+#     echo "No tag"
+# else
+#     echo "New git tag: ${GITTAG}"
+# fi
+# echo "Push triggered by: ${GITCOMMITTER}"
 format_logs
 echo "==========  BEGINNING STATE  =========="
 cat ${STARTLOG}

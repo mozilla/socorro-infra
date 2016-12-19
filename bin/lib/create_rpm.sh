@@ -16,8 +16,7 @@ function create_rpm() {
             RETURNCODE=$?;error_check
         cd socorro
         # Get the hash for later use to feed packer
-        export SOCORROHASH=`git log | head -n1 | awk '{print $2}'`
-        echo "`date` -- Clone of commit for ${SOCORROHASH} returned ${RETURNCODE}"
+        echo "`date` -- Clone of commit for ${GIT_COMMIT_HASH} returned ${RETURNCODE}"
         # Build the actual rpm file
         /usr/bin/env PYTHON=/usr/local/bin/python2.7 make package BUILD_TYPE=rpm
             RETURNCODE=$?;error_check
@@ -25,8 +24,7 @@ function create_rpm() {
     # Find the rpm file we created
     NEWRPM=$(ls -lart /data/socorro/socorro*.rpm|awk '{print $9}')
     # Get the version of that socorro rpm so we log it nicely.
-    NEWSOCORROVERSION=$(ls -lart /home/centos/org.mozilla.crash-stats.packages-public/x86_64/socorro-*.rpm| \
-                        tail -n1|sed 's/\// /g'|sed 's/\./ /g'|awk '{print $8}')
+    NEWSOCORROVERSION="${GIT_COMMIT_HASH}"
     # Get a version-date tag to apply as a name to the AMI
     SOCORROAMINAME="${NEWSOCORROVERSION}-`date +%Y%m%d%H%M`"
     if [ "$SKIPRPM" = "true" ];then
