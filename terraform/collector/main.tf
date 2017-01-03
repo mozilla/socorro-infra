@@ -146,13 +146,111 @@ resource "aws_elb" "elb-collector-oldssl" {
     cross_zone_load_balancing = true
     connection_draining = true
     connection_draining_timeout = 30
-    ### SSL policies aren't handled natively by TF, so here we go...
-    provisioner "local-exec" {
-        command = "aws elb create-load-balancer-policy --region ${var.region} --load-balancer-name ${aws_elb.elb-collector-oldssl.name} --policy-name oldssl --policy-type-name SSLNegotiationPolicyType --policy-attributes AttributeName=Reference-Security-Policy,AttributeValue=ELBSecurityPolicy-2011-08"
-    }
-    provisioner "local-exec" {
-        command = "aws elb set-load-balancer-policies-of-listener --region ${var.region} --load-balancer-name ${aws_elb.elb-collector-oldssl.name} --load-balancer-port 443 --policy-names oldssl"
-    }
+}
+
+# this is based off of ELBSecurityPolicy-2016-08
+# SSLv3 and DES-CBC3-SHA have been added
+# see: https://wiki.mozilla.org/Security/Server_Side_TLS#Old_backward_compatibility
+resource "aws_lb_ssl_negotiation_policy" "oldssl" {
+  name = "oldssl_policy"
+  load_balancer = "${aws_elb.elb-collector-oldssl.id}"
+  lb_port = 443
+  attribute {
+    name = "Protocol-TLSv1",
+    value = "true"
+  },
+  attribute {
+    name = "Protocol-SSLv3",
+    value = "false"
+  },
+  attribute {
+    name = "Protocol-TLSv1.1",
+    value = "true"
+  },
+  attribute {
+    name = "Protocol-TLSv1.2",
+    value = "true"
+  },
+  attribute {
+    name = "Server-Defined-Cipher-Order",
+    value = "true"
+  },
+  attribute {
+    name = "ECDHE-ECDSA-AES128-GCM-SHA256",
+    value = "true"
+  },
+  attribute {
+    name = "ECDHE-RSA-AES128-GCM-SHA256",
+    value = "true"
+  },
+  attribute {
+    name = "ECDHE-ECDSA-AES128-SHA256",
+    value = "true"
+  },
+  attribute {
+    name = "ECDHE-RSA-AES128-SHA256",
+    value = "true"
+  },
+  attribute {
+    name = "ECDHE-ECDSA-AES128-SHA",
+    value = "true"
+  },
+  attribute {
+    name = "ECDHE-RSA-AES128-SHA",
+    value = "true"
+  },
+  attribute {
+    name = "ECDHE-ECDSA-AES256-GCM-SHA384",
+    value = "true"
+  },
+  attribute {
+    name = "ECDHE-RSA-AES256-GCM-SHA384",
+    value = "true"
+  },
+  attribute {
+    name = "ECDHE-ECDSA-AES256-SHA384",
+    value = "true"
+  },
+  attribute {
+    name = "ECDHE-RSA-AES256-SHA384",
+    value = "true"
+  },
+  attribute {
+    name = "ECDHE-RSA-AES256-SHA",
+    value = "true"
+  },
+  attribute {
+    name = "ECDHE-ECDSA-AES256-SHA",
+    value = "true"
+  },
+  attribute {
+    name = "AES128-GCM-SHA256",
+    value = "true"
+  },
+  attribute {
+    name = "AES128-SHA256",
+    value = "true"
+  },
+  attribute {
+    name = "AES128-SHA",
+    value = "true"
+  },
+  attribute {
+    name = "AES256-GCM-SHA384",
+    value = "true"
+  },
+  attribute {
+    name = "AES256-SHA256",
+    value = "true"
+  },
+  attribute {
+    name = "AES256-SHA",
+    value = "true"
+  },
+  attribute {
+    name = "DES-CBC3-SHA",
+    value = "true"
+  }
 }
 
 resource "aws_launch_configuration" "lc-collector" {
@@ -210,3 +308,4 @@ resource "aws_autoscaling_group" "as-collector" {
         propagate_at_launch = true
     }
 }
+
