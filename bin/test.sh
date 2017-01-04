@@ -15,5 +15,5 @@ unzip -u terraform_${TFORM_VERSION}_${TFORM_PLATFORM}.zip
 popd
 
 for role in $(find ./terraform/* -maxdepth 1 -type d); do
-    ../terraform validate $role
+    ./terraform/terraform validate $role
 done
