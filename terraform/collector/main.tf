@@ -152,7 +152,7 @@ resource "aws_elb" "elb-collector-oldssl" {
 # SSLv3 and DES-CBC3-SHA have been added
 # see: https://wiki.mozilla.org/Security/Server_Side_TLS#Old_backward_compatibility
 resource "aws_lb_ssl_negotiation_policy" "oldssl" {
-  name = "oldssl_policy"
+  name = "oldssl-policy"
   load_balancer = "${aws_elb.elb-collector-oldssl.id}"
   lb_port = 443
   attribute {
@@ -308,4 +308,3 @@ resource "aws_autoscaling_group" "as-collector" {
         propagate_at_launch = true
     }
 }
-
