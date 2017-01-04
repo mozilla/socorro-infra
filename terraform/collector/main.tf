@@ -161,7 +161,7 @@ resource "aws_lb_ssl_negotiation_policy" "oldssl" {
   },
   attribute {
     name = "Protocol-SSLv3",
-    value = "false"
+    value = "true"
   },
   attribute {
     name = "Protocol-TLSv1.1",
