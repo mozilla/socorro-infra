@@ -2,7 +2,7 @@
 
 set -e
 
-TFORM_VERSION="0.5.3"
+TFORM_VERSION="0.7.13"
 TFORM_PLATFORM="linux_amd64"
 
 gem install puppet puppet-lint
@@ -14,16 +14,6 @@ wget "https://releases.hashicorp.com/terraform/${TFORM_VERSION}/terraform_${TFOR
 unzip -u terraform_${TFORM_VERSION}_${TFORM_PLATFORM}.zip
 popd
 
-for environment in stage prod; do
-    for role in $(find ./terraform/* -maxdepth 1 -type d); do
-        pushd "$role"
-        ../terraform plan -var="environment=$environment" \
-                       -var="secret_key=FAKE" \
-                       -var="access_key=FAKE" \
-                       -var="subnets=FAKE" \
-                       -var="secret_bucket=FAKE" \
-                       -var="buildbox_cert=FAKE" \
-                       -var="rds_root_password=FAKE"
-        popd
-    done
+for role in $(find ./terraform/* -maxdepth 1 -type d); do
+    ./terraform/terraform validate $role
 done
