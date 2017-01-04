@@ -279,15 +279,15 @@ function terminate_instances() {
 
 function find_ami() {
     PROGSTEP="Find correct prod AMI"
-    if echo ${GITHUBHASH} | grep "^ami-" > /dev/null;then
-        echo "`date` -- AMI id ${GITHUBHASH} is going to be used"
-        NEWAMI=${GITHUBHASH}
-    else
     echo "`date` -- Attempting to locate AMI tagged with appsha of ${GITCOMMITHASH}"
-        NEWAMI=$(aws ec2 describe-images \
-                 --filters Name=tag:apphash,Values=${GITCOMMITHASH} \
-                 --output text --query 'Images[*].ImageId')
-            RETURNCODE=$?;error_check
+    NEWAMI=$(aws ec2 describe-images \
+             --filters Name=tag:apphash,Values=${GITCOMMITHASH} \
+             --output text --query 'Images[*].ImageId')
+    RETURNCODE=$?;error_check
+    if [[ -z "$NEWAMI" ]]; then
+        echo "`date` -- AMI for appsha ${GITCOMMITHASH} could not be found."
+        RETURNCODE=1;error_check
+    else
         echo "`date` -- AMI id ${NEWAMI} found containing github hash tag of ${GITCOMMITHASH} : Return code ${RETURNCODE}"
     fi
 }
@@ -308,6 +308,7 @@ function apply_ami() {
             cd /home/centos/socorro-infra/terraform
             echo "`date` -- Attempting to terraform plan and apply ${AUTOSCALENAME} with new AMI id ${NEWAMI} and tagging with ${SOCORROHASH}"
             /home/centos/socorro-infra/terraform/wrapper.sh "plan -var base_ami={us-west-2=\"${NEWAMI}\"} -var ${SCALEVARIABLE}=${ASCAPACITY}" ${ENVNAME} ${TERRAFORMNAME}
+                RETURNCODE=$?;error_check
             echo " ";echo " ";echo "==================================";echo " "
             /home/centos/socorro-infra/terraform/wrapper.sh "apply -var base_ami={us-west-2=\"${NEWAMI}\"} -var ${SCALEVARIABLE}=${ASCAPACITY}" ${ENVNAME} ${TERRAFORMNAME}
                 RETURNCODE=$?;error_check
