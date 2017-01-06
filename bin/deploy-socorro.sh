@@ -256,14 +256,15 @@ function deregister_elb_nodes() {
         identify_role ${ROLEENVNAME}
         if [ "${ELBNAME}" = "NONE" ];then
             echo "No ELB to check for ${ROLEENVNAME}"
-            else
+        else
+            echo "Deregistering initial instances from ${ELBNAME}"
             # For every instance in $ELBNAME, check if it's slated to be killed.
-            for INSTANCETOCHECK in $(aws elb describe-instance-health \
-                                     --load-balancer-name elb-stage-socorroweb \
-                                     --output text --query 'InstanceStates[*].InstanceId')
-               do
+            INSTANCES=$(aws elb describe-instance-health \
+                         --load-balancer-name ${ELBNAME} \
+                         --output text --query 'InstanceStates[*].InstanceId')
+            for INSTANCETOCHECK in $INSTANCES; do
                instance_deregister ${INSTANCETOCHECK} ${ELBNAME}
-           done
+            done
         fi
     done
     echo "`date` -- All instances in ELBs deregistered, waiting for the 30 second drain period"
