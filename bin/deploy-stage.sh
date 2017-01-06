@@ -96,7 +96,7 @@ function create_ami() {
     /usr/bin/packer build -color=false $SOCORRO_INFRA_PATH/packer/socorro_base.json | tee ${TMP_PACKER_LOG}
     RC=${PIPESTATUS[0]}; error_check
     # Assign the sparkly new AMI id to a variable
-    AMI_ID=`grep ${TMP_PACKER_LOG} 'us-west-2: ami-*' | cut -f 2 -d ' '`
+    AMI_ID=`grep 'us-west-2: ami-.*' ${TMP_PACKER_LOG} | cut -f 2 -d ' '`
 
     STEP="[create_ami] Tagging AMI"
     AMI_NAME="${GIT_COMMIT_HASH}-`date +%Y-%m-%d-%H%M`"
@@ -375,7 +375,7 @@ echo "==========  ENDING STATE  ==========="
 cat ${ENDLOG}
 rm ${STARTLOG}
 rm ${ENDLOG}
-if [[ $TMP_DIR =~ "^/tmp/*" ]]; then
+if [[ $TMP_DIR =~ ^/tmp/.*$ ]]; then
     rm --preserve-root -rf ${TMP_DIR}
 fi
 exit ${ENDRC}
