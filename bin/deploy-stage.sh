@@ -108,59 +108,54 @@ function create_ami() {
 }
 
 function scale_in_per_elb() {
-    STEP="Scaling in ${ROLEENVNAME}";
-    echo "`date` -- Checking current desired capacity of autoscaling group for ${ROLEENVNAME}"
+    STEP="[scale_in_per_elb] Checking desired capacity for ${AUTOSCALENAME}"
     # We'll set the initial capacity and go back to that at the end
     INITIALCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
                       --auto-scaling-group-names ${AUTOSCALENAME} \
                       --output text \
-                      --query 'AutoScalingGroups[*].DesiredCapacity')
+                      --query 'AutoScalingGroups[0].DesiredCapacity')
     RC=$?; error_check
 
-    echo "`date` -- ${AUTOSCALENAME} initial capacity is set to ${INITIALCAPACITY}"
     # How many new nodes will we need to scale in for this deploy?
     DEPLOYCAPACITY=`echo $(($INITIALCAPACITY*2))`
     RC=$?; error_check
 
-    echo "`date` -- ${AUTOSCALENAME} capacity for this deploy is set to ${DEPLOYCAPACITY}"
+    STEP="[scale_in_per_elb] Listing instances in ${AUTOSCALENAME}"
     # Get a list of existing instance ids to terminate later
     INITIALINSTANCES="${INITIALINSTANCES} $(aws autoscaling \
                       describe-auto-scaling-groups \
                       --auto-scaling-group-name ${AUTOSCALENAME} \
                       --output text \
-                      --query 'AutoScalingGroups[*].Instances[*].InstanceId')"
+                      --query 'AutoScalingGroups[0].Instances[*].InstanceId')"
     RC=$?; error_check
 
-    echo "`date` -- Current instance list: ${INITIALINSTANCES}"
+    STEP="[scale_in_per_elb] Setting min and desired sizes for ${AUTOSCALENAME} to ${DEPLOYCAPACITY}"
     # Tell the AWS api to give us more instances in that role env.
     aws autoscaling update-auto-scaling-group --auto-scaling-group-name ${AUTOSCALENAME} --min-size ${DEPLOYCAPACITY}
-     RC=$?; error_check
+    RC=$?; error_check
 
-    echo "`date` -- Minimum capacity set with a return code of ${RC}"
     aws autoscaling set-desired-capacity --auto-scaling-group-name ${AUTOSCALENAME} --desired-capacity ${DEPLOYCAPACITY}
-     RC=$?; error_check
-
-    echo "`date` -- Desired capacity set with a return code of ${RC}"
+    RC=$?; error_check
 }
 
 function check_health_per_elb() {
-    STEP="Checking ELB status for ${ELBNAME}"
+    STEP="[check_health_per_elb] Checking desired capacity for ASG ${AUTOSCALENAME}"
     # We'll want to ensure the number of healthy hosts is equal to total number of hosts
     ASCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
                  --auto-scaling-group-names ${AUTOSCALENAME} \
                  --output text \
-                 --query 'AutoScalingGroups[*].DesiredCapacity')
+                 --query 'AutoScalingGroups[0].DesiredCapacity')
     RC=$?; error_check
 
+    STEP="[check_health_per_elb] Checking instance health for ELB ${ELBNAME}"
     HEALTHYHOSTCOUNT=$(aws elb describe-instance-health \
                        --load-balancer-name ${ELBNAME} \
-                       --output text | awk '{print $5}' | \
-                       grep InService | wc -l | awk '{print $1}')
+                       --query 'length(InstanceStates[?State==`InService`])')
     RC=$?; error_check
 
     CURRENTHEALTH="${CURRENTHEALTH} $(aws elb describe-instance-health \
                    --load-balancer-name ${ELBNAME} \
-                   --output text | awk '{print $5}')"
+                   --query 'length(InstanceStates[])')"
     RC=$?; error_check
 
     if [ ${HEALTHYHOSTCOUNT} -lt ${ASCAPACITY} ];then
@@ -180,7 +175,7 @@ function scale_in_all() {
 }
 
 function monitor_overall_health() {
-    STEP="Waiting for all ELBs to report healthy and full"
+    STEP="[monitor_overall_health] Waiting for all ELBs to report healthy and full"
     # If any elb is still unhealthy, we don't want to kill nodes
     ATTEMPT_COUNT=0;
     NO_HEALTH_ALERT=""
@@ -219,6 +214,8 @@ function monitor_overall_health() {
 function instance_deregister() {
     # We check to see if each instance in a given ELB is one of the doomed nodes
     if echo ${INITIALINSTANCES} | grep $1 > /dev/null;then
+        # doing this for consistency even though we don't error_check
+        STEP="[instance_deregister] Deregistering ${1} from ${2}"
         aws elb deregister-instances-from-load-balancer \
             --load-balancer-name $2 \
             --instances $1
@@ -233,7 +230,6 @@ function instance_deregister() {
 function deregister_elb_nodes() {
     # We'll list every ELB involved, and for each, list every instance.    Then, for each instance
     # we check if it is on the doomed list.    If so, we deregister it to allow a 30s drain
-    STEP="Starting scale down"
     echo "`date` -- ${STEP}"
     for ROLEENVNAME in $ROLES; do
         # Get ELB and AS group name.
@@ -243,9 +239,11 @@ function deregister_elb_nodes() {
         else
             echo "Deregistering initial instances from ${ELBNAME}"
             # For every instance in $ELBNAME, check if it's slated to be killed.
+            STEP="[deregister_elb_nodes] Getting instances for ${ELBNAME}"
             INSTANCES=$(aws elb describe-instance-health \
                          --load-balancer-name ${ELBNAME} \
                          --output text --query 'InstanceStates[*].InstanceId')
+            RC=$?; error_check
             for INSTANCETOCHECK in $INSTANCES; do
                instance_deregister ${INSTANCETOCHECK} ${ELBNAME}
             done
@@ -257,6 +255,7 @@ function deregister_elb_nodes() {
 function terminate_instances() {
     # We iterate over the list of instances to terminate (${INITIALINSTANCES}) and send each one here to
     # be terminated and simultaneously drop the desired-capacity down by 1.
+    STEP="[terminate_instances] Terminating ${1}"
     aws autoscaling terminate-instance-in-auto-scaling-group --instance-id $1 --should-decrement-desired-capacity
     rc=$?; if [[ $rc != 0 ]]; then
         echo "`date` -- Attempt to terminate $1 failed with RC ${rc}"
@@ -266,52 +265,54 @@ function terminate_instances() {
 }
 
 function apply_ami() {
-    STEP="Apply AMI using Terraform"
     # For each of our apps, we want to use terraform to apply the new base AMI we've just created
     for ROLEENVNAME in $ROLES; do
             # Get AS group name for each ROLE
             echo "`date` -- Checking role for ${ROLEENVNAME}"
             identify_role ${ROLEENVNAME}
             infra_report ${AUTOSCALENAME} >> ${STARTLOG}
+            STEP="[apply_ami] Getting capacity of ${AUTOSCALENAME} (${ROLEENVNAME})"
             ASCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
                          --auto-scaling-group-names ${AUTOSCALENAME} \
                          --output text \
-                         --query 'AutoScalingGroups[*].DesiredCapacity')
+                         --query 'AutoScalingGroups[0].DesiredCapacity')
+            RC=$?; error_check
             cd ${SOCORRO_INFRA_PATH}/terraform
             echo "`date` -- Attempting to terraform plan and apply ${AUTOSCALENAME}"
+            STEP="[apply_ami] Terraform plan for ${ROLEENVNAME}"
             ${SOCORRO_INFRA_PATH}/terraform/wrapper.sh "plan -var base_ami={us-west-2=\"${AMI_ID}\"} -var ${SCALEVARIABLE}=${ASCAPACITY}" ${ENVIRONMENT} ${TERRAFORMNAME}
             RC=$?; error_check
 
-            echo " ";echo " ";echo "==================================";echo " "
+            echo  "\n\n==================================\n"
+            STEP="[apply_ami] Terraform apply for ${ROLEENVNAME}"
             ${SOCORRO_INFRA_PATH}/terraform/wrapper.sh "apply -var base_ami={us-west-2=\"${AMI_ID}\"} -var ${SCALEVARIABLE}=${ASCAPACITY}" ${ENVIRONMENT} ${TERRAFORMNAME}
             RC=$?; error_check
-
-            echo "`date` -- Got return code ${RC} applying terraform update"
         done
     echo "`date` -- All roles updated"
 }
 
 function terminate_instances_all() {
-    STEP="Terminating instances"
     for ROLEENVNAME in $ROLES; do
         # First, we halve the number of minimum size for each group
         echo "`date` -- Setting min size for ${ROLEENVNAME}"
         identify_role ${ROLEENVNAME}
+        STEP="[terminate_instances_all] Describe instances for ${AUTOSCALENAME} (${ROLEENVNAME})"
         ASCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
                      --auto-scaling-group-names ${AUTOSCALENAME} \
                      --output text \
-                     --query 'AutoScalingGroups[*].DesiredCapacity')
+                     --query 'AutoScalingGroups[0].DesiredCapacity')
+        RC=$?; error_check
+        # lol integer division => lose an instance if ASG size was odd
         SCALEDOWNCAPACITY=$(echo $(($ASCAPACITY/2)))
         if [ ${SCALEDOWNCAPACITY} -lt 1 ]; then
             SCALEDOWNCAPACITY=1
         fi
         # Scale back to half current min size, unless that'd bring us to 0
-        echo "`date` -- Setting ${AUTOSCALENAME} from ${ASCAPACITY} min size to ${SCALEDOWNCAPACITY} to prep for instance killings"
+        STEP="[terminate_instances_all] Setting ${AUTOSCALENAME} from ${ASCAPACITY} min size to ${SCALEDOWNCAPACITY} (${ROLEENVNAME})"
         aws autoscaling update-auto-scaling-group --auto-scaling-group-name ${AUTOSCALENAME} --min-size ${SCALEDOWNCAPACITY}
         RC=$?; error_check
 
     done
-    echo "`date` -- Shooting servers in the face"
     # With the list we built earlier of old instances, iterate over it and terminate/decrement
     for doomedinstances in $(echo ${INITIALINSTANCES} )
         do
