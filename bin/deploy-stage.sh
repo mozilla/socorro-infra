@@ -3,8 +3,8 @@
 
 ### adapted from deploy-socorro
 
-set +u
-set +x
+set -u
+set -x
 
 SCRIPT_PATH=`dirname $(realpath $0)`
 SOCORRO_INFRA_PATH="/home/centos/socorro-infra"
@@ -21,10 +21,14 @@ ROLES=`cat ${SCRIPT_PATH}/lib/${ENVIRONMENT}_socorro_master.list`
 . ${SCRIPT_PATH}/lib/identify_role.sh
 . ${SCRIPT_PATH}/lib/infra_status.sh
 
+# for postgres and python
+PATH=$PATH:/usr/pgsql-9.3/bin:/usr/local/bin/
+echo "PATH: ${PATH}"
+
 get_stage_git_info() {
-    echo "git info for ${PWD}"
+    echo "git info for `basename $(git remote show -n origin | grep Fetch | cut -d: -f2-)`"
     # short sha of latest commit from master
-    GIT_COMMIT_HASH=$(git rev-parse -n 1 master)
+    GIT_COMMIT_HASH=$(git rev-parse master)
     COMMITTER_INFO=$(git log -n 1 --format="%an committed %h %ad" ${GIT_COMMIT_HASH})
     echo "Latest commit on master: ${COMMITTER_INFO}"
 }
@@ -45,7 +49,7 @@ error_check() {
 
 create_rpm() {
     STEP="[create_rpm] Creating TMP_DIR"
-    TMP_DIR=`mktemp -d` && cd $TMP_DIR
+    readonly TMP_DIR=`mktemp -d` && cd $TMP_DIR
     RC=$?; error_check
 
     STEP="[create_rpm] Cloning repo"
@@ -92,16 +96,16 @@ function create_ami() {
     /usr/bin/packer build -color=false $SOCORRO_INFRA_PATH/packer/socorro_base.json | tee ${TMP_PACKER_LOG}
     RC=${PIPESTATUS[0]}; error_check
     # Assign the sparkly new AMI id to a variable
-    AMI_ID=`cat ${TMP_PACKER_LOG} | grep us-west-2 | grep ami | awk '{print $2}'`
+    AMI_ID=`grep ${TMP_PACKER_LOG} 'us-west-2: ami-*' | cut -f 2 -d ' '`
 
     STEP="[create_ami] Tagging AMI"
     AMI_NAME="${GIT_COMMIT_HASH}-`date +%Y-%m-%d-%H%M`"
     # Tag that AMI with the github hash of this commit
     aws ec2 create-tags --resources ${AMI_ID} \
-                        --tags Key=apphash,Value=${GIT_COMMIT_HASH}
+                        --tags "Key=apphash,Value=${GIT_COMMIT_HASH}"
     RC=$?; error_check
     aws ec2 create-tags --resources ${AMI_ID} \
-                        --tags Key=Name,Value=${AMI_NAME}
+                        --tags "Key=Name,Value=${AMI_NAME}"
     RC=$?; error_check
     echo "Tagged AMI with apphash:${GIT_COMMIT_HASH}, Name:${AMI_NAME}"
     rm ${TMP_PACKER_LOG}
@@ -371,4 +375,7 @@ echo "==========  ENDING STATE  ==========="
 cat ${ENDLOG}
 rm ${STARTLOG}
 rm ${ENDLOG}
+if [[ $TMP_DIR =~ "^/tmp/*" ]]; then
+    rm --preserve-root -rf ${TMP_DIR}
+fi
 exit ${ENDRC}
