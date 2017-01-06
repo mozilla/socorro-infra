@@ -17,6 +17,8 @@ ENDLOG=`mktemp`
 # Roles / instance types to deploy for stage
 ROLES=`cat ${SCRIPT_PATH}/lib/${ENVIRONMENT}_socorro_master.list`
 
+INITIALINSTANCES=
+
 # imports
 . ${SCRIPT_PATH}/lib/identify_role.sh
 . ${SCRIPT_PATH}/lib/infra_status.sh
@@ -35,7 +37,7 @@ get_stage_git_info() {
 
 format_logs() {
     # requires figlet installed
-    echo "`date`\n`figlet -f stop ${ENVIRONMENT}-${STEP}`"
+    echo "`date`\n`figlet -f stop ${ENVIRONMENT}`\n${STEP}\n\n"
 }
 
 error_check() {
@@ -111,6 +113,19 @@ function create_ami() {
     rm ${TMP_PACKER_LOG}
 }
 
+function get_initial_instances() {
+    STEP="[get_initial_instances] Listing instances in ${AUTOSCALENAME}"
+    # Get a list of existing instance ids to terminate later
+    for ROLEENVNAME in $ROLES; do
+        INITIALINSTANCES="${INITIALINSTANCES} $(aws autoscaling \
+                          describe-auto-scaling-groups \
+                          --auto-scaling-group-name ${AUTOSCALENAME} \
+                          --output text \
+                          --query 'AutoScalingGroups[0].Instances[*].InstanceId')"
+        RC=$?; error_check
+    done
+}
+
 function scale_in_per_elb() {
     STEP="[scale_in_per_elb] Checking desired capacity for ${AUTOSCALENAME}"
     # We'll set the initial capacity and go back to that at the end
@@ -122,16 +137,6 @@ function scale_in_per_elb() {
 
     # How many new nodes will we need to scale in for this deploy?
     DEPLOYCAPACITY=`echo $(($INITIALCAPACITY*2))`
-    RC=$?; error_check
-
-    STEP="[scale_in_per_elb] Listing instances in ${AUTOSCALENAME}"
-    # Get a list of existing instance ids to terminate later
-    INITIALINSTANCES="${INITIALINSTANCES} $(aws autoscaling \
-                      describe-auto-scaling-groups \
-                      --auto-scaling-group-name ${AUTOSCALENAME} \
-                      --output text \
-                      --query 'AutoScalingGroups[0].Instances[*].InstanceId')"
-    RC=$?; error_check
 
     STEP="[scale_in_per_elb] Setting min and desired sizes for ${AUTOSCALENAME} to ${DEPLOYCAPACITY}"
     # Tell the AWS api to give us more instances in that role env.
@@ -169,7 +174,7 @@ function check_health_per_elb() {
 }
 
 function scale_in_all() {
-    STEP="Scaling in all the nodes"
+    STEP="[scale_in_all] Scaling in per role"
     # Each socorro env has its own master list in ./lib.
     # We iterate over that list to scale up and identify nodes to kill later
     for ROLEENVNAME in $ROLES; do
@@ -318,8 +323,7 @@ function terminate_instances_all() {
 
     done
     # With the list we built earlier of old instances, iterate over it and terminate/decrement
-    for doomedinstances in $(echo ${INITIALINSTANCES} )
-        do
+    for doomedinstances in ${INITIALINSTANCES}; do
         terminate_instances $doomedinstances
     done
 }
@@ -338,6 +342,7 @@ get_stage_git_info
 
 time create_rpm; format_logs
 time create_ami; format_logs
+time get_initial_instances; format_logs
 time apply_ami; format_logs
 time scale_in_all; format_logs
 
