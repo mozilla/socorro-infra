@@ -37,7 +37,7 @@ get_stage_git_info() {
 
 format_logs() {
     # requires figlet installed
-    echo "`date`\n`figlet -f stop ${ENVIRONMENT}`\n${STEP}\n\n"
+    echo -e "`date`\n`figlet -f stop ${ENVIRONMENT}`\n${STEP}\n\n"
 }
 
 error_check() {
@@ -114,9 +114,10 @@ function create_ami() {
 }
 
 function get_initial_instances() {
-    STEP="[get_initial_instances] Listing instances in ${AUTOSCALENAME}"
     # Get a list of existing instance ids to terminate later
     for ROLEENVNAME in $ROLES; do
+        identify_role $ROLEENVNAME
+        STEP="[get_initial_instances] Listing instances in ${AUTOSCALENAME}"
         INITIALINSTANCES="${INITIALINSTANCES} $(aws autoscaling \
                           describe-auto-scaling-groups \
                           --auto-scaling-group-name ${AUTOSCALENAME} \
