@@ -6,6 +6,13 @@
 set -u
 set -x
 
+SKIP_TO_DEPLOYMENT="false"
+# provide an existing AMI SHA and we will skip most of this!
+if [[ -n $1 ]]; then
+    FIND_AMI_HASH=$1
+    SKIP_TO_DEPLOYMENT="true"
+fi
+
 SCRIPT_PATH=`dirname $(realpath $0)`
 SOCORRO_INFRA_PATH="/home/centos/socorro-infra"
 ENVIRONMENT="stage"
@@ -111,6 +118,14 @@ function create_ami() {
     RC=$?; error_check
     echo "Tagged AMI with apphash:${GIT_COMMIT_HASH}, Name:${AMI_NAME}"
     rm ${TMP_PACKER_LOG}
+}
+
+function find_ami() {
+    STEP="[find_ami] Finding AMI by apphash ${FIND_AMI_HASH}"
+    AMI_ID=$(aws ec2 describe-images \
+             --filters Name=tag:apphash,Values=${FIND_AMI_HASH} \
+             --output text --query 'Images[0].ImageId')
+    RC=$?;error_check
 }
 
 function get_initial_instances() {
@@ -342,8 +357,14 @@ function query_end_scale() {
 # print socorro-infra latest commit info
 get_stage_git_info
 
-time create_rpm; format_logs
-time create_ami; format_logs
+# create_rpm and create_ami are time intensive
+if [[ $SKIP_TO_DEPLOYMENT == "true" ]]; then
+    time find_ami; format_logs
+else
+    time create_rpm; format_logs
+    time create_ami; format_logs
+fi
+
 time get_initial_instances; format_logs
 time apply_ami; format_logs
 time scale_in_all; format_logs
