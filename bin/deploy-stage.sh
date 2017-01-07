@@ -17,7 +17,7 @@ ENDLOG=`mktemp`
 # Roles / instance types to deploy for stage
 ROLES=`cat ${SCRIPT_PATH}/lib/${ENVIRONMENT}_socorro_master.list`
 
-INITIALINSTANCES=
+INITIAL_INSTANCES=
 
 # imports
 . ${SCRIPT_PATH}/lib/identify_role.sh
@@ -44,7 +44,7 @@ error_check() {
     if [ ${RC} -ne 0 ]; then
         echo "`date` -- Error encountered during ${STEP}"
         echo "Fatal, exiting"
-        echo "Instances which may need to be terminated manually: ${INITIALINSTANCES}"
+        echo "Instances which may need to be terminated manually: ${INITIAL_INSTANCES}"
         exit 1
     fi
 }
@@ -118,7 +118,7 @@ function get_initial_instances() {
     for ROLEENVNAME in $ROLES; do
         identify_role $ROLEENVNAME
         STEP="[get_initial_instances] Listing instances in ${AUTOSCALENAME}"
-        INITIALINSTANCES="${INITIALINSTANCES} $(aws autoscaling \
+        INITIAL_INSTANCES="${INITIAL_INSTANCES} $(aws autoscaling \
                           describe-auto-scaling-groups \
                           --auto-scaling-group-name ${AUTOSCALENAME} \
                           --output text \
@@ -163,13 +163,13 @@ function check_health_per_elb() {
                        --query 'length(InstanceStates[?State==`InService`])')
     RC=$?; error_check
 
-    CURRENTHEALTH="${CURRENTHEALTH} $(aws elb describe-instance-health \
+    CURRENT_HEALTH="${CURRENT_HEALTH} $(aws elb describe-instance-health \
                    --load-balancer-name ${ELBNAME} \
                    --query 'length(InstanceStates[])')"
     RC=$?; error_check
 
     if [ ${HEALTHYHOSTCOUNT} -lt ${ASCAPACITY} ];then
-        CURRENTHEALTH="Out"
+        CURRENT_HEALTH="UNHEALTHY"
     fi
     echo "`date` -- ${AUTOSCALENAME} nodes healthy in ELB: ${HEALTHYHOSTCOUNT} / ${ASCAPACITY}"
 }
@@ -189,8 +189,9 @@ function monitor_overall_health() {
     # If any elb is still unhealthy, we don't want to kill nodes
     ATTEMPT_COUNT=0;
     NO_HEALTH_ALERT=""
-    until [ "${HEALTH_STATUS}" = "HEALTHY" ]
-        do
+    OVERALL_HEALTH="UNHEALTHY"
+    CURRENT_HEALTH=""
+    until [ "${OVERALL_HEALTH}" = "HEALTHY" ]; do
         ATTEMPT_COUNT=`echo $(($ATTEMPT_COUNT+1))`
         echo "`date` -- Attempt ${ATTEMPT_COUNT} of 15 checking on healthy elbs"
         for ROLEENVNAME in $ROLES; do
@@ -201,29 +202,29 @@ function monitor_overall_health() {
             else
                 check_health_per_elb
             fi
-            done
+        done
         # Check for OutOfService in the saved string of statuses.    If it exists, reset and wait.
-        if echo ${CURRENTHEALTH} | grep Out > /dev/null;then
-            CURRENTHEALTH=""
+        if echo ${CURRENT_HEALTH} | grep "UNHEALTHY" > /dev/null; then
             sleep 60 # We want to be polite to the API
             if [ $ATTEMPT_COUNT -gt 14 ]; then
                 echo "`date` -- ALERT!  We've tried for 15 minutes to wait for healthy nodes, continuing"
                 NO_HEALTH_ALERT="true"
-                HEALTH_STATUS="HEALTHY"
+                # this breaks the until loop
+                OVERALL_HEALTH="HEALTHY"
             fi
         else
             echo "`date` -- ELBs are now healthy"
-            HEALTH_STATUS="HEALTHY"
+            OVERALL_HEALTH="HEALTHY"
         fi
     done
-    if [ "${HEALTH_STATUS}" = "HEALTHY" ] && [ "${NO_HEALTH_ALERT}" = "" ];then
+    if [ "${OVERALL_HEALTH}" = "HEALTHY" ] && [ "${NO_HEALTH_ALERT}" = "" ];then
         echo "`date` -- We are bonafide healthy"
     fi
 }
 
 function instance_deregister() {
     # We check to see if each instance in a given ELB is one of the doomed nodes
-    if echo ${INITIALINSTANCES} | grep $1 > /dev/null;then
+    if echo ${INITIAL_INSTANCES} | grep $1 > /dev/null;then
         # doing this for consistency even though we don't error_check
         STEP="[instance_deregister] Deregistering ${1} from ${2}"
         aws elb deregister-instances-from-load-balancer \
@@ -263,7 +264,7 @@ function deregister_elb_nodes() {
 }
 
 function terminate_instances() {
-    # We iterate over the list of instances to terminate (${INITIALINSTANCES}) and send each one here to
+    # We iterate over the list of instances to terminate (${INITIAL_INSTANCES}) and send each one here to
     # be terminated and simultaneously drop the desired-capacity down by 1.
     STEP="[terminate_instances] Terminating ${1}"
     aws autoscaling terminate-instance-in-auto-scaling-group --instance-id $1 --should-decrement-desired-capacity
@@ -324,7 +325,7 @@ function terminate_instances_all() {
 
     done
     # With the list we built earlier of old instances, iterate over it and terminate/decrement
-    for doomedinstances in ${INITIALINSTANCES}; do
+    for doomedinstances in ${INITIAL_INSTANCES}; do
         terminate_instances $doomedinstances
     done
 }
@@ -352,7 +353,7 @@ sleep 60
 
 # After updates go out, monitor for all instances in all elbs to be healthy.
 time monitor_overall_health; format_logs
-if [ "${NOHEALTHALERT}" = "true" ]; then
+if [ "${NO_HEALTH_ALERT}" = "true" ]; then
     # This means earlier, the health check process tried 10 times, and never got an all healthy response
     echo "Not going to scale out, since we aren't all healthy"
     ENDRC=1
@@ -361,16 +362,16 @@ else
     time deregister_elb_nodes; format_logs
     # Wait for drain, default we set is to 30s
     sleep 30
-    # Kill the instances we listed in ${INITIALINSTANCES}
+    # Kill the instances we listed in ${INITIAL_INSTANCES}
     time terminate_instances_all; format_logs
 fi
 # All done, get our report.
 echo "`date` -- Deployment complete"
 echo "Nodes we think should have been killed:"
-echo ${INITIALINSTANCES}
+echo ${INITIAL_INSTANCES}
 query_end_scale; format_logs # What did our groups end at?
-echo "New Socorro RPM Version: ${NEWSOCORROVERSION}"
-echo "New AMI Name: ${SOCORROAMINAME}"
+echo "New Socorro RPM: ${RPM}"
+echo "New AMI Name: ${AMI_NAME}"
 echo "New AMI ID: ${AMI_ID}"
 echo "New AMI Hash Tag: ${GIT_COMMIT_HASH}"
 format_logs
