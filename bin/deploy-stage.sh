@@ -10,7 +10,8 @@ SKIP_TO_DEPLOYMENT="false"
 # provide an existing AMI SHA and we will skip most of this!
 if [[ -n $1 ]]; then
     FIND_AMI_HASH=$1
-    RPM="RPM building was skipped, AMI SHA provided was ${FIND_AMI_HASH}."
+    RPM="RPM has no value, RPM building was skipped."
+    AMI_NAME="AMI_NAME has no value, RPM building was skipped."
     SKIP_TO_DEPLOYMENT="true"
 fi
 
@@ -126,7 +127,11 @@ function find_ami() {
     AMI_ID=$(aws ec2 describe-images \
              --filters Name=tag:apphash,Values=${FIND_AMI_HASH} \
              --output text --query 'Images[0].ImageId')
-    RC=$?;error_check
+    # None is returned if no AMI is found
+    if [[ $AMI_ID == "None" ]]; then
+        RC=1
+    fi
+    RC=$?; error_check
 }
 
 function get_initial_instances() {
