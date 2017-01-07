@@ -1,5 +1,6 @@
-### this is a minimal script that executes socorro stage build
-### takes on arguments, builds most recent commit to master
+### this executes socorro stage build and can run without arguments
+### by default builds most recent commit to master
+### optional argument: socorro SHA corresponding to previously created AMI
 
 ### adapted from deploy-socorro
 
@@ -58,12 +59,12 @@ error_check() {
     fi
 }
 
-create_rpm() {
-    STEP="[create_rpm] Creating TMP_DIR"
+clone_repo() {
+    STEP="[clone_repo] Creating TMP_DIR"
     readonly TMP_DIR=`mktemp -d` && cd $TMP_DIR
     RC=$?; error_check
 
-    STEP="[create_rpm] Cloning repo"
+    STEP="[clone_repo] Cloning repo"
     echo "Cloning the socorro repo into ${TMP_DIR}/socorro"
     git clone https://github.com/mozilla/socorro.git
     RC=$?; error_check
@@ -71,7 +72,11 @@ create_rpm() {
     cd $TMP_DIR/socorro
     # print socorro commit info
     get_stage_git_info
+}
 
+create_rpm() {
+    # repeated so this code is a _little_ less stateful
+    cd $TMP_DIR/socorro
     STEP="[create_rpm] Creating RPM"
     /usr/bin/env PYTHON=/usr/local/bin/python2.7 make package BUILD_TYPE=rpm
     RC=$?; error_check
@@ -128,10 +133,11 @@ function find_ami() {
              --filters Name=tag:apphash,Values=${FIND_AMI_HASH} \
              --output text --query 'Images[0].ImageId')
     # None is returned if no AMI is found
-    if [[ $AMI_ID == "None" ]]; then
-        RC=1
+    # this is a problem if we want to SKIP_TO_DEPLOYMENT
+    # otherwise, we can short circuit having to recreate AMIs in case of rollback
+    if [[$AMI_ID == "None"]] && [[$SKIP_TO_DEPLOYMENT == "true"]]; then
+        RC=1; error_check
     fi
-    RC=$?; error_check
 }
 
 function get_initial_instances() {
@@ -363,10 +369,16 @@ function query_end_scale() {
 # print socorro-infra latest commit info
 get_stage_git_info
 
+# clone_repo checks latest commit on master
+time clone_repo; format_logs
+
+# find_ami checks whether an AMI for that
+# commit already exists
+time find_ami; format_logs
+
 # create_rpm and create_ami are time intensive
-if [[ $SKIP_TO_DEPLOYMENT == "true" ]]; then
-    time find_ami; format_logs
-else
+# so they are skipped in favor of existing AMI
+if [[$AMI_ID == "None"]]; then
     time create_rpm; format_logs
     time create_ami; format_logs
 fi
@@ -380,7 +392,7 @@ sleep 60
 
 # After updates go out, monitor for all instances in all elbs to be healthy.
 time monitor_overall_health; format_logs
-if [ "${NO_HEALTH_ALERT}" = "true" ]; then
+if [[ $NO_HEALTH_ALERT == "true" ]]; then
     # This means earlier, the health check process tried 10 times, and never got an all healthy response
     echo "Not going to scale out, since we aren't all healthy"
     ENDRC=1
@@ -392,21 +404,25 @@ else
     # Kill the instances we listed in ${INITIAL_INSTANCES}
     time terminate_instances_all; format_logs
 fi
+
 # All done, get our report.
 echo "`date` -- Deployment complete"
 echo "Nodes we think should have been killed:"
 echo ${INITIAL_INSTANCES}
 query_end_scale; format_logs # What did our groups end at?
+
 echo "New Socorro RPM: ${RPM}"
 echo "New AMI Name: ${AMI_NAME}"
 echo "New AMI ID: ${AMI_ID}"
 echo "New AMI Hash Tag: ${GIT_COMMIT_HASH}"
+
 format_logs
 echo "==========  BEGINNING STATE  =========="
 cat ${STARTLOG}
 format_logs
 echo "==========  ENDING STATE  ==========="
 cat ${ENDLOG}
+
 rm ${STARTLOG}
 rm ${ENDLOG}
 if [[ $TMP_DIR =~ ^/tmp/.*$ ]]; then
