@@ -4,12 +4,13 @@
 ### adapted from deploy-socorro
 
 set -u
-set -x
+set +x
 
 SKIP_TO_DEPLOYMENT="false"
 # provide an existing AMI SHA and we will skip most of this!
 if [[ -n $1 ]]; then
     FIND_AMI_HASH=$1
+    RPM="RPM building was skipped, AMI SHA provided was ${FIND_AMI_HASH}."
     SKIP_TO_DEPLOYMENT="true"
 fi
 
@@ -145,35 +146,35 @@ function get_initial_instances() {
 function scale_in_per_elb() {
     STEP="[scale_in_per_elb] Checking desired capacity for ${AUTOSCALENAME}"
     # We'll set the initial capacity and go back to that at the end
-    INITIALCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
+    INITIAL_CAPACITY=$(aws autoscaling describe-auto-scaling-groups \
                       --auto-scaling-group-names ${AUTOSCALENAME} \
                       --output text \
                       --query 'AutoScalingGroups[0].DesiredCapacity')
     RC=$?; error_check
 
     # How many new nodes will we need to scale in for this deploy?
-    DEPLOYCAPACITY=`echo $(($INITIALCAPACITY*2))`
+    DEPLOY_CAPACITY=`echo $(($INITIAL_CAPACITY*2))`
 
-    STEP="[scale_in_per_elb] Setting min and desired sizes for ${AUTOSCALENAME} to ${DEPLOYCAPACITY}"
+    STEP="[scale_in_per_elb] Setting min and desired sizes for ${AUTOSCALENAME} to ${DEPLOY_CAPACITY}"
     # Tell the AWS api to give us more instances in that role env.
-    aws autoscaling update-auto-scaling-group --auto-scaling-group-name ${AUTOSCALENAME} --min-size ${DEPLOYCAPACITY}
+    aws autoscaling update-auto-scaling-group --auto-scaling-group-name ${AUTOSCALENAME} --min-size ${DEPLOY_CAPACITY}
     RC=$?; error_check
 
-    aws autoscaling set-desired-capacity --auto-scaling-group-name ${AUTOSCALENAME} --desired-capacity ${DEPLOYCAPACITY}
+    aws autoscaling set-desired-capacity --auto-scaling-group-name ${AUTOSCALENAME} --desired-capacity ${DEPLOY_CAPACITY}
     RC=$?; error_check
 }
 
 function check_health_per_elb() {
     STEP="[check_health_per_elb] Checking desired capacity for ASG ${AUTOSCALENAME}"
     # We'll want to ensure the number of healthy hosts is equal to total number of hosts
-    ASCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
+    ASG_CAPACITY=$(aws autoscaling describe-auto-scaling-groups \
                  --auto-scaling-group-names ${AUTOSCALENAME} \
                  --output text \
                  --query 'AutoScalingGroups[0].DesiredCapacity')
     RC=$?; error_check
 
     STEP="[check_health_per_elb] Checking instance health for ELB ${ELBNAME}"
-    HEALTHYHOSTCOUNT=$(aws elb describe-instance-health \
+    HEALTHY_HOST_COUNT=$(aws elb describe-instance-health \
                        --load-balancer-name ${ELBNAME} \
                        --query 'length(InstanceStates[?State==`InService`])')
     RC=$?; error_check
@@ -183,10 +184,10 @@ function check_health_per_elb() {
                    --query 'length(InstanceStates[])')"
     RC=$?; error_check
 
-    if [ ${HEALTHYHOSTCOUNT} -lt ${ASCAPACITY} ];then
+    if [ ${HEALTHY_HOST_COUNT} -lt ${ASG_CAPACITY} ];then
         CURRENT_HEALTH="UNHEALTHY"
     fi
-    echo "`date` -- ${AUTOSCALENAME} nodes healthy in ELB: ${HEALTHYHOSTCOUNT} / ${ASCAPACITY}"
+    echo "`date` -- ${AUTOSCALENAME} nodes healthy in ELB: ${HEALTHY_HOST_COUNT} / ${ASG_CAPACITY}"
 }
 
 function scale_in_all() {
@@ -205,8 +206,8 @@ function monitor_overall_health() {
     ATTEMPT_COUNT=0;
     NO_HEALTH_ALERT=""
     OVERALL_HEALTH="UNHEALTHY"
-    CURRENT_HEALTH=""
     until [ "${OVERALL_HEALTH}" = "HEALTHY" ]; do
+        CURRENT_HEALTH=""
         ATTEMPT_COUNT=`echo $(($ATTEMPT_COUNT+1))`
         echo "`date` -- Attempt ${ATTEMPT_COUNT} of 15 checking on healthy elbs"
         for ROLEENVNAME in $ROLES; do
@@ -298,7 +299,7 @@ function apply_ami() {
             identify_role ${ROLEENVNAME}
             infra_report ${AUTOSCALENAME} >> ${STARTLOG}
             STEP="[apply_ami] Getting capacity of ${AUTOSCALENAME} (${ROLEENVNAME})"
-            ASCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
+            ASG_CAPACITY=$(aws autoscaling describe-auto-scaling-groups \
                          --auto-scaling-group-names ${AUTOSCALENAME} \
                          --output text \
                          --query 'AutoScalingGroups[0].DesiredCapacity')
@@ -306,12 +307,12 @@ function apply_ami() {
             cd ${SOCORRO_INFRA_PATH}/terraform
             echo "`date` -- Attempting to terraform plan and apply ${AUTOSCALENAME}"
             STEP="[apply_ami] Terraform plan for ${ROLEENVNAME}"
-            ${SOCORRO_INFRA_PATH}/terraform/wrapper.sh "plan -var base_ami={us-west-2=\"${AMI_ID}\"} -var ${SCALEVARIABLE}=${ASCAPACITY}" ${ENVIRONMENT} ${TERRAFORMNAME}
+            ${SOCORRO_INFRA_PATH}/terraform/wrapper.sh "plan -var base_ami={us-west-2=\"${AMI_ID}\"} -var ${SCALEVARIABLE}=${ASG_CAPACITY}" ${ENVIRONMENT} ${TERRAFORMNAME}
             RC=$?; error_check
 
             echo  "\n\n==================================\n"
             STEP="[apply_ami] Terraform apply for ${ROLEENVNAME}"
-            ${SOCORRO_INFRA_PATH}/terraform/wrapper.sh "apply -var base_ami={us-west-2=\"${AMI_ID}\"} -var ${SCALEVARIABLE}=${ASCAPACITY}" ${ENVIRONMENT} ${TERRAFORMNAME}
+            ${SOCORRO_INFRA_PATH}/terraform/wrapper.sh "apply -var base_ami={us-west-2=\"${AMI_ID}\"} -var ${SCALEVARIABLE}=${ASG_CAPACITY}" ${ENVIRONMENT} ${TERRAFORMNAME}
             RC=$?; error_check
         done
     echo "`date` -- All roles updated"
@@ -323,18 +324,18 @@ function terminate_instances_all() {
         echo "`date` -- Setting min size for ${ROLEENVNAME}"
         identify_role ${ROLEENVNAME}
         STEP="[terminate_instances_all] Describe instances for ${AUTOSCALENAME} (${ROLEENVNAME})"
-        ASCAPACITY=$(aws autoscaling describe-auto-scaling-groups \
+        ASG_CAPACITY=$(aws autoscaling describe-auto-scaling-groups \
                      --auto-scaling-group-names ${AUTOSCALENAME} \
                      --output text \
                      --query 'AutoScalingGroups[0].DesiredCapacity')
         RC=$?; error_check
         # lol integer division => lose an instance if ASG size was odd
-        SCALEDOWNCAPACITY=$(echo $(($ASCAPACITY/2)))
+        SCALEDOWNCAPACITY=$(echo $(($ASG_CAPACITY/2)))
         if [ ${SCALEDOWNCAPACITY} -lt 1 ]; then
             SCALEDOWNCAPACITY=1
         fi
         # Scale back to half current min size, unless that'd bring us to 0
-        STEP="[terminate_instances_all] Setting ${AUTOSCALENAME} from ${ASCAPACITY} min size to ${SCALEDOWNCAPACITY} (${ROLEENVNAME})"
+        STEP="[terminate_instances_all] Setting ${AUTOSCALENAME} from ${ASG_CAPACITY} min size to ${SCALEDOWNCAPACITY} (${ROLEENVNAME})"
         aws autoscaling update-auto-scaling-group --auto-scaling-group-name ${AUTOSCALENAME} --min-size ${SCALEDOWNCAPACITY}
         RC=$?; error_check
 
