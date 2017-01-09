@@ -4,7 +4,7 @@
 
 ### adapted from deploy-socorro
 
-set -u
+set +u
 set +x
 
 SKIP_TO_DEPLOYMENT="false"
@@ -14,6 +14,11 @@ if [[ -n $1 ]]; then
     RPM="RPM has no value, RPM building was skipped."
     AMI_NAME="AMI_NAME has no value, RPM building was skipped."
     SKIP_TO_DEPLOYMENT="true"
+fi
+
+FORCE_REBUILD="false"
+if [[ -n $2 ]]; then
+    FORCE_REBUILD="rebuild"
 fi
 
 SCRIPT_PATH=`dirname $(realpath $0)`
@@ -70,6 +75,7 @@ clone_repo() {
     RC=$?; error_check
 
     cd $TMP_DIR/socorro
+    STEP="[clone_repo] Acquiring git metadata"
     # print socorro commit info
     get_stage_git_info
 }
@@ -128,6 +134,11 @@ function create_ami() {
 }
 
 function find_ami() {
+    # find_ami based on latest commit
+    if [[ -z $FIND_AMI_HASH ]]; then
+        FIND_AMI_HASH=$GIT_COMMIT_HASH
+    fi
+
     STEP="[find_ami] Finding AMI by apphash ${FIND_AMI_HASH}"
     AMI_ID=$(aws ec2 describe-images \
              --filters Name=tag:apphash,Values=${FIND_AMI_HASH} \
@@ -135,7 +146,7 @@ function find_ami() {
     # None is returned if no AMI is found
     # this is a problem if we want to SKIP_TO_DEPLOYMENT
     # otherwise, we can short circuit having to recreate AMIs in case of rollback
-    if [[$AMI_ID == "None"]] && [[$SKIP_TO_DEPLOYMENT == "true"]]; then
+    if [["$AMI_ID" == "None"]] && [["$SKIP_TO_DEPLOYMENT" == "true"]]; then
         RC=1; error_check
     fi
 }
@@ -378,7 +389,7 @@ time find_ami; format_logs
 
 # create_rpm and create_ami are time intensive
 # so they are skipped in favor of existing AMI
-if [[$AMI_ID == "None"]]; then
+if [["$AMI_ID" == "None"]] || [[ "$FORCE_REBUILD" == "rebuild" ]]; then
     time create_rpm; format_logs
     time create_ami; format_logs
 fi
