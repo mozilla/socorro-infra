@@ -76,12 +76,12 @@ clone_repo() {
     git clone https://github.com/mozilla/socorro.git
     RC=$?; error_check
 
+    cd "$TMP_DIR/socorro"
+    RC=$?; error_check
+
     # reset to the specified commit
     # defaults to master
     git reset --hard "${SPECIFIED_HASH}"
-
-    cd "$TMP_DIR/socorro"
-    RC=$?; error_check
 
     STEP="[clone_repo] Acquiring git metadata"; format_logs
     # print socorro commit info
