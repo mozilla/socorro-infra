@@ -105,16 +105,12 @@ function parse_github_payload() {
     # We will get all sorts of fun info here!
     echo "Git Payload for copying into jenkins build parameter"
     echo " ";echo ${GITPAYLOAD};echo " "
-    GITCOMMITHASH=$(echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep head_commit | \
-                    sed 's/"/ /g' | awk '{print $5}')
+    GITCOMMITHASH=$(echo ${GITPAYLOAD} | jq -r '.commits[0].id')
     echo "Git commit hash:  ${GITCOMMITHASH}"
-    GITREF=$(echo ${GITPAYLOAD} | sed 's/,/\'$'\n/g'| grep ref | head -n1 | \
-             sed 's/"/ /g' | awk '{print $4}')
+    GITREF=$(echo ${GITPAYLOAD} | jq -r '.ref')
     echo "Git Ref:  ${GITREF}"
     if echo ${GITREF} | grep tag > /dev/null;then
-        GITTAG=$(echo ${GITPAYLOAD}|sed 's/,/\'$'\n/g' | grep ref | head -n1 | \
-                 sed 's/"/ /g' | awk '{print $4}' | \
-                 sed 's/\// /g' | awk '{print $3}')
+        GITTAG=$GITREF
         ENVNAME="prod";format_logs
         echo "`date` -- Tag detected, # ${GITTAG}"
     else
