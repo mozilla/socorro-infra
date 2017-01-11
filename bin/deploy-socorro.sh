@@ -111,6 +111,7 @@ function parse_github_payload() {
     echo "Git Ref:  ${GITREF}"
     if echo ${GITREF} | grep tag > /dev/null;then
         GITTAG=$GITREF
+        GITCOMMITHASH=$(echo ${GITPAYLOAD} | jq -r '.head_commit.id')
         ENVNAME="prod";format_logs
         echo "`date` -- Tag detected, # ${GITTAG}"
     else
