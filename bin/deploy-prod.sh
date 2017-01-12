@@ -28,6 +28,11 @@ error_check() {
 LIVE_ENV_URL="https://crash-stats.mozilla.org/status/revision/"
 
 SHOULD_DEPLOY="true"
+
+# checked in find_ami
+# if an AMI is not found, this will cause an error
+SKIP_TO_DEPLOYMENT="true"
+
 # provide an existing tag
 if [[ -n $1 ]] && [[ $1 =~ [0-9]{4} ]]; then
     # properly formatted tag

@@ -4,7 +4,7 @@ deploy-prod.sh is adapted from deploy-socorro.sh.
 
 deploy-prod.sh can be called without arguments, so that it could, in theory, be run on a schedule in CI/CD. When run, deploy-prod.sh can look at the current Socorro prod deployment, and based on the reported revision decide not to continue (if live version == SHA of most recent tag).
 
-In the case of a manual rollback, provide the tag or SHA to rollback to as $1 and deploy-prod.sh will search for AMIs available (by AMI tag appsha == tag/SHA supplied in $1) to find the correct AMI to rollback to. This prevents the need for a total rebuild in the case of a rollback. The most recent AMI is always chosen.
+In the case of a manual rollback, provide the tag or SHA to rollback to as $1 and deploy-prod.sh will search for AMIs available (by AMI tag appsha == tag/SHA supplied in $1) to find the correct AMI to rollback to. The most recent AMI is always chosen.
 
 If a redeploy of the running live tag or SHA is desired, simply specify "redeploy" as a positional argument (if specified along with a tag or SHA, $2). This will force a redeploy of the RPM and AMI, and then deploy from there.
 
@@ -17,15 +17,14 @@ At present, deploy-prod.sh works as follows:
 
   - prints info about the currently checked out mozilla/socorro-infra repo
   - clones a fresh mozilla/socorro repo into /data/socorro
-    - if a SHA was specified, `git reset --hard`'s to it
+    - if a SHA or tag was specified, `git reset --hard`'s to it
   - prints info about the freshly checked out mozilla/socorro repo
 
   - compares the live SHA at https://crash-stats.allizom.org/status/revision/ to the freshly checked out SHA
-    - if they are the same and rebuild is not enabled, exits cleanly
+    - if they are the same and redeploy is not enabled, exits cleanly
 
   - checks to see if there is already an AMI for the checked out SHA
-    - if so, and rebuild is not enabled, skips to deployment using that AMI
-    - if not, creates an RPM using the checked out mozilla/socorro repository, and then creates a base AMI with that RPM installed using Packer
+    - if not, fatal error
 
   - gets a list of initial instances running in prod with the roles that we care to replace (lib/prod_socorro_master.list)
 

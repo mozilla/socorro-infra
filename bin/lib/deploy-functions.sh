@@ -70,8 +70,11 @@ function find_ami() {
     # otherwise, we can short circuit having to recreate AMIs in case of rollback
     if [[ "$AMI_ID" == "None" ]]; then
         STEP="[find_ami] Could not find AMI for ${GIT_COMMIT_HASH}."; format_logs
-    elif [[ "$AMI_ID" == "None" ]] && [[ "$SKIP_TO_DEPLOYMENT" == "true" ]]; then
-        RC=1; error_check
+        # intending to skip building RPM / AMI, cannot find AMI
+        # this is a problem!
+        if [[ "$SKIP_TO_DEPLOYMENT" == "true" ]]; then
+            RC=1; error_check
+        fi
     else
         # if we have found the AMI
         AMI_NAME=$(aws ec2 describe-images --image-ids "${AMI_ID}" \
