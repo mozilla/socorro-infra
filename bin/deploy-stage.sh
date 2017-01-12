@@ -75,48 +75,48 @@ INITIAL_INSTANCES=
 PATH="${PATH}:/usr/pgsql-9.3/bin:/usr/local/bin/"
 echo "PATH: ${PATH}"
 
-check_dependencies() {
-    STEP="[check_dependencies] checking if aws in PATH"
+check_for_dependencies() {
+    STEP="[check_for_dependencies] checking if aws in PATH"
     aws help > /dev/null
     RC=$?; error_check
 
-    STEP="[check_dependencies] checking if figlet in PATH"
+    STEP="[check_for_dependencies] checking if figlet in PATH"
     figlet test > /dev/null
     RC=$?; error_check
 
-    STEP="[check_dependencies] checking if jq in PATH"
+    STEP="[check_for_dependencies] checking if jq in PATH"
     echo '{}' | jq '[]' > /dev/null
     RC=$?; error_check
 
-    STEP="[check_dependencies] checking if git in PATH"
+    STEP="[check_for_dependencies] checking if git in PATH"
     git --help > /dev/null
     RC=$?; error_check
 
-    STEP="[check_dependencies] checking if curl in PATH"
+    STEP="[check_for_dependencies] checking if curl in PATH"
     curl --help > /dev/null
     RC=$?; error_check
 
-    STEP="[check_dependencies] checking if terraform in PATH"
+    STEP="[check_for_dependencies] checking if terraform in PATH"
     TERRAFORM_VERSION=$(terraform version | grep -o 'Terraform v[0-9]*\.[0-9]*\.[0-9]*')
     RC=$?; error_check
 
-    STEP="[check_dependencies] checking terraform if version matches ${EXPECTED_TERRAFORM_VERSION}"
+    STEP="[check_for_dependencies] checking terraform if version matches ${EXPECTED_TERRAFORM_VERSION}"
     test $EXPECTED_TERRAFORM_VERSION -eq $TERRAFORM_VERSION
     RC=$?; error_check
 
-    STEP="[check_dependencies] checking if packer in PATH"
+    STEP="[check_for_dependencies] checking if packer in PATH"
     PACKER_VERSION=$(packer version | grep -o 'Packer v[0-9]*\.[0-9]*\.[0-9]*')
     RC=$?; error_check
 
-    STEP="[check_dependencies] checking packer if version matches ${EXPECTED_PACKER_VERSION}"
+    STEP="[check_for_dependencies] checking packer if version matches ${EXPECTED_PACKER_VERSION}"
     test $EXPECTED_PACKER_VERSION -eq $PACKER_VERSION
     RC=$?; error_check
 
-    STEP="[check_dependencies] checking if python in PATH"
+    STEP="[check_for_dependencies] checking if python in PATH"
     PYTHON_VERSION=$(python --version)
     RC=$?; error_check
 
-    STEP="[check_dependencies] checking python if version matches ${EXPECTED_PYTHON_VERSION}"
+    STEP="[check_for_dependencies] checking python if version matches ${EXPECTED_PYTHON_VERSION}"
     test $EXPECTED_PYTHON_VERSION -eq $PYTHON_VERSION
     RC=$?; error_check
 }
@@ -481,6 +481,8 @@ function query_end_scale() {
 }
 
 ### Script execution
+check_for_dependencies
+
 # print socorro-infra latest commit info
 get_stage_git_info
 
