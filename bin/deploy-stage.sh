@@ -2,7 +2,7 @@
 
 ### this executes socorro stage build and can run without arguments
 ### by default builds most recent commit to master
-### optional argument $1: socorro SHA corresponding to previously created AMI
+### optional argument $1: socorro SHA to deploy
 ### optional argument $2: "rebuild" to force a rebuild of the SHA (rpm + ami)
 
 ### adapted from deploy-socorro
