@@ -55,6 +55,10 @@ ENDRC=0
 
 readonly DATA_DIRECTORY="/data"
 
+readonly EXPECTED_TERRAFORM_VERSION="Terraform v0.7.13"
+readonly EXPECTED_PACKER_VERSION="Packer v0.7.5"
+readonly EXPECTED_PYTHON_VERSION="Python 2.7.11"
+
 STARTLOG=$(mktemp)
 ENDLOG=$(mktemp)
 
@@ -70,6 +74,52 @@ INITIAL_INSTANCES=
 # for postgres and python
 PATH="${PATH}:/usr/pgsql-9.3/bin:/usr/local/bin/"
 echo "PATH: ${PATH}"
+
+check_dependencies() {
+    STEP="[check_dependencies] checking if aws in PATH"
+    aws help > /dev/null
+    RC=$?; error_check
+
+    STEP="[check_dependencies] checking if figlet in PATH"
+    figlet test > /dev/null
+    RC=$?; error_check
+
+    STEP="[check_dependencies] checking if jq in PATH"
+    echo '{}' | jq '[]' > /dev/null
+    RC=$?; error_check
+
+    STEP="[check_dependencies] checking if git in PATH"
+    git --help > /dev/null
+    RC=$?; error_check
+
+    STEP="[check_dependencies] checking if curl in PATH"
+    curl --help > /dev/null
+    RC=$?; error_check
+
+    STEP="[check_dependencies] checking if terraform in PATH"
+    TERRAFORM_VERSION=$(terraform version | grep -o 'Terraform v[0-9]*\.[0-9]*\.[0-9]*')
+    RC=$?; error_check
+
+    STEP="[check_dependencies] checking terraform if version matches ${EXPECTED_TERRAFORM_VERSION}"
+    test $EXPECTED_TERRAFORM_VERSION -eq $TERRAFORM_VERSION
+    RC=$?; error_check
+
+    STEP="[check_dependencies] checking if packer in PATH"
+    PACKER_VERSION=$(packer version | grep -o 'Packer v[0-9]*\.[0-9]*\.[0-9]*')
+    RC=$?; error_check
+
+    STEP="[check_dependencies] checking packer if version matches ${EXPECTED_PACKER_VERSION}"
+    test $EXPECTED_PACKER_VERSION -eq $PACKER_VERSION
+    RC=$?; error_check
+
+    STEP="[check_dependencies] checking if python in PATH"
+    PYTHON_VERSION=$(python --version)
+    RC=$?; error_check
+
+    STEP="[check_dependencies] checking python if version matches ${EXPECTED_PYTHON_VERSION}"
+    test $EXPECTED_PYTHON_VERSION -eq $PYTHON_VERSION
+    RC=$?; error_check
+}
 
 get_stage_git_info() {
     echo "git info for $(basename "$(git remote show -n origin | grep Fetch | cut -d: -f2-)")"
@@ -134,17 +184,21 @@ create_rpm() {
     # Find the RPM
     RPM=$(ls "$DATA_DIRECTORY"/socorro/socorro*.rpm)
 
+    STEP="[create_rpm] Refreshing RPM repo from S3"; format_logs
+    /home/centos/manage_repo.sh refresh
+    RC=$?; error_check
+
     # Sign the rpm file
     STEP="[create_rpm] Signing RPM"; format_logs
-    echo "Refreshing RPM repo from S3"
-    /home/centos/manage_repo.sh refresh
     rpm --addsign "${RPM}" < /home/centos/.rpmsign
-    echo "Signed socorro package, now copying into local repo"
+    RC=$?; error_check
+
+    STEP="[create_rpm] Copying RPM into local repo"; format_logs
     # Copy to the local repo
     cp "${RPM}" ~/org.mozilla.crash-stats.packages-public/x86_64
+    RC=$?; error_check
 
     STEP="[create_rpm] Syncing local packages repo to S3"; format_logs
-    echo "Uploading RPM package to S3"
     /home/centos/manage_repo.sh update
     RC=$?; error_check
 }
@@ -160,7 +214,7 @@ function create_ami() {
 
     STEP="[create_ami] Executing packer build"; format_logs
     # Build the image using packer.
-    /usr/bin/packer build -color=false "$SOCORRO_INFRA_PATH"/packer/socorro_base.json | tee "${TMP_PACKER_LOG}"
+    packer build -color=false "$SOCORRO_INFRA_PATH"/packer/socorro_base.json | tee "${TMP_PACKER_LOG}"
     RC=${PIPESTATUS[0]}; error_check
     # Assign the sparkly new AMI id to a variable
     AMI_ID=$(grep 'us-west-2: ami-.*' "${TMP_PACKER_LOG}" | cut -f 2 -d ' ')
@@ -378,6 +432,7 @@ function apply_ami() {
 
             echo "$(date) -- Attempting to terraform plan and apply ${AUTOSCALENAME}"
             STEP="[apply_ami] Terraform plan for ${ROLEENVNAME}"; format_logs
+            # note: wrapper.sh will add /home/centos/terraform to PATH if terraform is not in PATH
             ${SOCORRO_INFRA_PATH}/terraform/wrapper.sh "plan -var base_ami={us-west-2=\"${AMI_ID}\"} -var ${SCALEVARIABLE}=${ASG_CAPACITY}" "${ENVIRONMENT}" "${TERRAFORMNAME}"
             RC=$?; error_check
 
