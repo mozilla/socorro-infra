@@ -24,15 +24,26 @@ error_check() {
     fi
 }
 
+LIVE_STAGE_URL="https://crash-stats.allizom.org/status/revision/"
+
+SHOULD_DEPLOY="true"
 SKIP_TO_DEPLOYMENT="false"
 # provide an existing AMI SHA and we will skip most of this!
-if [[ -n $1 ]]; then
+if [[ -n $1 ]] && [[ $1 =~ [0-9a-f]{40} ]]; then
+    # valid SHA
     SPECIFIED_HASH=$1
     SKIP_TO_DEPLOYMENT="true"
+elif [[ -n $1 ]] && [[ $1 == "rebuild" ]]; then
+    # rebuild
+    set -- "" "rebuild"
+elif [[ -n $1 ]]; then
+    # invalid SHA, rebuild not specified
+    STEP="[skip_to_deployment] $1 is not a valid commit SHA"; format_logs
+    RC=1; error_check
 fi
 
 FORCE_REBUILD="false"
-if [[ "$2" == "rebuild" ]]; then
+if [[ -n $2 ]] && [[ "$2" == "rebuild" ]]; then
     STEP="[rebuild] Rebuilding RPM/AMI enabled for this build."; format_logs
     FORCE_REBUILD="rebuild"
 fi
@@ -41,6 +52,8 @@ SCRIPT_PATH=$(dirname "$(realpath "$0")")
 SOCORRO_INFRA_PATH="/home/centos/socorro-infra"
 ENVIRONMENT="stage"
 ENDRC=0
+
+readonly DATA_DIRECTORY="/data"
 
 STARTLOG=$(mktemp)
 ENDLOG=$(mktemp)
@@ -67,30 +80,51 @@ get_stage_git_info() {
 }
 
 clone_repo() {
-    STEP="[clone_repo] Creating TMP_DIR"; format_logs
-    readonly TMP_DIR=$(mktemp -d) && cd "$TMP_DIR"
+    STEP="[clone_repo] Moving to ${DATA_DIRECTORY}"; format_logs
+    cd "$DATA_DIRECTORY"
+    RC=$?; error_check
+
+    STEP="[clone_repo] Removing old repo"; format_logs
+    rm --preserve-root -rf "${DATA_DIRECTORY}/socorro"
     RC=$?; error_check
 
     STEP="[clone_repo] Cloning repo"; format_logs
-    echo "Cloning the socorro repo into ${TMP_DIR}/socorro"
+    echo "Cloning the socorro repo into ${DATA_DIRECTORY}/socorro"
     git clone https://github.com/mozilla/socorro.git
     RC=$?; error_check
 
-    cd "$TMP_DIR/socorro"
+    cd "$DATA_DIRECTORY/socorro"
     RC=$?; error_check
 
     # reset to the specified commit
     # defaults to master
+    if [[ -z "$SPECIFIED_HASH" ]]; then
+        SPECIFIED_HASH=$(git rev-parse master)
+    fi
+
+    STEP="[clone_repo] Checking out ${SPECIFIED_HASH}"; format_logs
     git reset --hard "${SPECIFIED_HASH}"
+    RC=$?; error_check
 
     STEP="[clone_repo] Acquiring git metadata"; format_logs
     # print socorro commit info
     get_stage_git_info
 }
 
+check_if_should_deploy() {
+    STEP="[check_if_should_deploy] curl ${LIVE_STAGE_URL}"
+    LIVE_GIT_COMMIT_HASH=$(curl ${LIVE_STAGE_URL})
+    RC=$?; error_check
+
+    if [[ "$GIT_COMMIT_HASH" == "$LIVE_GIT_COMMIT_HASH" ]]; then
+        # up to date
+        SHOULD_DEPLOY="false"
+    fi
+}
+
 create_rpm() {
     # repeated so this code is a _little_ less stateful
-    cd "$TMP_DIR/socorro"
+    cd "$DATA_DIRECTORY/socorro"
     RC=$?; error_check
 
     STEP="[create_rpm] Creating RPM"; format_logs
@@ -98,7 +132,7 @@ create_rpm() {
     RC=$?; error_check
 
     # Find the RPM
-    RPM=$(ls "$TMP_DIR"/socorro/socorro*.rpm)
+    RPM=$(ls "$DATA_DIRECTORY"/socorro/socorro*.rpm)
 
     # Sign the rpm file
     STEP="[create_rpm] Signing RPM"; format_logs
@@ -145,11 +179,6 @@ function create_ami() {
 }
 
 function find_ami() {
-    # find_ami based on latest commit
-    if [[ -z "$SPECIFIED_HASH" ]]; then
-        SPECIFIED_HASH="$GIT_COMMIT_HASH"
-    fi
-
     STEP="[find_ami] Finding AMI by apphash ${SPECIFIED_HASH}"; format_logs
     AMI_ID=$(aws ec2 describe-images \
              --filters Name=tag:apphash,Values="${SPECIFIED_HASH}" \
@@ -159,7 +188,9 @@ function find_ami() {
     # None is returned if no AMI is found
     # this is a problem if we want to SKIP_TO_DEPLOYMENT
     # otherwise, we can short circuit having to recreate AMIs in case of rollback
-    if [[ "$AMI_ID" == "None" ]] && [[ "$SKIP_TO_DEPLOYMENT" == "true" ]]; then
+    if [[ "$AMI_ID" == "None" ]]; then
+        STEP="[find_ami] Could not find AMI for ${GIT_COMMIT_HASH}."; format_logs
+    elif [[ "$AMI_ID" == "None" ]] && [[ "$SKIP_TO_DEPLOYMENT" == "true" ]]; then
         RC=1; error_check
     fi
 }
@@ -397,6 +428,15 @@ get_stage_git_info
 
 # clone_repo checks latest commit on master
 clone_repo
+check_if_should_deploy
+
+if [[ "$SHOULD_DEPLOY" == "false" ]] && [[ "$FORCE_REBUILD" != "rebuild" ]]; then
+    STEP="[main_script] SHOULD_DEPLOY => ${SHOULD_DEPLOY}"
+    echo "Live revision at ${LIVE_STAGE_URL} is same as latest master."
+    echo "Live: ${LIVE_GIT_COMMIT_HASH} == ${GIT_COMMIT_HASH}"
+    exit 0
+fi
+
 
 # find_ami checks whether an AMI for that
 # commit already exists
@@ -432,7 +472,7 @@ else
 fi
 
 # All done, get our report.
-STEP="[main script] post-deploy check-in"
+STEP="[main script] post-deploy check-in"; format_logs
 echo "$(date) -- Deployment complete"
 echo "Nodes we think should have been killed:"
 echo "${INITIAL_INSTANCES}"
@@ -457,7 +497,5 @@ cat "${ENDLOG}"
 
 rm "${STARTLOG}"
 rm "${ENDLOG}"
-if [[ "$TMP_DIR" =~ ^/tmp/.*$ ]]; then
-    rm --preserve-root -rf "${TMP_DIR}"
-fi
+
 exit ${ENDRC}
