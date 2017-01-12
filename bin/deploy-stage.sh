@@ -238,10 +238,8 @@ function find_ami() {
     # we sort by date and choose the most recent AMI using sort | tail | awk
     AMI_ID=$(aws ec2 describe-images \
              --filters Name=tag:apphash,Values="${SPECIFIED_HASH}" \
-             --output text --query 'Images[0].[CreationDate, ImageId]' \
+             --output text --query 'Images[].[CreationDate, ImageId]' \
              | sort -k1 | tail -n1 | awk '{print $2}')
-    AMI_NAME=$(aws ec2 describe-images --image-ids "${AMI_ID}" \
-             --output text --query 'Images[0].Tags[?Key==`Name`].Value')
     # None is returned if no AMI is found
     # this is a problem if we want to SKIP_TO_DEPLOYMENT
     # otherwise, we can short circuit having to recreate AMIs in case of rollback
@@ -249,6 +247,10 @@ function find_ami() {
         STEP="[find_ami] Could not find AMI for ${GIT_COMMIT_HASH}."; format_logs
     elif [[ "$AMI_ID" == "None" ]] && [[ "$SKIP_TO_DEPLOYMENT" == "true" ]]; then
         RC=1; error_check
+    else
+        # if we have found the AMI
+        AMI_NAME=$(aws ec2 describe-images --image-ids "${AMI_ID}" \
+                 --output text --query 'Images[0].Tags[?Key==`Name`].Value')
     fi
 }
 
