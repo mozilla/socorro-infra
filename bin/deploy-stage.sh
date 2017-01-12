@@ -180,9 +180,12 @@ function create_ami() {
 
 function find_ami() {
     STEP="[find_ami] Finding AMI by apphash ${SPECIFIED_HASH}"; format_logs
+    # the aws command outputs CreationDate and ImageId
+    # we sort by date and choose the most recent AMI using sort | tail | awk
     AMI_ID=$(aws ec2 describe-images \
              --filters Name=tag:apphash,Values="${SPECIFIED_HASH}" \
-             --output text --query 'Images[0].ImageId')
+             --output text --query 'Images[0].[CreationDate, ImageId]' \
+             | sort -k1 | tail -n1 | awk '{print $2}')
     AMI_NAME=$(aws ec2 describe-images --image-ids "${AMI_ID}" \
              --output text --query 'Images[0].Tags[?Key==`Name`].Value')
     # None is returned if no AMI is found

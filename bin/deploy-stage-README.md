@@ -2,6 +2,12 @@
 
 deploy-stage.sh is adapted from deploy-socorro.sh.
 
+deploy-stage.sh can be called without arguments, so that it can be run on a schedule in CI/CD. When run, deploy-stage.sh can look at the current Socorro stage deployment, and based on the reported revision decide not to continue (live version == tip of master branch).
+
+In the case of a manual rollback, provide the commit SHA to rollback to as $1 and deploy-stage.sh will search for AMIs available (by tag appsha == $1) to find the correct AMI to rollback to. This prevents the need for a total rebuild in the case of a rollback. The most recent AMI is always chosen.
+
+If a rebuild is desired, simply specify "rebuild" as a positional argument (if specified along with a SHA, $2). This will force a rebuild of the RPM and AMI, and then deploy from there.
+
 At present, deploy-stage.sh works as follows:
   - takes two completely optional positional arguments
     - optional argument $1: socorro commit SHA
