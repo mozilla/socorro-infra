@@ -25,24 +25,24 @@ check_for_dependencies() {
     TERRAFORM_VERSION=$(terraform version | grep -o 'Terraform v[0-9]*\.[0-9]*\.[0-9]*')
     RC=$?; error_check
 
-    STEP="[check_for_dependencies] checking terraform if version matches ${EXPECTED_TERRAFORM_VERSION}"
-    test $EXPECTED_TERRAFORM_VERSION -eq $TERRAFORM_VERSION
+    STEP="[check_for_dependencies] checking if $TERRAFORM_VERSION matches ${EXPECTED_TERRAFORM_VERSION}"
+    [ "$EXPECTED_TERRAFORM_VERSION" == "$TERRAFORM_VERSION" ]
     RC=$?; error_check
 
     STEP="[check_for_dependencies] checking if packer in PATH"
     PACKER_VERSION=$(packer version | grep -o 'Packer v[0-9]*\.[0-9]*\.[0-9]*')
     RC=$?; error_check
 
-    STEP="[check_for_dependencies] checking packer if version matches ${EXPECTED_PACKER_VERSION}"
-    test $EXPECTED_PACKER_VERSION -eq $PACKER_VERSION
+    STEP="[check_for_dependencies] checking if $PACKER_VERSION matches ${EXPECTED_PACKER_VERSION}"
+    [ "$EXPECTED_PACKER_VERSION" == "$PACKER_VERSION" ]
     RC=$?; error_check
 
     STEP="[check_for_dependencies] checking if python in PATH"
     PYTHON_VERSION=$(python --version)
     RC=$?; error_check
 
-    STEP="[check_for_dependencies] checking python if version matches ${EXPECTED_PYTHON_VERSION}"
-    test $EXPECTED_PYTHON_VERSION -eq $PYTHON_VERSION
+    STEP="[check_for_dependencies] checking if $PYTHON_VERSION matches ${EXPECTED_PYTHON_VERSION}"
+    [ "$EXPECTED_PYTHON_VERSION" == "$PYTHON_VERSION" ]
     RC=$?; error_check
 }
 
@@ -64,21 +64,21 @@ function find_ami() {
     AMI_ID=$(aws ec2 describe-images \
              --filters Name=tag:apphash,Values="${SPECIFIED_HASH}" \
              --output text --query 'Images[].[CreationDate, ImageId]' \
-             | sort -k1 | tail -n1 | awk '{print $2}')
-    # None is returned if no AMI is found
+             | sort -k1 | tail -n1 | awk '{print $2; exit ($2 == "" ? 1: 0)}')
+    # awk exits 1 if no ami found
+    RC=$?; error_check
     # this is a problem if we want to SKIP_TO_DEPLOYMENT
     # otherwise, we can short circuit having to recreate AMIs in case of rollback
-    if [[ "$AMI_ID" == "None" ]]; then
+    if [[ -z "$AMI_ID" ]] && [[ "$SKIP_TO_DEPLOYMENT" == "true" ]]; then
+        RC=1; error_check
+    elif [[ -z "$AMI_ID" ]]; then
         STEP="[find_ami] Could not find AMI for ${GIT_COMMIT_HASH}."; format_logs
-        # intending to skip building RPM / AMI, cannot find AMI
-        # this is a problem!
-        if [[ "$SKIP_TO_DEPLOYMENT" == "true" ]]; then
-            RC=1; error_check
-        fi
     else
         # if we have found the AMI
-        AMI_NAME=$(aws ec2 describe-images --image-ids "${AMI_ID}" \
-                 --output text --query 'Images[0].Tags[?Key==`Name`].Value')
+        STEP="[find_ami] Found AMI $AMI_ID, getting AMI_NAME"; format_logs
+        AMI_NAME=$(aws ec2 describe-images --image-id "${AMI_ID}" \
+            --output text --query 'Images[0].Tags[?Key==`Name`].Value')
+        RC=$?; error_check
     fi
 }
 
