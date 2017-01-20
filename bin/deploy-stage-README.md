@@ -8,10 +8,14 @@ In the case of a manual rollback, provide the commit SHA to rollback to as $1 an
 
 If a rebuild is desired, simply specify "rebuild" as a positional argument (if specified along with a SHA, $2). This will force a rebuild of the RPM and AMI, and then deploy from there.
 
+If a redeploy without a rebuild is desired, simply specify "redeploy" as a positional argument (if specified along with a SHA, $2).
+
 At present, deploy-stage.sh works as follows:
   - takes two completely optional positional arguments
     - optional argument $1: socorro commit SHA
-    - optional argument $2: set to "rebuild" to force the script to recreate the RPM and AMI for a given commit
+    - optional argument $2:
+      - set to "rebuild" to force the script to recreate the RPM and AMI for a given commit
+      - set to "redeploy" to force a redeploy
   - the two positional arguments can be used separately or in conjunction
     - so if you want to rebuild and not specify a SHA, you can - this will rebuild the current tip of the master branch
 
@@ -21,7 +25,7 @@ At present, deploy-stage.sh works as follows:
   - prints info about the freshly checked out mozilla/socorro repo
 
   - compares the live SHA at https://crash-stats.allizom.org/status/revision/ to the freshly checked out SHA
-    - if they are the same and rebuild is not enabled, exits cleanly
+    - if they are the same and rebuild or redeploy are not enabled, exits cleanly
 
   - checks to see if there is already an AMI for the checked out SHA
     - if so, and rebuild is not enabled, skips to deployment using that AMI
