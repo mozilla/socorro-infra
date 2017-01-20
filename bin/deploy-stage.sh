@@ -8,7 +8,7 @@
 
 ### adapted from deploy-socorro
 
-set -u
+set +u
 set +x
 
 format_logs() {
