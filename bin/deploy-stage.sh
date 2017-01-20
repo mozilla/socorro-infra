@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ### this executes socorro stage build and can run without arguments
 ### by default builds most recent commit to master
@@ -79,10 +79,12 @@ INITIAL_INSTANCES=
 # imports
 . "${SCRIPT_PATH}/lib/identify_role.sh"
 . "${SCRIPT_PATH}/lib/infra_status.sh"
-. "${SCRIPT_PATH}/deploy-functions.sh"
+. "${SCRIPT_PATH}/deploy_functions.sh"
 
-# for postgres and python
-PATH="${PATH}:/usr/pgsql-9.3/bin:/usr/local/bin/"
+# for postgres and python and packer
+# note: /usr/local/bin first for python
+# /usr/sbin/ for packer
+PATH="/usr/local/bin/:/usr/bin/:${PATH}:/usr/pgsql-9.3/bin"
 echo "PATH: ${PATH}"
 
 get_stage_git_info() {
@@ -213,7 +215,7 @@ find_ami
 
 # create_rpm and create_ami are time intensive
 # so they are skipped in favor of existing AMI
-if [[ "$AMI_ID" == "None" ]] || [[ "$FORCE_REBUILD" == "rebuild" ]]; then
+if [[ -z "$AMI_ID" ]] || [[ "$FORCE_REBUILD" == "rebuild" ]]; then
     create_rpm
     create_ami
 fi

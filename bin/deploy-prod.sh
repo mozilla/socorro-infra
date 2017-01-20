@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ### this executes socorro prod build and can run without arguments
 ### by default builds most recent commit to master
@@ -75,10 +75,12 @@ INITIAL_INSTANCES=
 # imports
 . "${SCRIPT_PATH}/lib/identify_role.sh"
 . "${SCRIPT_PATH}/lib/infra_status.sh"
-. "${SCRIPT_PATH}/deploy-functions.sh"
+. "${SCRIPT_PATH}/deploy_functions.sh"
 
-# for postgres and python
-PATH="${PATH}:/usr/pgsql-9.3/bin:/usr/local/bin/"
+# for postgres and python and packer
+# note: /usr/local/bin first for python
+# /usr/sbin/ for packer
+PATH="/usr/local/bin/:/usr/bin/:${PATH}:/usr/pgsql-9.3/bin"
 echo "PATH: ${PATH}"
 
 function get_prod_git_info() {
