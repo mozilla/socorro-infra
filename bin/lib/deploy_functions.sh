@@ -1,4 +1,18 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+format_logs() {
+    # requires figlet installed
+    echo -e "$(date)\n$(figlet -f stop "${ENVIRONMENT}")\n\"${STEP}\"\n\n"
+}
+
+error_check() {
+    if [ "${RC}" -ne 0 ]; then
+        echo "$(date) -- Error encountered during ${STEP}"
+        echo "Fatal, exiting"
+        echo "Instances which may need to be terminated manually: ${INITIAL_INSTANCES}"
+        exit 1
+    fi
+}
 
 check_for_dependencies() {
     STEP="[check_for_dependencies] checking if aws in PATH"
@@ -46,18 +60,21 @@ check_for_dependencies() {
     RC=$?; error_check
 }
 
-check_if_should_deploy() {
-    STEP="[check_if_should_deploy] curl ${LIVE_ENV_URL}"
+get_live_sha() {
+    STEP="[get_live_sha] curl ${LIVE_ENV_URL}"
     LIVE_GIT_COMMIT_HASH=$(curl ${LIVE_ENV_URL})
     RC=$?; error_check
+}
 
+compare_live_to_deploy_sha() {
+    get_live_sha
     if [[ "$GIT_COMMIT_HASH" == "$LIVE_GIT_COMMIT_HASH" ]]; then
         # up to date
-        SHOULD_DEPLOY="false"
+        UP_TO_DATE="true"
     fi
 }
 
-function find_ami() {
+find_ami() {
     STEP="[find_ami] Finding AMI by apphash ${SPECIFIED_HASH}"; format_logs
     # the aws command outputs CreationDate and ImageId
     # we sort by date and choose the most recent AMI using sort | tail | awk
@@ -82,7 +99,7 @@ function find_ami() {
     fi
 }
 
-function get_initial_instances() {
+get_initial_instances() {
     # Get a list of existing instance ids to terminate later
     for ROLEENVNAME in $ROLES; do
         identify_role "$ROLEENVNAME"
@@ -96,7 +113,7 @@ function get_initial_instances() {
     done
 }
 
-function scale_in_per_elb() {
+scale_in_per_elb() {
     STEP="[scale_in_per_elb] Checking desired capacity for ${AUTOSCALENAME}"; format_logs
     # We'll set the initial capacity and go back to that at the end
     INITIAL_CAPACITY=$(aws autoscaling describe-auto-scaling-groups \
@@ -117,7 +134,7 @@ function scale_in_per_elb() {
     RC=$?; error_check
 }
 
-function check_health_per_elb() {
+check_health_per_elb() {
     STEP="[check_health_per_elb] Checking desired capacity for ASG ${AUTOSCALENAME}"; format_logs
     # We'll want to ensure the number of healthy hosts is equal to total number of hosts
     ASG_CAPACITY=$(aws autoscaling describe-auto-scaling-groups \
@@ -143,7 +160,7 @@ function check_health_per_elb() {
     echo "$(date) -- ${AUTOSCALENAME} nodes healthy in ELB: ${HEALTHY_HOST_COUNT} / ${ASG_CAPACITY}"
 }
 
-function scale_in_all() {
+scale_in_all() {
     STEP="[scale_in_all] Scaling in per role"; format_logs
     # Each socorro env has its own master list in ./lib.
     # We iterate over that list to scale up and identify nodes to kill later
@@ -153,7 +170,7 @@ function scale_in_all() {
     done
 }
 
-function monitor_overall_health() {
+monitor_overall_health() {
     STEP="[monitor_overall_health] Waiting for all ELBs to report healthy and full"; format_logs
     # If any elb is still unhealthy, we don't want to kill nodes
     ATTEMPT_COUNT=0;
@@ -191,7 +208,7 @@ function monitor_overall_health() {
     fi
 }
 
-function instance_deregister() {
+instance_deregister() {
     # We check to see if each instance in a given ELB is one of the doomed nodes
     if echo "${INITIAL_INSTANCES}" | grep "$1" > /dev/null;then
         # doing this for consistency even though we don't error_check
@@ -207,7 +224,7 @@ function instance_deregister() {
     fi
 }
 
-function deregister_elb_nodes() {
+deregister_elb_nodes() {
     # We'll list every ELB involved, and for each, list every instance.    Then, for each instance
     # we check if it is on the doomed list.    If so, we deregister it to allow a 30s drain
     for ROLEENVNAME in $ROLES; do
@@ -231,7 +248,7 @@ function deregister_elb_nodes() {
     echo "$(date) -- All instances in ELBs deregistered, waiting for the 30 second drain period"
 }
 
-function terminate_instances() {
+terminate_instances() {
     # We iterate over the list of instances to terminate (${INITIAL_INSTANCES}) and send each one here to
     # be terminated and simultaneously drop the desired-capacity down by 1.
     STEP="[terminate_instances] Terminating ${1}"; format_logs
@@ -243,7 +260,7 @@ function terminate_instances() {
     fi
 }
 
-function apply_ami() {
+apply_ami() {
     # For each of our apps, we want to use terraform to apply the new base AMI we've just created
     for ROLEENVNAME in $ROLES; do
             # Get AS group name for each ROLE
@@ -274,7 +291,7 @@ function apply_ami() {
     echo "$(date) -- All roles updated"
 }
 
-function terminate_instances_all() {
+terminate_instances_all() {
     for ROLEENVNAME in $ROLES; do
         # First, we halve the number of minimum size for each group
         echo "$(date) -- Setting min size for ${ROLEENVNAME}"
@@ -302,7 +319,7 @@ function terminate_instances_all() {
     done
 }
 
-function query_end_scale() {
+query_end_scale() {
     echo "END STATE FOR AUTO SCALING GROUPS"
     for ROLEENVNAME in $ROLES; do
         identify_role "${ROLEENVNAME}"
