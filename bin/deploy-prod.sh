@@ -11,8 +11,31 @@
 set +u
 set +x
 
-LIVE_ENV_URL="https://crash-stats.mozilla.org/status/revision/"
+SCRIPT_PATH=$(dirname "$(realpath "$0")")
+ENVIRONMENT="prod"
+ENDRC=0
 
+STARTLOG=$(mktemp)
+ENDLOG=$(mktemp)
+
+# Roles / instance types to deploy for prod
+ROLES=$(cat "${SCRIPT_PATH}/lib/${ENVIRONMENT}_socorro_master.list")
+
+INITIAL_INSTANCES=
+
+# imports
+. "${SCRIPT_PATH}/lib/common_vars.sh"
+. "${SCRIPT_PATH}/lib/identify_role.sh"
+. "${SCRIPT_PATH}/lib/infra_status.sh"
+. "${SCRIPT_PATH}/lib/deploy_functions.sh"
+
+# for postgres and python and packer
+# note: /usr/local/bin first for python
+# /usr/sbin/ for packer
+PATH="/usr/local/bin/:/usr/bin/:${PATH}:/usr/pgsql-9.3/bin"
+echo "PATH: ${PATH}"
+
+LIVE_ENV_URL="https://crash-stats.mozilla.org/status/revision/"
 SHOULD_DEPLOY="true"
 
 # checked in find_ami
@@ -40,30 +63,6 @@ if [[ -n $2 ]] && [[ "$2" == "redeploy" ]]; then
     STEP="[redeploy] Redeploy enabled for this build."; format_logs
     FORCE_REDEPLOY="redeploy"
 fi
-
-SCRIPT_PATH=$(dirname "$(realpath "$0")")
-ENVIRONMENT="prod"
-ENDRC=0
-
-STARTLOG=$(mktemp)
-ENDLOG=$(mktemp)
-
-# Roles / instance types to deploy for prod
-ROLES=$(cat "${SCRIPT_PATH}/lib/${ENVIRONMENT}_socorro_master.list")
-
-INITIAL_INSTANCES=
-
-# imports
-. "${SCRIPT_PATH}/common_vars.sh"
-. "${SCRIPT_PATH}/lib/identify_role.sh"
-. "${SCRIPT_PATH}/lib/infra_status.sh"
-. "${SCRIPT_PATH}/deploy_functions.sh"
-
-# for postgres and python and packer
-# note: /usr/local/bin first for python
-# /usr/sbin/ for packer
-PATH="/usr/local/bin/:/usr/bin/:${PATH}:/usr/pgsql-9.3/bin"
-echo "PATH: ${PATH}"
 
 function get_prod_git_info() {
     # most recent tag on master
