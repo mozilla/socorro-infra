@@ -52,7 +52,7 @@ check_for_dependencies() {
     RC=$?; error_check
 
     STEP="[check_for_dependencies] checking if python in PATH"
-    PYTHON_VERSION=$(python --version)
+    PYTHON_VERSION=$(python --version 2>&1)
     RC=$?; error_check
 
     STEP="[check_for_dependencies] checking if $PYTHON_VERSION matches ${EXPECTED_PYTHON_VERSION}"
