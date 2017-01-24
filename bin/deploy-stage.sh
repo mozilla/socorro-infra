@@ -11,20 +11,6 @@
 set +u
 set +x
 
-format_logs() {
-    # requires figlet installed
-    echo -e "$(date)\n$(figlet -f stop "${ENVIRONMENT}")\n\"${STEP}\"\n\n"
-}
-
-error_check() {
-    if [ "${RC}" -ne 0 ]; then
-        echo "$(date) -- Error encountered during ${STEP}"
-        echo "Fatal, exiting"
-        echo "Instances which may need to be terminated manually: ${INITIAL_INSTANCES}"
-        exit 1
-    fi
-}
-
 LIVE_ENV_URL="https://crash-stats.allizom.org/status/revision/"
 
 SHOULD_DEPLOY="true"
@@ -53,20 +39,13 @@ if [[ -n $2 ]] && [[ "$2" == "rebuild" ]]; then
     STEP="[rebuild] Rebuilding RPM/AMI enabled for this build."; format_logs
     FORCE_REBUILD="rebuild"
 elif [[ -n $2 ]] && [[ "$2" == "rebuild" ]]; then
-    STEP="[redeploy] Rebuilding RPM/AMI enabled for this build."; format_logs
+    STEP="[redeploy] Redeploy enabled for this build."; format_logs
     FORCE_REDEPLOY="redeploy"
 fi
 
 SCRIPT_PATH=$(dirname "$(realpath "$0")")
-SOCORRO_INFRA_PATH="/home/centos/socorro-infra"
 ENVIRONMENT="stage"
 ENDRC=0
-
-readonly DATA_DIRECTORY="/data"
-
-readonly EXPECTED_TERRAFORM_VERSION="Terraform v0.7.13"
-readonly EXPECTED_PACKER_VERSION="Packer v0.7.5"
-readonly EXPECTED_PYTHON_VERSION="Python 2.7.11"
 
 STARTLOG=$(mktemp)
 ENDLOG=$(mktemp)
@@ -77,6 +56,7 @@ ROLES=$(cat "${SCRIPT_PATH}/lib/${ENVIRONMENT}_socorro_master.list")
 INITIAL_INSTANCES=
 
 # imports
+. "${SCRIPT_PATH}/common_vars.sh"
 . "${SCRIPT_PATH}/lib/identify_role.sh"
 . "${SCRIPT_PATH}/lib/infra_status.sh"
 . "${SCRIPT_PATH}/deploy_functions.sh"
@@ -195,14 +175,19 @@ get_stage_git_info
 
 # clone_repo_stage checks latest commit on master
 clone_repo_stage
-check_if_should_deploy
 
-if [[ "$FORCE_REDEPLOY" == "true" ]]; then
+compare_live_to_deploy_sha
+if [[ "$UP_TO_DATE" == "true" ]]; then
+    SHOULD_DEPLOY="false"
+fi
+
+if [[ "$FORCE_REDEPLOY" == "redeploy" ]] || \
+   [[ "$FORCE_REBUILD" == "rebuild" ]]; then
     SHOULD_DEPLOY="true"
 fi
 
-if [[ "$SHOULD_DEPLOY" == "false" ]] && [[ "$FORCE_REBUILD" != "rebuild" ]]; then
-    STEP="[main_script] SHOULD_DEPLOY => ${SHOULD_DEPLOY}"
+if [[ "$SHOULD_DEPLOY" == "false" ]]; then
+    STEP="[main_script] SHOULD_DEPLOY => ${SHOULD_DEPLOY}"; format_logs
     echo "Live revision at ${LIVE_ENV_URL} is same as latest master."
     echo "Live: ${LIVE_GIT_COMMIT_HASH} == ${GIT_COMMIT_HASH}"
     exit 0

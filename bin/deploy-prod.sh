@@ -2,7 +2,7 @@
 
 ### this executes socorro prod build and can run without arguments
 ### by default builds most recent commit to master
-### optional argument $1: socorro tag to deploy
+### optional argument $1: socorro tag or sha to deploy
 ### optional argument $2: "redeploy" to force a redeploy of the build for the current tag
 ### # note: does not rebuild RPM or AMI, use deploy-stage.sh for that
 
@@ -10,20 +10,6 @@
 
 set +u
 set +x
-
-format_logs() {
-    # requires figlet installed
-    echo -e "$(date)\n$(figlet -f stop "${ENVIRONMENT}")\n\"${STEP}\"\n\n"
-}
-
-error_check() {
-    if [ "${RC}" -ne 0 ]; then
-        echo "$(date) -- Error encountered during ${STEP}"
-        echo "Fatal, exiting"
-        echo "Instances which may need to be terminated manually: ${INITIAL_INSTANCES}"
-        exit 1
-    fi
-}
 
 LIVE_ENV_URL="https://crash-stats.mozilla.org/status/revision/"
 
@@ -56,13 +42,8 @@ if [[ -n $2 ]] && [[ "$2" == "redeploy" ]]; then
 fi
 
 SCRIPT_PATH=$(dirname "$(realpath "$0")")
-SOCORRO_INFRA_PATH="/home/centos/socorro-infra"
 ENVIRONMENT="prod"
 ENDRC=0
-
-readonly EXPECTED_TERRAFORM_VERSION="Terraform v0.7.13"
-readonly EXPECTED_PACKER_VERSION="Packer v0.7.5"
-readonly EXPECTED_PYTHON_VERSION="Python 2.7.11"
 
 STARTLOG=$(mktemp)
 ENDLOG=$(mktemp)
@@ -73,6 +54,7 @@ ROLES=$(cat "${SCRIPT_PATH}/lib/${ENVIRONMENT}_socorro_master.list")
 INITIAL_INSTANCES=
 
 # imports
+. "${SCRIPT_PATH}/common_vars.sh"
 . "${SCRIPT_PATH}/lib/identify_role.sh"
 . "${SCRIPT_PATH}/lib/infra_status.sh"
 . "${SCRIPT_PATH}/deploy_functions.sh"
@@ -152,9 +134,16 @@ get_infra_git_info
 # clone_repo_prod checks latest tag on master
 clone_repo_prod
 
-check_if_should_deploy
+compare_live_to_deploy_sha
+if [[ "$UP_TO_DATE" == "true" ]]; then
+    SHOULD_DEPLOY="false"
+fi
 
-if [[ "$SHOULD_DEPLOY" == "false" ]] && [[ "$FORCE_REDEPLOY" != "redeploy" ]]; then
+if [[ "$FORCE_REDEPLOY" == "redeploy" ]]; then
+    SHOULD_DEPLOY="true"
+fi
+
+if [[ "$SHOULD_DEPLOY" == "false" ]]; then
     STEP="[main_script] SHOULD_DEPLOY => ${SHOULD_DEPLOY}"
     echo "Live revision at ${LIVE_ENV_URL} is same as latest master."
     echo "Live: ${LIVE_GIT_COMMIT_HASH} == ${GIT_COMMIT_HASH}"
