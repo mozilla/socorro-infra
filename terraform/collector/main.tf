@@ -263,6 +263,9 @@ resource "aws_launch_configuration" "lc-collector" {
     security_groups = [
         "${aws_security_group.ec2-collector-sg.id}",
     ]
+    root_block_device {
+      volume_size = "24"
+    }
     lifecycle {
         create_before_destroy = true
     }
