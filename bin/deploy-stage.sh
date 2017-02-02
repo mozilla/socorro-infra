@@ -62,7 +62,7 @@ FORCE_REDEPLOY="false"
 if [[ -n $2 ]] && [[ "$2" == "rebuild" ]]; then
     STEP="[rebuild] Rebuilding RPM/AMI enabled for this build."; format_logs
     FORCE_REBUILD="rebuild"
-elif [[ -n $2 ]] && [[ "$2" == "rebuild" ]]; then
+elif [[ -n $2 ]] && [[ "$2" == "redeploy" ]]; then
     STEP="[redeploy] Redeploy enabled for this build."; format_logs
     FORCE_REDEPLOY="redeploy"
 fi
