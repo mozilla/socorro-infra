@@ -82,3 +82,14 @@ server {
     }
 
 }
+
+# for datadog monitoring
+server {
+    listen 127.0.0.1:81;
+    location /nginx_status {
+        stub_status on;
+        access_log off;
+        allow 127.0.0.1;
+        deny all;
+    }
+}
