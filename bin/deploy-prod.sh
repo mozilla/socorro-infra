@@ -43,7 +43,7 @@ SHOULD_DEPLOY="true"
 SKIP_TO_DEPLOYMENT="true"
 
 # provide an existing tag
-if [[ -n $1 ]] && [[ $1 =~ [0-9]{4} ]]; then
+if [[ -n $1 ]] && [[ $1 =~ [0-9]{3,4} ]]; then
     # properly formatted tag
     SPECIFIED_TAG=$1
 elif [[ -n $1 ]] &&  [[ $1 =~ [0-9a-f]{40} ]]; then
@@ -53,7 +53,7 @@ elif [[ -n $1 ]] && [[ $1 == "redeploy" ]]; then
     set -- "" "redeploy"
 elif [[ -n $1 ]]; then
     # invalid tag or SHA, redeploy not specified
-    # tags need to be [0-9]{4}, SHAs need to be [0-9a-f]{40}
+    # tags need to be [0-9]{3,4}, SHAs need to be [0-9a-f]{40}
     STEP="[skip_to_deployment] $1 is not a correctly formatted tag"; format_logs
     RC=1; error_check
 fi
