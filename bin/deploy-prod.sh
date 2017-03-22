@@ -66,7 +66,7 @@ fi
 
 function get_prod_git_info() {
     # most recent tag on master
-    MOST_RECENT_TAG=$(git describe --tags ${SPECIFIED_HASH})
+    MOST_RECENT_TAG=$(git describe --tags ${SPECIFIED_HASH} | cut -d '-' -f 1)
     # short sha of commit most recent tag points to
     # git's API is inconsistent.
     GIT_COMMIT_HASH=$(git rev-list -n 1 ${MOST_RECENT_TAG})
@@ -99,7 +99,7 @@ clone_repo_prod() {
 
     # hash specified => set tag
     if [[ -n "$SPECIFIED_HASH" ]]; then
-        SPECIFIED_TAG=$(git describe --tags ${SPECIFIED_HASH})
+        SPECIFIED_TAG=$(git describe --tags ${SPECIFIED_HASH} | cut -d '-' -f 1)
     fi
 
     # tag specified => set hash
@@ -110,7 +110,7 @@ clone_repo_prod() {
     # tag not specified, hash not specified
     # defaults to most recent tag
     if [[ -z "$SPECIFIED_TAG" ]] && [[ -z "$SPECIFIED_HASH" ]]; then
-        SPECIFIED_TAG=$(git describe --tags master)
+        SPECIFIED_TAG=$(git describe --tags master | cut -d '-' -f 1)
         SPECIFIED_HASH=$(git rev-parse ${SPECIFIED_TAG})
     fi
 
