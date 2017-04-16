@@ -4,7 +4,7 @@ class socorro::role::postgres {
 include socorro::role::common
 
   service {
-    'postgresql93-server':
+    'postgresql-9.3':
       ensure  => running,
       enable  => true,
       require => Exec['join_consul_cluster'];
