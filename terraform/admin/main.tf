@@ -4,6 +4,7 @@ provider "aws" {
     secret_key = "${var.secret_key}"
 }
 
+
 resource "aws_security_group" "ec2-socorroadmin-sg" {
     name = "ec2-socorroadmin-${var.environment}-sg"
     description = "Allow (alt) SSH to the Admin node."
