@@ -1,7 +1,10 @@
 # socorro-infra (public)
 
-This is the public Socorro Infra repository. It contains (most of) the bits and
-pieces necessary to spin up an instance of Socorro in the cloud.
+This is a Mozilla-centric Socorro infrastructure repository. It contains (some
+of) the bits and pieces necessary to spin up an instance of Socorro in the cloud.
+
+The contents of this repository are not supported in any way for non-Mozilla
+uses.
 
 ## Packer
 
