@@ -40,15 +40,14 @@ server {
     # not where the file is.
     location = /favicon.ico {
         rewrite (.*) /crashstats/base/static/img$1;
-        add_header   Cache-Control public;
+        add_header   Cache-Control 'public,immutable';
         expires      1y;
         access_log   off;
         break;
     }
 
-    # files like /static/browserid.js that don't have a unique URL
     location /static {
-        add_header   Cache-Control public;
+        add_header   Cache-Control 'public,immutable';
         expires      1y;
         access_log   off;
         break;
