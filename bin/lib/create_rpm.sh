@@ -29,9 +29,9 @@ function create_rpm() {
                         tail -n1|sed 's/\// /g'|sed 's/\./ /g'|awk '{print $8}')
     # Get a version-date tag to apply as a name to the AMI
     SOCORROAMINAME="${NEWSOCORROVERSION}-`date +%Y%m%d%H%M`"
-    if [ "$SKIPRPM" = "true" ];then
+    if [[ "$SKIPRPM" == "true" ]]; then
         echo "Skipping rpm upload"
-        else
+    else
         echo "`date` -- Completed build of $ROLENAME rpm with a return code of $RETURNCODE, now signing the rpm"
         # Sign the rpm file
         echo "`date` -- Refreshing RPM repo from S3"
