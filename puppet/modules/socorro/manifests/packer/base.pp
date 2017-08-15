@@ -38,7 +38,22 @@ class socorro::packer::base {
       baseurl => 'http://yum.postgresql.org/9.4/redhat/rhel-$releasever-$basearch',
       gpgkey  => 'http://yum.postgresql.org/RPM-GPG-KEY-PGDG';
     'datadog-agent':
-      baseurl => 'http://yum.datadoghq.com/rpm/x86_64/',
+      baseurl => 'http://yum.datadoghq.com/rpm/x86_64/';
+    'nodesource':
+      baseurl => 'https://s3-us-west-2.amazonaws.com/net-mozaws-prod-us-west-2-ops-rpmrepo-mirror/nodesource/6.x/7/x86_64/',
+      failovermethod => 'priority',
+      enabled => 1,
+      gpgcheck => 1,
+      gpgkey => 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-nodesource',
+      require => File['/etc/pki/rpm-gpg/RPM-GPG-KEY-nodesource'],
+  }
+
+  file { '/etc/pki/rpm-gpg/RPM-GPG-KEY-nodesource':
+    ensure  => file,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0644',
+    content => file('socorro/yum-gpg/NODESOURCE-GPG-SIGNING-KEY-EL');
   }
 
   Yumrepo['elasticsearch', 'PGDG'] {
