@@ -31,7 +31,7 @@ server {
         application/javascript
         text/x-js;
 
-    add_header Strict-Transport-Security "max-age=31536000";
+    add_header Strict-Transport-Security "max-age=31536000" always;
 
     # crash-stats needs to accept debug symbol zips
     client_max_body_size 2g;
@@ -47,6 +47,7 @@ server {
     }
 
     location /static {
+        add_header   Strict-Transport-Security "max-age=31536000" always;
         add_header   Cache-Control 'public,immutable';
         expires      1y;
         access_log   off;
