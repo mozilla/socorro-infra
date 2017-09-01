@@ -31,21 +31,7 @@ server {
         application/javascript
         text/x-js;
 
-    # Add default security headers when the app doesn't set them
-    header_filter_by_lua_block {
-        default_headers = {
-            ["X-XSS-Protection"] = "1; mode=block",
-            ["X-Content-Type-Options"] = "nosniff",
-            ["Cache-Control"] = "private, no-cache, no-store, must-revalidate",
-            ["X-Frame-Options"] = "DENY",
-            ["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'; report-uri /__cspreport__",
-            ["Strict-Transport-Security"] = "max-age=31536000",
-        }
-        for header, default in pairs(default_headers) do
-            ngx.header[header] = ngx.header[header] or default
-        end
-        }
-    }
+    add_header Strict-Transport-Security "max-age=31536000";
 
     # crash-stats needs to accept debug symbol zips
     client_max_body_size 2g;
@@ -61,7 +47,6 @@ server {
     }
 
     location /static {
-        add_header   Strict-Transport-Security "max-age=31536000" always;
         add_header   Cache-Control 'public,immutable';
         expires      1y;
         access_log   off;
