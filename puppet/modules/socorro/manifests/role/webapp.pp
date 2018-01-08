@@ -13,20 +13,12 @@ include socorro::role::common
       enable    => true,
       subscribe => File[
         '/etc/nginx/conf.d/socorro-webapp.conf',
-        '/etc/nginx/conf.d/socorro-middleware.conf'
       ];
 
     'socorro-webapp':
       ensure  => running,
       enable  => true,
       require => Exec['join_consul_cluster'];
-
-    'socorro-middleware':
-      ensure  => running,
-      enable  => true,
-      require => [
-        Exec['join_consul_cluster']
-      ];
   }
 
   file {
@@ -51,13 +43,6 @@ include socorro::role::common
 
     '/etc/nginx/conf.d/socorro-webapp.conf':
       content => template('socorro/etc_nginx/conf_d/socorro-webapp.conf.erb'),
-      owner   => 'root',
-      group   => 'nginx',
-      mode    => '0664',
-      require => File['/etc/nginx/nginx.conf'];
-
-    '/etc/nginx/conf.d/socorro-middleware.conf':
-      source  => 'puppet:///modules/socorro/etc_nginx/conf_d/socorro-middleware.conf',
       owner   => 'root',
       group   => 'nginx',
       mode    => '0664',
