@@ -40,12 +40,12 @@ class socorro::packer::base {
     'datadog-agent':
       baseurl => 'http://yum.datadoghq.com/rpm/x86_64/';
     'nodesource':
-      baseurl => 'https://s3-us-west-2.amazonaws.com/net-mozaws-prod-us-west-2-ops-rpmrepo-mirror/nodesource/8.x/7/x86_64/',
+      baseurl        => 'https://s3-us-west-2.amazonaws.com/net-mozaws-prod-us-west-2-ops-rpmrepo-mirror/nodesource/8.x/7/x86_64/',
       failovermethod => 'priority',
-      enabled => 1,
-      gpgcheck => 1,
-      gpgkey => 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-nodesource',
-      require => File['/etc/pki/rpm-gpg/RPM-GPG-KEY-nodesource'],
+      enabled        => 1,
+      gpgcheck       => 1,
+      gpgkey         => 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-nodesource',
+      require        => File['/etc/pki/rpm-gpg/RPM-GPG-KEY-nodesource'],
   }
 
   file { '/etc/pki/rpm-gpg/RPM-GPG-KEY-nodesource':

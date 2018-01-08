@@ -47,11 +47,11 @@ include socorro::role::common
       require => File['/etc/nginx/nginx.conf'];
 
     '/etc/dd-agent/conf.d/nginx.yaml':
-      source  => 'puppet:///modules/socorro/etc_dd-agent/nginx.yaml',
-      owner   => 'root',
-      group   => 'dd-agent',
-      mode    => '0664',
-      notify  => Service['datadog-agent'],
+      source => 'puppet:///modules/socorro/etc_dd-agent/nginx.yaml',
+      owner  => 'root',
+      group  => 'dd-agent',
+      mode   => '0664',
+      notify => Service['datadog-agent'],
   }
 
 }
