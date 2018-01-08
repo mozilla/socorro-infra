@@ -11,9 +11,7 @@ include socorro::role::common
     'nginx':
       ensure    => running,
       enable    => true,
-      subscribe => File[
-        '/etc/nginx/conf.d/socorro-webapp.conf',
-      ];
+      subscribe => File['/etc/nginx/conf.d/socorro-webapp.conf'];
 
     'socorro-webapp':
       ensure  => running,
