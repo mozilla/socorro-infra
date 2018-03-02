@@ -35,8 +35,8 @@ class socorro::packer::base {
       baseurl => 'http://packages.elasticsearch.org/elasticsearch/1.4/centos',
       gpgkey  => 'https://packages.elasticsearch.org/GPG-KEY-elasticsearch';
     'PGDG':
-      baseurl => 'http://yum.postgresql.org/9.4/redhat/rhel-$releasever-$basearch',
-      gpgkey  => 'http://yum.postgresql.org/RPM-GPG-KEY-PGDG';
+      baseurl => 'https://download.postgresql.org/pub/repos/yum/9.4/redhat/rhel-$releasever-$basearch',
+      gpgkey  => 'https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG';
     'datadog-agent':
       baseurl => 'http://yum.datadoghq.com/rpm/x86_64/';
     'nodesource':
