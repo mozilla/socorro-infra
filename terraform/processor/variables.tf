@@ -40,7 +40,7 @@ variable "socorroadmin_num" {
 variable "processor_num" {
     default = {
         stage = "2"
-        prod = "11"
+        prod = "8"
     }
 }
 variable "processor_ec2_type" {
