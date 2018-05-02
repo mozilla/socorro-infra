@@ -1,26 +1,28 @@
 # socorro-infra (public)
 
-This is a Mozilla-centric Socorro infrastructure repository. It contains (some
+This is Socorro infrastructure repository. It contains (some
 of) the bits and pieces necessary to spin up an instance of Socorro in the cloud.
 
-The contents of this repository are not supported in any way for non-Mozilla
-uses.
+*Mozilla no longer uses this code to manage our socorro deployment, so it is
+likely to stop working over time.*
+
+The contents of this repository are not supported in any way.
 
 ## Packer
 
-[Packer](https://www.packer.io) is a tool for creating machine images.  We use
+[Packer](https://www.packer.io) is a tool for creating machine images.  We used
 it for generating a generic image suitable for deploying any given Socorro
 role.
 
 ## Puppet
 
-[Puppet](https://puppetlabs.com) is a configuration management tool.  We use it
+[Puppet](https://puppetlabs.com) is a configuration management tool.  We used it
 both for managing the Packer-built images as well as for provisioning nodes.
 
 ## Terraform
 
 [Terraform](https://www.terraform.io) is a tool for building and maintaining
-virtual infrastructure in a variety of environments.  We use it for managing
+virtual infrastructure in a variety of environments.  We used it for managing
 various elements of Socorro's cloud-based deployment.
 
 ## Socorro Config
@@ -134,8 +136,6 @@ export aws_secret_key=<secret>
 export AWS_DEFAULT_REGION=<region> # us-west-2
 ```
 
-*TODO*: Explain each of the above-noted variables.
-
 ### Path
 
 Add the following locations to `$PATH`:
@@ -151,7 +151,7 @@ sudo yum install Jenkins
 
 ### Modify the Jenkins user
 
-For simplicity we run Jenkins under the default system user, `centos`. This
+For simplicity we ran Jenkins under the default system user, `centos`. This
 requires some minor configuration and file system permissions modifications.
 
 * Update `/etc/sysconfig/Jenkins` and update user to be `centos` instead of
