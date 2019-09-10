@@ -340,6 +340,13 @@ function terminate_instances_all() {
         do
         terminate_instances $doomedinstances
     done
+    # We are junking old kit, so we should ditch all the unused volumes the scale out leaves behind
+    echo "`date` -- Removing old volumes"
+    aws ec2 describe-volumes –filters "Name=status,Values=available" "Name=size,Values=8" \
+                 --region us-west-2 --output json | \
+                 python -c "from __future__ import print_function; import json,sys;data=json.load(sys.stdin); [ print(v['VolumeId']) for v in data['Volumes']]" | \
+                 xargs -n 1 -I % aws ec2 delete-volume –volume-id=% --region us-west-2
+                    RETURNCODE=$?;echo "Finished removing old volumes with a ${RETURNCODE} return code"
 }
 
 function query_end_scale() {
