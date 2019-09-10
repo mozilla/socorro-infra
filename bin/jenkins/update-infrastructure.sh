@@ -6,7 +6,7 @@
 SCALEUPADJUSTMENT=6  # How many nodes to scale in upon receiving a trigger?
 SCALEDOWNADJUSTMENT=-3  # How many nodes to scale away upon receiving a trigger?  (Note, make this a -#)
 SCALEUPCOOLDOWN=300  # Seconds to wait before allowing further scale up adjustments
-SCALEUPCOOLDOWN=300  # Seconds to wait before allowing further scale down adjustments
+SCALEDOWNCOOLDOWN=300  # Seconds to wait before allowing further scale down adjustments
 SCALEUPTHRESHOLD=70  # Avg CPU utilization of cluster before scale up
 SCALEDOWNTHRESHOLD=20  # Avg CPU utilization of cluster before scale down
 
@@ -57,8 +57,8 @@ function create_scaling_trigger_and_policy() {
     DOWN=$(aws autoscaling put-scaling-policy --policy-name ${AUTOSCALENAME}-scale-down \
         --auto-scaling-group-name ${AUTOSCALENAME} \
         --scaling-adjustment ${SCALEDOWNADJUSTMENT} \
-        --adjustment-type ChangeInCapacity -\
-        -cooldown ${SCALEDOWNCOOLDOWN}|grep Policy | sed 's/"/ /g'|awk '{print $3}')
+        --adjustment-type ChangeInCapacity \
+        --cooldown ${SCALEDOWNCOOLDOWN}|grep Policy | sed 's/"/ /g'|awk '{print $3}')
     # Create a Cloudwatch alarm for high CPU average aggregate in the autoscale group, which triggers a scale up
     echo "`date` -- Creating a high CPU alarm to hook autoscaling to for ${AUTOSCALENAME}"
     aws cloudwatch put-metric-alarm \
@@ -128,12 +128,12 @@ for ROLEENVNAME in $(cat /home/centos/socorro-infra/bin/lib/infra_to_update.list
         echo "`date` -- Setting scaling notifications for ${AUTOSCALENAME}"
         create_scaling_notifications || echo "`date` -- Scaling notifications already set for ${AUTOSCALENAME}"
         # Decide if we apply good cipher policies to a SSL-enabled ELB
-        if [ "${SSLELB}" = "true" ]; then
-            echo "`date` -- Customizing ELB SSL ciphers for ${ELBNAME}"
-            customize_ciphers
-              RETURNCODE=$?
-            echo "`date` -- Cipher customization returned code ${RETURNCODE}"
-        fi
+        # if [ "${SSLELB}" = "true" ]; then
+        #     echo "`date` -- Customizing ELB SSL ciphers for ${ELBNAME}"
+        #     customize_ciphers
+        #       RETURNCODE=$?
+        #     echo "`date` -- Cipher customization returned code ${RETURNCODE}"
+        # fi
         # Decide if we create autoscaling for this group
         if [ "${APPLYSCALINGPOLICY}" = "true" ]; then
             echo "`date` -- Creating Cloudwatch alarms for scaling triggers and scaling policies for ${AUTOSCALENAME}"
