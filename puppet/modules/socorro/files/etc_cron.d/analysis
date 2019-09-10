@@ -1,0 +1,5 @@
+# Correlation report for crash-analysis
+05 00 * * * socorro /usr/bin/envconsul -once -prefix socorro/common -upcase -sanitize /data/bin/cron_libraries.sh >> /var/log/socorro/cron_libraries.log 2>&1
+
+# Missing symbols report
+00 17 * * * socorro /usr/bin/envconsul -once -prefix socorro/common -upcase -sanitize /data/bin/cron_missing_symbols.sh >> /var/log/socorro/missing_symbols.log 2>&1
